@@ -7,6 +7,10 @@ let controller1, controller2;
 
 let updateMessage;
 
+let playerList = {};
+
+let divFps = document.getElementById("fps");
+
 const canvas = document.getElementById("renderCanvas"); // Get the canvas element
 const engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
 
@@ -26,8 +30,10 @@ const createScene = function () {
     // Dim the light a small amount - 0 to 1
     light.intensity = 0.7;
     // Built-in 'sphere' shape.
-    const testSphere = BABYLON.MeshBuilder.CreateSphere("sphere",
+    const testSphere = BABYLON.MeshBuilder.CreateSphere("testSphere",
         { diameter: 2, segments: 32 }, scene);
+
+    testSphere.material = new BABYLON.StandardMaterial("mat", scene);
     // Move the sphere upward 1/2 its height
     testSphere.position.y = 1;
     // Built-in 'ground' shape.
@@ -38,19 +44,14 @@ const createScene = function () {
 
 const scene = createScene(); //Call the createScene function
 
-// Register a render loop to repeatedly render the scene
-engine.runRenderLoop(function () {
-    scene.render();
-});
-
 // Watch for browser/canvas resize events
 window.addEventListener("resize", function () {
     engine.resize();
 });
 
-scene.debugLayer.show({
-    embedMode: true,
-});
+// scene.debugLayer.show({
+//     embedMode: true,
+// });
 
 socket.on('yourPlayerInfo', (socket) => {
 
@@ -60,26 +61,6 @@ socket.on('yourPlayerInfo', (socket) => {
 
     // Spawn yourself Entity
     addPlayer(socket);
-
-    // // get the Player Entity
-    // thisPlayer = document.getElementById(playerID);
-    // thisPlayerContrR = document.getElementById(playerID + '_contr_r');
-    // thisPlayerContrL = document.getElementById(playerID + '_contr_l');
-    // // give yourself movement and rotation controls
-    // thisPlayer.setAttribute('camera', '');
-    // thisPlayer.setAttribute('look-controls', '');
-    // thisPlayer.setAttribute('wasd-controls', '');
-    // thisPlayer.setAttribute('controller-handler', '');
-    // thisPlayer.setAttribute('net-sync', '');
-
-    // thisPlayerContrR.setAttribute('tracked-controls', 'controller: 0');
-    // thisPlayerContrL.setAttribute('tracked-controls', 'controller: 1');
-
-
-    // controller1 = renderer.xr.getController(0);
-    // controller2 = renderer.xr.getController(1);
-    // console.log(controller1);
-    // console.log(controller2);
 });
 
 
@@ -88,57 +69,56 @@ document.addEventListener('click', () => {
 });
 
 socket.on('colorChanged', (color) => {
-    document.getElementById('testBox').setAttribute('color', color);
+    console.log('colorChanged: ', color);
+    scene.getMeshByName('testSphere').material.diffuseColor = BABYLON.Color3.FromHexString(color);
 });
 
 // get Player Information from the Server and calling Spawning function
 socket.on('currentState', (players) => {
-    Object.keys(players).forEach((id) => {
-        let playerByID = document.getElementById(id) || addPlayer(players[id]);
-        let playerContrR = document.getElementById(id + '_contr_r');
-        let playerContrL = document.getElementById(id + '_contr_l');
-        if (playerByID) {
-            playerByID.setAttribute('position', players[id].position);
-            playerByID.setAttribute('rotation', players[id].rotation);
+    // Object.keys(players).forEach((id) => {
+    //     let playerByID = document.getElementById(id) || addPlayer(players[id]);
+    //     let playerContrR = document.getElementById(id + '_contr_r');
+    //     let playerContrL = document.getElementById(id + '_contr_l');
+    //     if (playerByID) {
+    //         playerByID.setAttribute('position', players[id].position);
+    //         playerByID.setAttribute('rotation', players[id].rotation);
 
-            //playerByID.object3D.position.set(players[id].position.x, players[id].position.y, players[id].position.z);
-            //playerByID.object3D.rotation.set(players[id].rotation.x, players[id].rotation.y, players[id].rotation.z);
-        }
-        if (playerContrR) {
-            playerContrR.setAttribute('position', players[id].contr_pos_r);
-            playerContrR.setAttribute('rotation', players[id].contr_rot_r);
-        }
-        if (playerContrL) {
-            playerContrL.setAttribute('position', players[id].contr_pos_l);
-            playerContrL.setAttribute('rotation', players[id].contr_rot_l);
-        }
-    });
+    //         //playerByID.object3D.position.set(players[id].position.x, players[id].position.y, players[id].position.z);
+    //         //playerByID.object3D.rotation.set(players[id].rotation.x, players[id].rotation.y, players[id].rotation.z);
+    //     }
+    //     if (playerContrR) {
+    //         playerContrR.setAttribute('position', players[id].contr_pos_r);
+    //         playerContrR.setAttribute('rotation', players[id].contr_rot_r);
+    //     }
+    //     if (playerContrL) {
+    //         playerContrL.setAttribute('position', players[id].contr_pos_l);
+    //         playerContrL.setAttribute('rotation', players[id].contr_rot_l);
+    //     }
+    // });
 });
 
 // Spawn Player Entity with the Connection ID
 function addPlayer(player) {
-    const playerElem = document.createElement('a-box');
-    playerElem.setAttribute('id', player.id);
-    playerElem.setAttribute('position', player.position);
-    playerElem.setAttribute('rotation', player.rotation);
-    playerElem.setAttribute('color', player.color);
-    document.querySelector('a-scene').appendChild(playerElem);
+    const playerElem = BABYLON.MeshBuilder.CreateBox("box", { size: 1 }, scene);
+    playerElem.id = player.id;
+    playerElem.position = player.position;
+    playerElem.rotation = player.rotation;
+    playerElem.color = player.color;
+    playerElem.material = new BABYLON.StandardMaterial("mat", scene);
 
-    const playerContrR = document.createElement('a-box');
-    playerContrR.setAttribute('id', player.id + '_contr_r');
-    playerContrR.setAttribute('position', player.contr_pos_r);
-    playerContrR.setAttribute('rotation', player.contr_rot_r);
-    playerContrR.setAttribute('color', player.color);
-    playerContrR.setAttribute('scale', '0.3 0.3 0.3');
-    document.querySelector('a-scene').appendChild(playerContrR);
+    const playerContrR = BABYLON.MeshBuilder.CreateBox("box", { size: 0.3 }, scene);
+    playerContrR.id = player.id + '_contr_r';
+    playerContrR.position = player.contr_pos_r;
+    playerContrR.rotation = player.contr_rot_r;
+    playerContrR.color = player.color;
+    playerContrR.material = new BABYLON.StandardMaterial("mat", scene);
 
-    const playerContrL = document.createElement('a-box');
-    playerContrL.setAttribute('id', player.id + '_contr_l');
-    playerContrL.setAttribute('position', player.contr_pos_l);
-    playerContrL.setAttribute('rotation', player.contr_rot_l);
-    playerContrL.setAttribute('color', player.color);
-    playerContrL.setAttribute('scale', '0.3 0.3 0.3');
-    document.querySelector('a-scene').appendChild(playerContrL);
+    const playerContrL = BABYLON.MeshBuilder.CreateBox("box", { size: 0.3 }, scene);
+    playerContrL.id = player.id + '_contr_l';
+    playerContrL.position = player.contr_pos_l;
+    playerContrL.rotation = player.contr_rot_l;
+    playerContrL.color = player.color;
+    playerContrL.material = new BABYLON.StandardMaterial("mat", scene);
 }
 
 socket.on('newPlayer', (player) => {
@@ -147,37 +127,21 @@ socket.on('newPlayer', (player) => {
 });
 
 socket.on('playerDisconnected', (id) => {
-    const el = document.getElementById(id);
-    if (el) {
-        el.parentNode.removeChild(el);
+    const disconnectedPlayer = playerList[id];
+    if (disconnectedPlayer) {
+        disconnectedPlayer.remove();
     }
 });
 
-// Detect player movement and rotation
-/*
-if (thisPlayer) {
-    thisPlayer.addEventListener('componentchanged', (event) => {
-        console.log('player moved');
-        if (event.detail.name === 'position' || event.detail.name === 'rotation') {
-            console.log('Player moved');
-            socket.emit('playerMoved', {
-                id: socket.id,
-                position: player.getAttribute('position'),
-                rotation: player.getAttribute('rotation')
-            });
-        }
-    });
-} */
+// setInterval(function () {
+//     if (thisPlayer) {
+//         socket.emit('update', {
+//         });
+//     }
+// }, 20);
 
-setInterval(function () {
-    if (thisPlayer) {
-        socket.emit('update', {
-            position: thisPlayer.getAttribute('position'),
-            rotation: thisPlayer.getAttribute('rotation'),
-            contr_pos_r: thisPlayerContrR.getAttribute('position'),
-            contr_pos_l: thisPlayerContrL.getAttribute('position'),
-            contr_rot_r: thisPlayerContrR.getAttribute('rotation'),
-            contr_rot_l: thisPlayerContrL.getAttribute('rotation')
-        });
-    }
-}, 20);
+// Register a render loop to repeatedly render the scene
+engine.runRenderLoop(function () {
+    divFps.innerHTML = engine.getFps().toFixed() + " fps";
+    scene.render();
+});
