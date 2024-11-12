@@ -81,7 +81,7 @@ io.on('connection', (socket) => {
     // Send the current state to the new player
     socket.emit('currentState', players);
 
-    socket.on('update', (data) => {
+    socket.on('clientUpdate', (data) => {
         players[socket.id].position = data.position;
         players[socket.id].rotation = data.rotation;
         players[socket.id].contr_pos_r = data.contr_pos_r;
@@ -113,7 +113,6 @@ io.on('connection', (socket) => {
 
         delete players[socket.id];
         io.emit('playerDisconnected', socket.id);
-        socket.emit('currentState', players);
     });
 });
 
@@ -124,5 +123,5 @@ httpsServer.listen(port, () => {
 
 // Game loop
 setInterval(function () {
-    io.emit('currentState', players);
+    io.emit('serverUpdate', players);
 }, 20);
