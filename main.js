@@ -28,35 +28,58 @@ let divFps = document.getElementById("fps");
 const canvas = document.getElementById("renderCanvas"); // Get the canvas element
 const engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
 
-const createScene = function () {
-    // Creates a basic Babylon Scene object
-    const scene = new BABYLON.Scene(engine);
-    // Creates and positions a free camera
-    const camera = new BABYLON.FreeCamera("camera1",
-        new BABYLON.Vector3(0, 5, -10), scene);
-    // Targets the camera to scene origin
-    camera.setTarget(BABYLON.Vector3.Zero());
-    // This attaches the camera to the canvas
-    camera.attachControl(canvas, true);
-    // Creates a light, aiming 0,1,0 - to the sky
-    const light = new BABYLON.HemisphericLight("light",
-        new BABYLON.Vector3(0, 1, 0), scene);
-    // Dim the light a small amount - 0 to 1
-    light.intensity = 0.7;
-    // Built-in 'sphere' shape.
-    const testSphere = BABYLON.MeshBuilder.CreateSphere("testSphere",
-        { diameter: 2, segments: 32 }, scene);
+const scene = new BABYLON.Scene(engine);
+// Creates and positions a free camera
+const camera = new BABYLON.FreeCamera("camera1",
+    new BABYLON.Vector3(0, 5, -10), scene);
+// Targets the camera to scene origin
+camera.setTarget(BABYLON.Vector3.Zero());
+// This attaches the camera to the canvas
+camera.attachControl(canvas, true);
+// Creates a light, aiming 0,1,0 - to the sky
+const light = new BABYLON.HemisphericLight("light",
+    new BABYLON.Vector3(0, 1, 0), scene);
+// Dim the light a small amount - 0 to 1
+light.intensity = 0.7;
+// Built-in 'sphere' shape.
+const testSphere = BABYLON.MeshBuilder.CreateSphere("testSphere",
+    { diameter: 2, segments: 32 }, scene);
+testSphere.material = new BABYLON.StandardMaterial("mat", scene);
+// Move the sphere upward 1/2 its height
+testSphere.position.y = 1;
+// Built-in 'ground' shape.
+const ground = BABYLON.MeshBuilder.CreateGround("ground",
+    { width: 6, height: 6 }, scene);
 
-    testSphere.material = new BABYLON.StandardMaterial("mat", scene);
-    // Move the sphere upward 1/2 its height
-    testSphere.position.y = 1;
-    // Built-in 'ground' shape.
-    const ground = BABYLON.MeshBuilder.CreateGround("ground",
-        { width: 6, height: 6 }, scene);
-    return scene;
-};
+// const createScene = function () {
+//     // Creates a basic Babylon Scene object
+//     const scene = new BABYLON.Scene(engine);
+//     // Creates and positions a free camera
+//     const camera = new BABYLON.FreeCamera("camera1",
+//         new BABYLON.Vector3(0, 5, -10), scene);
+//     // Targets the camera to scene origin
+//     camera.setTarget(BABYLON.Vector3.Zero());
+//     // This attaches the camera to the canvas
+//     camera.attachControl(canvas, true);
+//     // Creates a light, aiming 0,1,0 - to the sky
+//     const light = new BABYLON.HemisphericLight("light",
+//         new BABYLON.Vector3(0, 1, 0), scene);
+//     // Dim the light a small amount - 0 to 1
+//     light.intensity = 0.7;
+//     // Built-in 'sphere' shape.
+//     const testSphere = BABYLON.MeshBuilder.CreateSphere("testSphere",
+//         { diameter: 2, segments: 32 }, scene);
 
-const scene = createScene(); //Call the createScene function
+//     testSphere.material = new BABYLON.StandardMaterial("mat", scene);
+//     // Move the sphere upward 1/2 its height
+//     testSphere.position.y = 1;
+//     // Built-in 'ground' shape.
+//     const ground = BABYLON.MeshBuilder.CreateGround("ground",
+//         { width: 6, height: 6 }, scene);
+//     return scene;
+// };
+
+// const scene = createScene(); //Call the createScene function
 
 // Watch for browser/canvas resize events
 window.addEventListener("resize", function () {
@@ -73,6 +96,10 @@ window.addEventListener("resize", function () {
         //  xrInput: defaultXRExperience.input,
         //      floorMeshes: [environment.ground] /* Array of meshes to be used as landing points */
     });
+
+    const xrCamera = xr.baseExperience.camera;
+
+    xrCamera.setTransformationFromNonVRCamera(camera);
 
     // const defaultXRExperience = await scene.createDefaultXRExperienceAsync({
     //     floorMeshes: [scene.getMeshByName('ground')],
@@ -98,6 +125,17 @@ window.addEventListener("resize", function () {
     xr.input.onControllerAddedObservable.add((controller) => {
         controller.onMotionControllerInitObservable.add((motionController) => {
             if (motionController.handness === 'left') {
+                const handle = BABYLON.MeshBuilder.CreateCylinder(playerID, {
+                    height: 0.4, diameter: 0.02, tessellation: 8
+                });
+
+                // Set the parent of the handle to the controller's grip or pointer
+                //handle.parent = controller.grip || controller.pointer;
+
+                xr.input.onControllerRemovedObservable.add(() => {
+
+                });
+
                 const xr_ids = motionController.getComponentIds();
 
                 // // Get the position and rotation of the controller
@@ -293,8 +331,11 @@ socket.on('yourPlayerInfo', (socket) => {
 
     playerList[socket.id] = clientPlayer;
 
+    camera.position = new BABYLON.Vector3(socket.position.x, socket.position.y, socket.position.z);
+    camera.setTarget(BABYLON.Vector3.Zero());
+
     // Spawn yourself Entity
-    addPlayer(socket);
+    addPlayer(socket, true);
 });
 
 socket.on('newPlayer', (player) => {
@@ -305,7 +346,7 @@ socket.on('newPlayer', (player) => {
     playerList[player.id] = new Player(player);
 
     // Spawn new player Entity
-    addPlayer(player);
+    addPlayer(player, false);
 });
 
 // get all current Player Information from the Server at the start
@@ -319,7 +360,7 @@ socket.on('currentState', (players, testColor) => {
             playerList[id] = new Player(players[id]);
 
             // Spawn new player Entity
-            const [playerElem, playerContrR, playerContrL] = addPlayer(players[id]);
+            const [playerElem, playerContrR, playerContrL] = addPlayer(players[id], false);
 
             console.log(playerElem);
         }
@@ -350,30 +391,48 @@ socket.on('serverUpdate', (players) => {
 });
 
 // Spawn Player Entity with the Connection ID
-function addPlayer(player) {
+function addPlayer(player, isPlayer) {
     console.log('Spawning player: ', player.id);
 
     console.log('Playercolor: ', player.color);
 
-    //let playerElem = BABYLON.MeshBuilder.CreateBox("player_" + player.id, { size: 1 }, scene);
-    let playerElem = BABYLON.MeshBuilder.CreateSphere("testSphere",
-        { diameter: 2, segments: 32 }, scene);
-    playerElem.position = player.position;
-    playerElem.rotation = player.rotation;
+    const playerElem = BABYLON.MeshBuilder.CreateBox("player_" + player.id, { size: 1 }, scene);
+    if (isPlayer) {
+        playerElem.parent = camera;
+    } else {
+        playerElem.position.x = player.position.x;
+        playerElem.position.y = player.position.y;
+        playerElem.position.z = player.position.z;
+
+        playerElem.rotation.x = player.rotation.x;
+        playerElem.rotation.y = player.rotation.y;
+        playerElem.rotation.z = player.rotation.z;
+    }
+
     playerElem.material = new BABYLON.StandardMaterial("mat_" + player.id, scene);
-    // playerElem.material.diffuseColor = BABYLON.Color3.FromHexString(player.color);
+    playerElem.material.diffuseColor = BABYLON.Color3.FromHexString(player.color);
 
-    let playerContrR = BABYLON.MeshBuilder.CreateBox('conR_' + player.id, { size: 0.3 }, scene);
-    playerContrR.position = player.contr_pos_r;
-    playerContrR.rotation = player.contr_rot_r;
+    const playerContrR = BABYLON.MeshBuilder.CreateBox('conR_' + player.id, { size: 0.3 });
+    playerContrR.position.x = player.contr_pos_r.x;
+    playerContrR.position.y = player.contr_pos_r.y;
+    playerContrR.position.z = player.contr_pos_r.z;
+
+    playerContrR.rotation.x = player.contr_rot_r.x;
+    playerContrR.rotation.y = player.contr_rot_r.y;
+    playerContrR.rotation.z = player.contr_rot_r.z;
     playerContrR.material = new BABYLON.StandardMaterial("matConR_" + player.id, scene);
-    // playerContrR.material.diffuseColor = BABYLON.Color3.FromHexString(player.color);
+    playerContrR.material.diffuseColor = BABYLON.Color3.FromHexString(player.color);
 
-    let playerContrL = BABYLON.MeshBuilder.CreateBox('conL_' + player.id, { size: 0.3 }, scene);
-    playerContrL.position = player.contr_pos_l;
-    playerContrL.rotation = player.contr_rot_l;
+    const playerContrL = BABYLON.MeshBuilder.CreateBox('conL_' + player.id, { size: 0.3 });
+    playerContrL.position.x = player.contr_pos_l.x;
+    playerContrL.position.y = player.contr_pos_l.y;
+    playerContrL.position.z = player.contr_pos_l.z;
+
+    playerContrL.rotation.x = player.contr_rot_l.x;
+    playerContrL.rotation.y = player.contr_rot_l.y;
+    playerContrL.rotation.z = player.contr_rot_l.z;
     playerContrL.material = new BABYLON.StandardMaterial("matConL" + player.id, scene);
-    // playerContrL.material.diffuseColor = BABYLON.Color3.FromHexString(player.color);
+    playerContrL.material.diffuseColor = BABYLON.Color3.FromHexString(player.color);
 
     return [playerElem, playerContrR, playerContrL];
 }
