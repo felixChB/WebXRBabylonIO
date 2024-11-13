@@ -8,6 +8,7 @@ import { Server } from "socket.io";
 import { SocketAddress } from "net";
 
 const port = process.env.PORT || 3000;
+const ipAdress = '192.168.178.156'; // for local network // Desktop
 
 const app = express();
 
@@ -37,7 +38,7 @@ let players = {};
 /////////////////////////////  VARIABLES  //////////////////////////////////
 const color1 = '#d60040';
 const color2 = '#91ff42';
-var aciveColor;
+var activeColor;
 
 const maxPlayers = 4;
 const playerColors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00'];
@@ -79,7 +80,7 @@ io.on('connection', (socket) => {
     socket.broadcast.emit('newPlayer', players[socket.id]);
 
     // Send the current state to the new player
-    socket.emit('currentState', players);
+    socket.emit('currentState', players, activeColor);
 
     socket.on('clientUpdate', (data) => {
         players[socket.id].position = data.position;
@@ -94,13 +95,13 @@ io.on('connection', (socket) => {
     socket.on('clicked', () => {
         // console.log('Clicked');
 
-        if (aciveColor == color1) {
-            aciveColor = color2;
+        if (activeColor == color1) {
+            activeColor = color2;
         } else {
-            aciveColor = color1;
+            activeColor = color1;
         }
-        // console.log(aciveColor);
-        io.emit('colorChanged', aciveColor);
+        // console.log(activeColor);
+        io.emit('colorChanged', activeColor);
     });
 
     // Handle player disconnection
@@ -116,8 +117,9 @@ io.on('connection', (socket) => {
     });
 });
 
-httpsServer.listen(port, () => {
-    console.log('Server is listening on port https://localhost:' + port);
+httpsServer.listen(port, ipAdress, () => {
+    // console.log('Server is listening on port https://localhost:' + port);        // for localhost network
+    console.log('Server is listening on port https://' + ipAdress + ':' + port);    // for local ip network
 });
 
 

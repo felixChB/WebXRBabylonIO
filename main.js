@@ -99,7 +99,6 @@ window.addEventListener("resize", function () {
         controller.onMotionControllerInitObservable.add((motionController) => {
             if (motionController.handness === 'left') {
                 const xr_ids = motionController.getComponentIds();
-                let triggerComponent = motionController.getComponent(xr_ids[0]);//xr-standard-trigger
 
                 // // Get the position and rotation of the controller
                 // const grip = controller.grip || controller.pointer;
@@ -120,6 +119,7 @@ window.addEventListener("resize", function () {
 
                 // add Event Listeners for each button //
 
+                let triggerComponent = motionController.getComponent(xr_ids[0]); //xr-standard-trigger
                 triggerComponent.onButtonStateChangedObservable.add(() => {
                     if (triggerComponent.pressed) {
                         // Box_Left_Trigger.scaling = new BABYLON.Vector3(1.2, 1.2, 1.2);
@@ -139,9 +139,11 @@ window.addEventListener("resize", function () {
                         // Box_Left_Squeeze.scaling = new BABYLON.Vector3(1, 1, 1);
                     }
                 });
+
                 let thumbstickComponent = motionController.getComponent(xr_ids[2]);//xr-standard-thumbstick
                 thumbstickComponent.onButtonStateChangedObservable.add(() => {
                     if (thumbstickComponent.pressed) {
+                        socket.emit('clicked');
                         // Box_Left_ThumbStick.scaling = new BABYLON.Vector3(1.2, 1.2, 1.2);
                     } else {
                         // Box_Left_ThumbStick.scaling = new BABYLON.Vector3(1, 1, 1);
@@ -152,6 +154,7 @@ window.addEventListener("resize", function () {
                         Box_Left_ThumbStick.position.y += axes.y;
                     */
                 });
+
                 thumbstickComponent.onAxisValueChangedObservable.add((axes) => {
                     //https://playground.babylonjs.com/#INBVUY#87
                     //inactivate camera rotation : not working so far
@@ -182,15 +185,18 @@ window.addEventListener("resize", function () {
                 let xbuttonComponent = motionController.getComponent(xr_ids[3]);//x-button
                 xbuttonComponent.onButtonStateChangedObservable.add(() => {
                     if (xbuttonComponent.pressed) {
+                        socket.emit('clicked');
                         // Sphere_Left_XButton.scaling = new BABYLON.Vector3(1.2, 1.2, 1.2);
 
                     } else {
                         // Sphere_Left_XButton.scaling = new BABYLON.Vector3(1, 1, 1);
                     }
                 });
+
                 let ybuttonComponent = motionController.getComponent(xr_ids[4]);//y-button
                 ybuttonComponent.onButtonStateChangedObservable.add(() => {
                     if (ybuttonComponent.pressed) {
+                        socket.emit('clicked');
                         // Sphere_Left_YButton.scaling = new BABYLON.Vector3(1.2, 1.2, 1.2);
 
                     } else {
@@ -213,6 +219,7 @@ window.addEventListener("resize", function () {
             }
             if (motionController.handness === 'right') {
                 const xr_ids = motionController.getComponentIds();
+
                 let triggerComponent = motionController.getComponent(xr_ids[0]);//xr-standard-trigger
                 triggerComponent.onButtonStateChangedObservable.add(() => {
                     if (triggerComponent.pressed) {
@@ -223,6 +230,7 @@ window.addEventListener("resize", function () {
 
                     }
                 });
+
                 let squeezeComponent = motionController.getComponent(xr_ids[1]);//xr-standard-squeeze
                 squeezeComponent.onButtonStateChangedObservable.add(() => {
                     if (squeezeComponent.pressed) {
@@ -232,9 +240,11 @@ window.addEventListener("resize", function () {
                         // Box_Right_Squeeze.scaling = new BABYLON.Vector3(1, 1, 1);
                     }
                 });
+
                 let thumbstickComponent = motionController.getComponent(xr_ids[2]);//xr-standard-thumbstick
                 thumbstickComponent.onButtonStateChangedObservable.add(() => {
                     if (thumbstickComponent.pressed) {
+                        socket.emit('clicked');
                         // Box_Right_ThumbStick.scaling = new BABYLON.Vector3(1.2, 1.2, 1.2);
                     } else {
                         // Box_Right_ThumbStick.scaling = new BABYLON.Vector3(1, 1, 1);
@@ -251,14 +261,17 @@ window.addEventListener("resize", function () {
                 let abuttonComponent = motionController.getComponent(xr_ids[3]);//a-button
                 abuttonComponent.onButtonStateChangedObservable.add(() => {
                     if (abuttonComponent.pressed) {
+                        socket.emit('clicked');
                         // Sphere_Right_AButton.scaling = new BABYLON.Vector3(1.2, 1.2, 1.2);
                     } else {
                         // Sphere_Right_AButton.scaling = new BABYLON.Vector3(1, 1, 1);
                     }
                 });
+
                 let bbuttonComponent = motionController.getComponent(xr_ids[4]);//b-button
                 bbuttonComponent.onButtonStateChangedObservable.add(() => {
                     if (bbuttonComponent.pressed) {
+                        socket.emit('clicked');
                         // Sphere_Right_BButton.scaling = new BABYLON.Vector3(1.2, 1.2, 1.2);
 
                     } else {
@@ -295,6 +308,23 @@ socket.on('newPlayer', (player) => {
     addPlayer(player);
 });
 
+// get all current Player Information from the Server at the start
+// and spawning all current players except yourself
+socket.on('currentState', (players, testColor) => {
+    scene.getMeshByName('testSphere').material.diffuseColor = BABYLON.Color3.FromHexString(testColor);
+
+    Object.keys(players).forEach((id) => {
+        if (id != playerID) {
+            // Add new player to the playerList
+            playerList[id] = new Player(players[id]);
+
+            // Spawn new player Entity
+            const [playerElem, playerContrR, playerContrL] = addPlayer(players[id]);
+
+            console.log(playerElem);
+        }
+    });
+});
 
 document.addEventListener('click', () => {
     socket.emit('clicked');
@@ -303,20 +333,6 @@ document.addEventListener('click', () => {
 socket.on('colorChanged', (color) => {
     // change color of the sphere
     scene.getMeshByName('testSphere').material.diffuseColor = BABYLON.Color3.FromHexString(color);
-});
-
-// get all current Player Information from the Server at the start
-// and spawning all current players except yourself
-socket.on('currentState', (players) => {
-    Object.keys(players).forEach((id) => {
-        if (id != playerID) {
-            // Add new player to the playerList
-            playerList[id] = new Player(players[id]);
-
-            // Spawn new player Entity
-            addPlayer(players[id]);
-        }
-    });
 });
 
 // update the players position and rotation from the server
@@ -335,28 +351,31 @@ socket.on('serverUpdate', (players) => {
 
 // Spawn Player Entity with the Connection ID
 function addPlayer(player) {
-    const playerElem = BABYLON.MeshBuilder.CreateBox("player_" + player.id, { size: 1 }, scene);
+    console.log('Spawning player: ', player.id);
+
+    console.log('Playercolor: ', player.color);
+
+    //let playerElem = BABYLON.MeshBuilder.CreateBox("player_" + player.id, { size: 1 }, scene);
+    let playerElem = BABYLON.MeshBuilder.CreateSphere("testSphere",
+        { diameter: 2, segments: 32 }, scene);
     playerElem.position = player.position;
     playerElem.rotation = player.rotation;
-    playerElem.color = player.color;
     playerElem.material = new BABYLON.StandardMaterial("mat_" + player.id, scene);
-    playerElem.material.diffuseColor = BABYLON.Color3.FromHexString(player.color);
+    // playerElem.material.diffuseColor = BABYLON.Color3.FromHexString(player.color);
 
-    const playerContrR = BABYLON.MeshBuilder.CreateBox('conR_' + player.id, { size: 0.3 }, scene);
+    let playerContrR = BABYLON.MeshBuilder.CreateBox('conR_' + player.id, { size: 0.3 }, scene);
     playerContrR.position = player.contr_pos_r;
     playerContrR.rotation = player.contr_rot_r;
-    playerContrR.color = player.color;
     playerContrR.material = new BABYLON.StandardMaterial("matConR_" + player.id, scene);
-    playerContrR.material.diffuseColor = BABYLON.Color3.FromHexString(player.color);
+    // playerContrR.material.diffuseColor = BABYLON.Color3.FromHexString(player.color);
 
-    const playerContrL = BABYLON.MeshBuilder.CreateBox('conL_' + player.id, { size: 0.3 }, scene);
+    let playerContrL = BABYLON.MeshBuilder.CreateBox('conL_' + player.id, { size: 0.3 }, scene);
     playerContrL.position = player.contr_pos_l;
     playerContrL.rotation = player.contr_rot_l;
-    playerContrL.color = player.color;
     playerContrL.material = new BABYLON.StandardMaterial("matConL" + player.id, scene);
-    playerContrL.material.diffuseColor = BABYLON.Color3.FromHexString(player.color);
+    // playerContrL.material.diffuseColor = BABYLON.Color3.FromHexString(player.color);
 
-    return playerElem, playerContrR, playerContrL;
+    return [playerElem, playerContrR, playerContrL];
 }
 
 socket.on('playerDisconnected', (id) => {
