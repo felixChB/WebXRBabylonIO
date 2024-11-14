@@ -66,10 +66,10 @@ io.on('connection', (socket) => {
         startPosition: playerStartPos,
         position: playerStartPos,
         rotation: { x: 0, y: 0, z: 0 },
-        contr_pos_r: playerStartPos,
-        contr_pos_l: playerStartPos,
-        contr_rot_r: { x: 0, y: 0, z: 0 },
-        contr_rot_l: { x: 0, y: 0, z: 0 },
+        contrPosR: playerStartPos,
+        contrPosL: playerStartPos,
+        contrRotR: { x: 0, y: 0, z: 0 },
+        contrRotL: { x: 0, y: 0, z: 0 },
         color: playerColors.shift()
     };
 
@@ -85,10 +85,10 @@ io.on('connection', (socket) => {
     socket.on('clientUpdate', (data) => {
         players[socket.id].position = data.position;
         players[socket.id].rotation = data.rotation;
-        players[socket.id].contr_pos_r = data.contr_pos_r;
-        players[socket.id].contr_pos_l = data.contr_pos_l;
-        players[socket.id].contr_rot_r = data.contr_rot_r;
-        players[socket.id].contr_rot_l = data.contr_rot_l;
+        players[socket.id].contrPosR = data.contrPosR;
+        players[socket.id].contrPosL = data.contrPosL;
+        players[socket.id].contrRotR = data.contrRotR;
+        players[socket.id].contrRotL = data.contrRotL;
     });
 
     // Test color change for connection

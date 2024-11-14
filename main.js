@@ -1,3 +1,5 @@
+// import { io } from "socket.io-client";
+
 const socket = io();
 
 let playerID, clientPlayerColor;
@@ -10,15 +12,27 @@ let updateMessage;
 let playerList = {};
 let playerObjList = [];
 
+// class PlayerData {
+//     constructor() {
+//         this.id = null;
+//         this.position = { x: 0, y: 0, z: 0 };
+//         this.rotation = { x: 0, y: 0, z: 0 };
+//         this.contrPosR = { x: 0, y: 0, z: 0 };
+//         this.contrPosL = { x: 0, y: 0, z: 0 };
+//         this.contrRotR = { x: 0, y: 0, z: 0 };
+//         this.contrRotL = { x: 0, y: 0, z: 0 };
+//     }
+// }
+
 class Player {
     constructor(player) {
         this.id = player.id;
         this.position = player.position;
         this.rotation = player.rotation;
-        this.contr_pos_r = player.contr_pos_r;
-        this.contr_pos_l = player.contr_pos_l;
-        this.contr_rot_r = player.contr_rot_r;
-        this.contr_rot_l = player.contr_rot_l;
+        this.contrPosR = player.contrPosR;
+        this.contrPosL = player.contrPosL;
+        this.contrRotR = player.contrRotR;
+        this.contrRotL = player.contrRotL;
         this.color = player.color;
     }
 }
@@ -89,10 +103,10 @@ window.addEventListener("resize", function () {
 (async function main() {
     // Create a WebXR experience
     var xr = await scene.createDefaultXRExperienceAsync({
-        floorMeshes: [scene.getMeshByName('ground')]
-        // inputOptions: {
-        //     doNotLoadControllerMeshes: true
-        // }
+        floorMeshes: [scene.getMeshByName('ground')],
+        inputOptions: {
+            doNotLoadControllerMeshes: true
+        }
         //  xrInput: defaultXRExperience.input,
         //      floorMeshes: [environment.ground] /* Array of meshes to be used as landing points */
     });
@@ -101,9 +115,9 @@ window.addEventListener("resize", function () {
 
     xrCamera.setTransformationFromNonVRCamera(camera);
 
-    const playerRef = scene.getMeshByName('player_' + playerID);
-    playerRef.position = new BABYLON.Vector3(0, 0, 0);
-    playerRef.rotation = new BABYLON.Vector3(xrCamera.rotation.x, xrCamera.rotation.y, xrCamera.rotation.z);
+    // const playerRef = scene.getMeshByName('player_' + playerID);
+    // playerRef.position = new BABYLON.Vector3(0, 0, 0);
+    // playerRef.rotation = new BABYLON.Vector3(xrCamera.rotation.x, xrCamera.rotation.y, xrCamera.rotation.z);
 
     // const defaultXRExperience = await scene.createDefaultXRExperienceAsync({
     //     floorMeshes: [scene.getMeshByName('ground')],
@@ -391,10 +405,10 @@ socket.on('serverUpdate', (players) => {
         if (playerList[id]) {
             playerList[id].position = players[id].position;
             playerList[id].rotation = players[id].rotation;
-            playerList[id].contr_pos_r = players[id].contr_pos_r;
-            playerList[id].contr_pos_l = players[id].contr_pos_l;
-            playerList[id].contr_rot_r = players[id].contr_rot_r;
-            playerList[id].contr_rot_l = players[id].contr_rot_l;
+            playerList[id].contrPosR = players[id].contrPosR;
+            playerList[id].contrPosL = players[id].contrPosL;
+            playerList[id].contrRotR = players[id].contrRotR;
+            playerList[id].contrRotL = players[id].contrRotL;
         }
     });
 });
@@ -417,14 +431,14 @@ function addPlayer(player, isPlayer) {
     playerElem.material.diffuseColor = BABYLON.Color3.FromHexString(player.color);
 
     const playerContrR = BABYLON.MeshBuilder.CreateBox('conR_' + player.id, { size: 0.2 });
-    playerContrR.position = new BABYLON.Vector3(player.contr_pos_r.x, player.contr_pos_r.y, player.contr_pos_r.z);
-    playerContrR.rotation = new BABYLON.Vector3(player.contr_rot_r.x, player.contr_rot_r.y, player.contr_rot_r.z);
+    playerContrR.position = new BABYLON.Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
+    playerContrR.rotation = new BABYLON.Vector3(player.contrRotR.x, player.contrRotR.y, player.contrRotR.z);
     playerContrR.material = new BABYLON.StandardMaterial("matConR_" + player.id, scene);
     playerContrR.material.diffuseColor = BABYLON.Color3.FromHexString(player.color);
 
     const playerContrL = BABYLON.MeshBuilder.CreateBox('conL_' + player.id, { size: 0.2 });
-    playerContrL.position = new BABYLON.Vector3(player.contr_pos_l.x, player.contr_pos_l.y, player.contr_pos_l.z);
-    playerContrL.rotation = new BABYLON.Vector3(player.contr_rot_l.x, player.contr_rot_l.y, player.contr_rot_l.z);
+    playerContrL.position = new BABYLON.Vector3(player.contrPosL.x, player.contrPosL.y, player.contrPosL.z);
+    playerContrL.rotation = new BABYLON.Vector3(player.contrRotL.x, player.contrRotL.y, player.contrRotL.z);
     playerContrL.material = new BABYLON.StandardMaterial("matConL" + player.id, scene);
     playerContrL.material.diffuseColor = BABYLON.Color3.FromHexString(player.color);
 
@@ -474,11 +488,11 @@ engine.runRenderLoop(function () {
                 playerElem.position = new BABYLON.Vector3(playerList[id].position.x, playerList[id].position.y, playerList[id].position.z);
                 playerElem.rotation = new BABYLON.Vector3(playerList[id].rotation.x, playerList[id].rotation.y, playerList[id].rotation.z);
 
-                playerContrR.position = new BABYLON.Vector3(playerList[id].contr_pos_r.x, playerList[id].contr_pos_r.y, playerList[id].contr_pos_r.z);
-                playerContrR.rotation = new BABYLON.Vector3(playerList[id].contr_rot_r.x, playerList[id].contr_rot_r.y, playerList[id].contr_rot_r.z);
+                playerContrR.position = new BABYLON.Vector3(playerList[id].contrPosR.x, playerList[id].contrPosR.y, playerList[id].contrPosR.z);
+                playerContrR.rotation = new BABYLON.Vector3(playerList[id].contrRotR.x, playerList[id].contrRotR.y, playerList[id].contrRotR.z);
 
-                playerContrL.position = new BABYLON.Vector3(playerList[id].contr_pos_l.x, playerList[id].contr_pos_l.y, playerList[id].contr_pos_l.z);
-                playerContrL.rotation = new BABYLON.Vector3(playerList[id].contr_rot_l.x, playerList[id].contr_rot_l.y, playerList[id].contr_rot_l.z);
+                playerContrL.position = new BABYLON.Vector3(playerList[id].contrPosL.x, playerList[id].contrPosL.y, playerList[id].contrPosL.z);
+                playerContrL.rotation = new BABYLON.Vector3(playerList[id].contrRotL.x, playerList[id].contrRotL.y, playerList[id].contrRotL.z);
             }
         }
     });

@@ -4,13 +4,14 @@
   "description": "Babylonjs x Socket IO Server",
   "type": "module",
   "dependencies": {
-      "express": "^4.21.1",
-      "socket.io": "^4.8.1"
+    "express": "^4.21.1",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1"
   },
   "main": "main.js",
   "scripts": {
-      "test": "echo \"Error: no test specified\" && exit 1",
-      "start": "node server.js"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
