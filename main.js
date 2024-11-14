@@ -101,6 +101,10 @@ window.addEventListener("resize", function () {
 
     xrCamera.setTransformationFromNonVRCamera(camera);
 
+    const playerRef = scene.getMeshByName('player_' + playerID);
+    playerRef.position = new BABYLON.Vector3(0, 0, 0);
+    playerRef.rotation = new BABYLON.Vector3(xrCamera.rotation.x, xrCamera.rotation.y, xrCamera.rotation.z);
+
     // const defaultXRExperience = await scene.createDefaultXRExperienceAsync({
     //     floorMeshes: [scene.getMeshByName('ground')],
     //     inputOptions: {
@@ -125,9 +129,10 @@ window.addEventListener("resize", function () {
     xr.input.onControllerAddedObservable.add((controller) => {
         controller.onMotionControllerInitObservable.add((motionController) => {
             if (motionController.handness === 'left') {
-                const handle = BABYLON.MeshBuilder.CreateCylinder(playerID, {
-                    height: 0.4, diameter: 0.02, tessellation: 8
-                });
+
+                const leftController = scene.getMeshByName('conR_' + playerID);
+                leftController.position = new BABYLON.Vector3(0, 0, 0);
+                leftController.parent = controller.grip;
 
                 // Set the parent of the handle to the controller's grip or pointer
                 //handle.parent = controller.grip || controller.pointer;
@@ -257,6 +262,10 @@ window.addEventListener("resize", function () {
             }
             if (motionController.handness === 'right') {
                 const xr_ids = motionController.getComponentIds();
+
+                const leftController = scene.getMeshByName('conL_' + playerID);
+                leftController.position = new BABYLON.Vector3(0, 0, 0);
+                leftController.parent = controller.grip;
 
                 let triggerComponent = motionController.getComponent(xr_ids[0]);//xr-standard-trigger
                 triggerComponent.onButtonStateChangedObservable.add(() => {
@@ -400,37 +409,22 @@ function addPlayer(player, isPlayer) {
     if (isPlayer) {
         playerElem.parent = camera;
     } else {
-        playerElem.position.x = player.position.x;
-        playerElem.position.y = player.position.y;
-        playerElem.position.z = player.position.z;
-
-        playerElem.rotation.x = player.rotation.x;
-        playerElem.rotation.y = player.rotation.y;
-        playerElem.rotation.z = player.rotation.z;
+        playerElem.position = new BABYLON.Vector3(player.position.x, player.position.y, player.position.z);
+        playerElem.rotation = new BABYLON.Vector3(player.rotation.x, player.rotation.y, player.rotation.z);
     }
 
     playerElem.material = new BABYLON.StandardMaterial("mat_" + player.id, scene);
     playerElem.material.diffuseColor = BABYLON.Color3.FromHexString(player.color);
 
-    const playerContrR = BABYLON.MeshBuilder.CreateBox('conR_' + player.id, { size: 0.3 });
-    playerContrR.position.x = player.contr_pos_r.x;
-    playerContrR.position.y = player.contr_pos_r.y;
-    playerContrR.position.z = player.contr_pos_r.z;
-
-    playerContrR.rotation.x = player.contr_rot_r.x;
-    playerContrR.rotation.y = player.contr_rot_r.y;
-    playerContrR.rotation.z = player.contr_rot_r.z;
+    const playerContrR = BABYLON.MeshBuilder.CreateBox('conR_' + player.id, { size: 0.2 });
+    playerContrR.position = new BABYLON.Vector3(player.contr_pos_r.x, player.contr_pos_r.y, player.contr_pos_r.z);
+    playerContrR.rotation = new BABYLON.Vector3(player.contr_rot_r.x, player.contr_rot_r.y, player.contr_rot_r.z);
     playerContrR.material = new BABYLON.StandardMaterial("matConR_" + player.id, scene);
     playerContrR.material.diffuseColor = BABYLON.Color3.FromHexString(player.color);
 
-    const playerContrL = BABYLON.MeshBuilder.CreateBox('conL_' + player.id, { size: 0.3 });
-    playerContrL.position.x = player.contr_pos_l.x;
-    playerContrL.position.y = player.contr_pos_l.y;
-    playerContrL.position.z = player.contr_pos_l.z;
-
-    playerContrL.rotation.x = player.contr_rot_l.x;
-    playerContrL.rotation.y = player.contr_rot_l.y;
-    playerContrL.rotation.z = player.contr_rot_l.z;
+    const playerContrL = BABYLON.MeshBuilder.CreateBox('conL_' + player.id, { size: 0.2 });
+    playerContrL.position = new BABYLON.Vector3(player.contr_pos_l.x, player.contr_pos_l.y, player.contr_pos_l.z);
+    playerContrL.rotation = new BABYLON.Vector3(player.contr_rot_l.x, player.contr_rot_l.y, player.contr_rot_l.z);
     playerContrL.material = new BABYLON.StandardMaterial("matConL" + player.id, scene);
     playerContrL.material.diffuseColor = BABYLON.Color3.FromHexString(player.color);
 
@@ -470,15 +464,24 @@ window.addEventListener("keydown", function (event) {
 engine.runRenderLoop(function () {
     divFps.innerHTML = engine.getFps().toFixed() + " fps";
 
-    // // Update the position and rotation of the controller boxes
-    // for (const handness in controllerBoxes) {
-    //     const grip = controllerBoxes[handness].grip;
-    //     const box = controllerBoxes[handness].box;
-    //     if (grip && box) {
-    //         box.position.copyFrom(grip.position);
-    //         box.rotationQuaternion.copyFrom(grip.rotationQuaternion);
-    //     }
-    // }
+    Object.keys(playerList).forEach((id) => {
+        if (playerList[id]) {
+            if (id != playerID) {
+                const playerElem = scene.getMeshByName('player_' + id);
+                const playerContrR = scene.getMeshByName('conR_' + id);
+                const playerContrL = scene.getMeshByName('conL_' + id);
+
+                playerElem.position = new BABYLON.Vector3(playerList[id].position.x, playerList[id].position.y, playerList[id].position.z);
+                playerElem.rotation = new BABYLON.Vector3(playerList[id].rotation.x, playerList[id].rotation.y, playerList[id].rotation.z);
+
+                playerContrR.position = new BABYLON.Vector3(playerList[id].contr_pos_r.x, playerList[id].contr_pos_r.y, playerList[id].contr_pos_r.z);
+                playerContrR.rotation = new BABYLON.Vector3(playerList[id].contr_rot_r.x, playerList[id].contr_rot_r.y, playerList[id].contr_rot_r.z);
+
+                playerContrL.position = new BABYLON.Vector3(playerList[id].contr_pos_l.x, playerList[id].contr_pos_l.y, playerList[id].contr_pos_l.z);
+                playerContrL.rotation = new BABYLON.Vector3(playerList[id].contr_rot_l.x, playerList[id].contr_rot_l.y, playerList[id].contr_rot_l.z);
+            }
+        }
+    });
 
     scene.render();
 });
