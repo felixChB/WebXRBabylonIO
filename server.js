@@ -32,8 +32,22 @@ app.get('/', (req, res) => {
 
 app.use(express.static('.'));
 
+class Player {
+    constructor(player){
+        this.id = '';
+        this.color = '';
+        this.startPosition = { x: 0, y: 0, z: 0 };
+        this.position = { x: 0, y: 0, z: 0 };
+        this.rotation = { x: 0, y: 0, z: 0 };
+        this.contrPosR = { x: 0, y: 0, z: 0 };
+        this.contrPosL = { x: 0, y: 0, z: 0 };
+        this.contrRotR = { x: 0, y: 0, z: 0 };
+        this.contrRotL = { x: 0, y: 0, z: 0 };
+    }
+}
+
 // Store all connected players
-let players = {};
+let playerList = {};
 
 /////////////////////////////  VARIABLES  //////////////////////////////////
 const color1 = '#d60040';
@@ -50,7 +64,7 @@ io.on('connection', (socket) => {
     console.log(`Player connected: ${socket.id}`);
 
     // Check if the maximum number of players has been reached
-    if (Object.keys(players).length >= maxPlayers) {
+    if (Object.keys(playerList).length >= maxPlayers) {
         console.log(`Maximum number of players reached. Disconnecting ${socket.id}`);
         socket.emit('maxPlayersReached', { message: 'Maximum number of players reached. Try again later.' });
         socket.disconnect();
@@ -61,7 +75,7 @@ io.on('connection', (socket) => {
     const playerStartPos = startPositions.shift();
 
     // Add new player to the game
-    players[socket.id] = {
+    playerList[socket.id] = {
         id: socket.id,
         startPosition: playerStartPos,
         position: playerStartPos,
@@ -74,21 +88,21 @@ io.on('connection', (socket) => {
     };
 
     // Send the player's information to the new player
-    socket.emit('yourPlayerInfo', players[socket.id]);
+    socket.emit('yourPlayerInfo', playerList[socket.id]);
 
     // Notify other players of the new player
-    socket.broadcast.emit('newPlayer', players[socket.id]);
+    socket.broadcast.emit('newPlayer', playerList[socket.id]);
 
     // Send the current state to the new player
-    socket.emit('currentState', players, activeColor);
+    socket.emit('currentState', playerList, activeColor);
 
     socket.on('clientUpdate', (data) => {
-        players[socket.id].position = data.position;
-        players[socket.id].rotation = data.rotation;
-        players[socket.id].contrPosR = data.contrPosR;
-        players[socket.id].contrPosL = data.contrPosL;
-        players[socket.id].contrRotR = data.contrRotR;
-        players[socket.id].contrRotL = data.contrRotL;
+        playerList[socket.id].position = data.position;
+        playerList[socket.id].rotation = data.rotation;
+        playerList[socket.id].contrPosR = data.contrPosR;
+        playerList[socket.id].contrPosL = data.contrPosL;
+        playerList[socket.id].contrRotR = data.contrRotR;
+        playerList[socket.id].contrRotL = data.contrRotL;
     });
 
     // Test color change for connection
@@ -109,10 +123,10 @@ io.on('connection', (socket) => {
         console.log(`Player disconnected: ${socket.id}`);
 
         // Return the player's color to the array
-        playerColors.push(players[socket.id].color);
-        startPositions.push(players[socket.id].startPosition);
+        playerColors.push(playerList[socket.id].color);
+        startPositions.push(playerList[socket.id].startPosition);
 
-        delete players[socket.id];
+        delete playerList[socket.id];
         io.emit('playerDisconnected', socket.id);
     });
 });
@@ -125,5 +139,5 @@ httpsServer.listen(port, ipAdress, () => {
 
 // Game loop
 setInterval(function () {
-    io.emit('serverUpdate', players);
+    io.emit('serverUpdate', playerList);
 }, 20);
