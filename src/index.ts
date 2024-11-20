@@ -1,5 +1,5 @@
 import { io } from 'socket.io-client';
-import { Engine, Scene } from '@babylonjs/core';
+import { /*Camera,*/ Engine, FreeCamera, Scene } from '@babylonjs/core';
 import { ArcRotateCamera, HemisphericLight, MeshBuilder } from '@babylonjs/core';
 import { Mesh, StandardMaterial, Color3, Vector3 } from '@babylonjs/core';
 import { WebXRInputSource } from '@babylonjs/core/XR';
@@ -11,10 +11,17 @@ import './style.css'
 
 const socket = io();
 
+const rotationQuaternion = null;
+if (rotationQuaternion) {
+    //console.log('Rotation Quaternion: ', rotationQuaternion);
+}
+
 let playerID: string;
 let clientPlayer: Player | null = null;
 let playerUsingVR: boolean = false;
+let clientStartPos = {x: 0, y: 0, z: 0};
 
+let xrCamera: FreeCamera | null = null;
 let leftController: WebXRInputSource | null = null;
 let rightController: WebXRInputSource | null = null;
 let leftColor = new Color3(0, 0, 0);
@@ -57,8 +64,8 @@ const ground = MeshBuilder.CreateGround('ground',
 
 ground.material = new StandardMaterial('matGround', scene);
 
-const leftSphere = MeshBuilder.CreateSphere('xSphere', { segments: 16, diameter: 0.1 }, scene);
-const rightSphere = MeshBuilder.CreateSphere('xSphere', { segments: 16, diameter: 0.1 }, scene);
+const leftSphere = MeshBuilder.CreateBox('xBox', { size: 0.3 }, scene);
+const rightSphere = MeshBuilder.CreateBox('xBox', { size: 0.3 }, scene);
 const leftMaterial = new StandardMaterial('matR', scene);
 const rightMaterial = new StandardMaterial('matR', scene);
 
@@ -85,6 +92,10 @@ interface PlayerData {
     contrRotR: { x: number, y: number, z: number };
     contrRotL: { x: number, y: number, z: number };
     color: string;
+
+    setData(player: PlayerData): void;
+    updateObj(): void;
+    sendData(): void;
 }
 
 class Player implements PlayerData {
@@ -106,7 +117,7 @@ class Player implements PlayerData {
     controllerR?: Mesh | null;
     controllerL?: Mesh | null;
 
-    constructor(player: PlayerData) {
+    constructor(player: PlayerData, headObj?: Mesh, controllerR?: Mesh, controllerL?: Mesh) {
         this.id = player.id;
         // this.position = new Vector3(player.position.x, player.position.y, player.position.z);
         // this.rotation = new Vector3(player.rotation.x, player.rotation.y, player.rotation.z);
@@ -114,28 +125,105 @@ class Player implements PlayerData {
         // this.contrPosL = new Vector3(player.contrPosL.x, player.contrPosL.y, player.contrPosL.z);
         // this.contrRotR = new Vector3(player.contrRotR.x, player.contrRotR.y, player.contrRotR.z);
         // this.contrRotL = new Vector3(player.contrRotL.x, player.contrRotL.y, player.contrRotL.z);
-        this.position = player.position;
-        this.rotation = player.rotation;
-        this.contrPosR = player.contrPosR;
-        this.contrPosL = player.contrPosL;
-        this.contrRotR = player.contrRotR;
-        this.contrRotL = player.contrRotL;
+        this.position = { x: player.position.x, y: player.position.y, z: player.position.z };
+        this.rotation = { x: player.rotation.x, y: player.rotation.y, z: player.rotation.z };
+        this.contrPosR = { x: player.contrPosR.x, y: player.contrPosR.y, z: player.contrPosR.z };
+        this.contrPosL = { x: player.contrPosL.x, y: player.contrPosL.y, z: player.contrPosL.z };
+        this.contrRotR = { x: player.contrRotR.x, y: player.contrRotR.y, z: player.contrRotR.z };
+        this.contrRotL = { x: player.contrRotL.x, y: player.contrRotL.y, z: player.contrRotL.z };
         this.color = player.color;
-        //this.headObj = scene.getMeshByName('player_' + player.id);
-        //this.controllerR = scene.getMeshByName('conR_' + player.id);
-        //this.controllerL = scene.getMeshByName('conL_' + player.id);
+        this.headObj = headObj || null;
+        this.controllerR = controllerR || null;
+        this.controllerL = controllerL || null;
     }
 
-    setData(player: PlayerData) {
-        this.position = new Vector3(player.position.x, player.position.y, player.position.z);
-        this.rotation = new Vector3(player.rotation.x, player.rotation.y, player.rotation.z);
-        this.contrPosR = new Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
-        this.contrPosL = new Vector3(player.contrPosL.x, player.contrPosL.y, player.contrPosL.z);
-        this.contrRotR = new Vector3(player.contrRotR.x, player.contrRotR.y, player.contrRotR.z);
-        this.contrRotL = new Vector3(player.contrRotL.x, player.contrRotL.y, player.contrRotL.z);
+    setData(player: Player) {
+        this.position = { x: player.position.x, y: player.position.y, z: player.position.z };
+        this.rotation = { x: player.rotation.x, y: player.rotation.y, z: player.rotation.z };
+        this.contrPosR = { x: player.contrPosR.x, y: player.contrPosR.y, z: player.contrPosR.z };
+        this.contrPosL = { x: player.contrPosL.x, y: player.contrPosL.y, z: player.contrPosL.z };
+        this.contrRotR = { x: player.contrRotR.x, y: player.contrRotR.y, z: player.contrRotR.z };
+        this.contrRotL = { x: player.contrRotL.x, y: player.contrRotL.y, z: player.contrRotL.z };
     }
 
-    sendData() {
+    updateObj() {
+        //console.log('Updating player Mesh');
+        if (this.headObj) {
+            // onsole.log('Updating Head Object');
+            this.headObj.position = new Vector3(this.position.x, this.position.y, this.position.z);
+            this.headObj.rotation = new Vector3(this.rotation.x, this.rotation.y, this.rotation.z);
+        }
+
+        if (this.controllerR) {
+            // console.log('Updating Controller Right');
+            this.controllerR.position = new Vector3(this.contrPosR.x, this.contrPosR.y, this.contrPosR.z);
+            this.controllerR.rotation = new Vector3(this.contrRotR.x, this.contrRotR.y, this.contrRotR.z);
+        }
+
+        if (this.controllerL) {
+            // console.log('Updating Controller Left');
+            this.controllerL.position = new Vector3(this.contrPosL.x, this.contrPosL.y, this.contrPosL.z);
+            this.controllerL.rotation = new Vector3(this.contrRotL.x, this.contrRotL.y, this.contrRotL.z);
+        }
+    }
+
+    sendData(xrCamera?: FreeCamera, leftController?: WebXRInputSource, rightController?: WebXRInputSource) {
+
+        // console.log('Sending Data to Server');
+        // console.log('Player ID: ', this.id);
+        // console.log('Position: ', xrCamera?.position);
+        // console.log('Rotation: ', xrCamera?.rotation);
+        // console.log('Controller Position Right: ', rightController?.grip?.position);
+        // console.log('Controller Position Left: ', leftController?.grip?.position);
+        // console.log('Controller Rotation Right: ', rightController?.grip?.rotation);
+        // console.log('Controller Rotation Left: ', leftController?.grip?.rotation);
+
+        if (xrCamera && leftController && rightController) {
+            const headPos = {
+                x: xrCamera?.position.x,
+                y: xrCamera?.position.y,
+                z: xrCamera?.position.z
+            };
+            const headRot = {
+                x: xrCamera?.rotationQuaternion.toEulerAngles().x,
+                y: xrCamera?.rotationQuaternion.toEulerAngles().y,
+                z: xrCamera?.rotationQuaternion.toEulerAngles().z
+            };
+            const contrPosR = {
+                x: rightController?.grip?.position.x,
+                y: rightController?.grip?.position.y,
+                z: rightController?.grip?.position.z
+            };
+            const contrPosL = {
+                x: leftController?.grip?.position.x,
+                y: leftController?.grip?.position.y,
+                z: leftController?.grip?.position.z
+            };
+            const contrRotR = {
+                x: rightController?.grip?.rotationQuaternion?.toEulerAngles().x,
+                y: rightController?.grip?.rotationQuaternion?.toEulerAngles().y,
+                z: rightController?.grip?.rotationQuaternion?.toEulerAngles().z
+            };
+            const contrRotL = {
+                x: leftController?.grip?.rotationQuaternion?.toEulerAngles().x,
+                y: leftController?.grip?.rotationQuaternion?.toEulerAngles().y,
+                z: leftController?.grip?.rotationQuaternion?.toEulerAngles().z
+            };
+
+            // console.log('Sending Data to Server');
+            // console.log('headPos: ', headPos);
+            // console.log('headRot: ', headRot);
+
+            socket.emit('clientUpdate', {
+                position: headPos,
+                rotation: headRot,
+                contrPosR: contrPosR,
+                contrPosL: contrPosL,
+                contrRotR: contrRotR,
+                contrRotL: contrRotL,
+            });
+        }
+
 
     }
 }
@@ -164,10 +252,6 @@ window.addEventListener('resize', function () {
         },
     });
 
-    // const xrCamera = xr.baseExperience.camera;
-
-    // xrCamera.setTransformationFromNonVRCamera(camera);
-
     // const playerRef = scene.getMeshByName('player_' + playerID);
     // playerRef.position = new Vector3(0, 0, 0);
     // playerRef.rotation = new Vector3(xrCamera.rotation.x, xrCamera.rotation.y, xrCamera.rotation.z);
@@ -192,6 +276,12 @@ window.addEventListener('resize', function () {
     xr.teleportation.detach();
     xr.pointerSelection.detach();
 
+    xrCamera = xr.baseExperience.camera;
+    if (clientStartPos) {
+        xrCamera.position = new Vector3(clientStartPos.x, clientStartPos.y, clientStartPos.z);
+    }
+
+
     const hasImmersiveVR = await xr.baseExperience.sessionManager.isSessionSupportedAsync('immersive-vr');
 
     if (hasImmersiveVR) {
@@ -199,12 +289,13 @@ window.addEventListener('resize', function () {
         xr.baseExperience.sessionManager.onXRSessionInit.add(() => {
             playerUsingVR = true;
             console.log('Player is starting VR');
-            socket.emit('playerUsingVR', playerUsingVR);
+            socket.emit('playerStartVR', playerUsingVR);
         });
 
         xr.baseExperience.sessionManager.onXRSessionEnded.add(() => {
             playerUsingVR = false;
             console.log('Player is leaving VR');
+            socket.emit('playerEndVR', playerUsingVR);
         });
 
         window.addEventListener('keydown', function (event) {
@@ -373,9 +464,28 @@ window.addEventListener('resize', function () {
                 }
             })
         });
+
+        setInterval(function () {
+            console.log('Interval Function');
+            if (clientPlayer) {
+                if (playerUsingVR) {
+                    if (xrCamera && leftController && rightController) {
+                        clientPlayer.sendData(xrCamera, leftController, rightController);
+                    }
+                }
+            }
+            // if (leftController && rightController) {
+            //     console.log('LeftController Pointer Position: ', leftController.pointer.position);
+            //     console.log('LeftController Grip Position: ', leftController.grip?.position);
+            //     console.log('leftController Pointer Rotation: ', leftController.pointer.rotationQuaternion?.toEulerAngles());
+            // }
+        }, 1000);
     }
 })();
 
+socket.on('joinedWaitingRoom', () => {
+    console.log('You joined the waiting Room. Enter VR to join the Game.');
+});
 
 socket.on('yourPlayerInfo', (socket) => {
 
@@ -384,21 +494,29 @@ socket.on('yourPlayerInfo', (socket) => {
 
     clientPlayer = new Player(socket);
 
-    console.log('Socket Object')
-    console.log(socket);
+    clientStartPos = {x: socket.position.x, y: socket.position.y, z: socket.position.z};
 
-    console.log('Client Player Object')
+    console.log('Your Player Object before spawn');
     console.log(clientPlayer);
+
+    // console.log('Socket Object')
+    // console.log(socket);
+
+    // console.log('Client Player Object')
+    // console.log(clientPlayer);
 
     playerList[playerID] = clientPlayer;
     //playerList.push({ IdKey: playerID, player: clientPlayer });
 
 
-    camera.position = new Vector3(socket.position.x, socket.position.y, socket.position.z);
+    camera.position = new Vector3(clientStartPos.x, clientStartPos.y, clientStartPos.z);
     camera.setTarget(Vector3.Zero());
 
     // Spawn yourself Entity
     addPlayer(socket, true);
+
+    console.log('Your Player Object after spawn');
+    console.log(clientPlayer);
 });
 
 // when the current player is already on the server and a new player joins
@@ -435,7 +553,9 @@ socket.on('currentState', (players: { [key: string]: Player }, testColor: string
 });
 
 document.addEventListener('click', () => {
-    socket.emit('clicked');
+    if (playerUsingVR) {
+        socket.emit('clicked');
+    }
 });
 
 socket.on('colorChanged', (color) => {
@@ -447,14 +567,15 @@ socket.on('colorChanged', (color) => {
 
 // update the players position and rotation from the server
 socket.on('serverUpdate', (players) => {
+    // console.log('Server Update');
+    // console.log(players);
     Object.keys(players).forEach((id) => {
         if (playerList[id]) {
-            playerList[id].position = players[id].position;
-            playerList[id].rotation = players[id].rotation;
-            playerList[id].contrPosR = players[id].contrPosR;
-            playerList[id].contrPosL = players[id].contrPosL;
-            playerList[id].contrRotR = players[id].contrRotR;
-            playerList[id].contrRotL = players[id].contrRotL;
+            // console.log('Old player');
+            // console.log(playerList[id]);
+            playerList[id].setData(players[id]);
+            // console.log('updated Player');
+            // console.log(playerList[id]);
         }
     });
 });
@@ -463,38 +584,43 @@ socket.on('serverUpdate', (players) => {
 function addPlayer(player: Player, isPlayer: boolean) {
     console.log('Spawning player: ', player.id);
 
-    console.log('Playercolor: ', player.color);
+    player.headObj = MeshBuilder.CreateBox('player_' + player.id, { size: 1 }, scene);
+    player.headObj.position = new Vector3(player.position.x, player.position.y, player.position.z);
+    player.headObj.rotation = new Vector3(player.rotation.x, player.rotation.y, player.rotation.z);
+    player.headObj.material = new StandardMaterial('mat_' + player.id, scene);
+    (player.headObj.material as StandardMaterial).diffuseColor = Color3.FromHexString(player.color);
 
-    const playerElem = MeshBuilder.CreateBox('player_' + player.id, { size: 1 }, scene);
     if (isPlayer) {
-        playerElem.parent = camera;
-    } else {
-        playerElem.position = new Vector3(player.position.x, player.position.y, player.position.z);
-        playerElem.rotation = new Vector3(player.rotation.x, player.rotation.y, player.rotation.z);
+        player.headObj.isVisible = false;
     }
 
-    playerElem.material = new StandardMaterial('mat_' + player.id, scene);
-    (playerElem.material as StandardMaterial).diffuseColor = Color3.FromHexString(player.color);
+    player.controllerR = MeshBuilder.CreateBox('conR_' + player.id, { size: 0.2 });
+    player.controllerR.position = new Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
+    player.controllerR.rotation = new Vector3(player.contrRotR.x, player.contrRotR.y, player.contrRotR.z);
+    player.controllerR.material = new StandardMaterial('matConR_' + player.id, scene);
+    (player.controllerR.material as StandardMaterial).diffuseColor = Color3.FromHexString(player.color);
 
-    const playerContrR = MeshBuilder.CreateBox('conR_' + player.id, { size: 0.2 });
-    playerContrR.position = new Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
-    playerContrR.rotation = new Vector3(player.contrRotR.x, player.contrRotR.y, player.contrRotR.z);
-    playerContrR.material = new StandardMaterial('matConR_' + player.id, scene);
-    (playerContrR.material as StandardMaterial).diffuseColor = Color3.FromHexString(player.color);
+    player.controllerL = MeshBuilder.CreateBox('conL_' + player.id, { size: 0.2 });
+    player.controllerL.position = new Vector3(player.contrPosL.x, player.contrPosL.y, player.contrPosL.z);
+    player.controllerL.rotation = new Vector3(player.contrRotL.x, player.contrRotL.y, player.contrRotL.z);
+    player.controllerL.material = new StandardMaterial('matConL' + player.id, scene);
+    (player.controllerL.material as StandardMaterial).diffuseColor = Color3.FromHexString(player.color);
 
-    const playerContrL = MeshBuilder.CreateBox('conL_' + player.id, { size: 0.2 });
-    playerContrL.position = new Vector3(player.contrPosL.x, player.contrPosL.y, player.contrPosL.z);
-    playerContrL.rotation = new Vector3(player.contrRotL.x, player.contrRotL.y, player.contrRotL.z);
-    playerContrL.material = new StandardMaterial('matConL' + player.id, scene);
-    (playerContrL.material as StandardMaterial).diffuseColor = Color3.FromHexString(player.color);
+
+    playerList[player.id].headObj = player.headObj;
+    playerList[player.id].controllerR = player.controllerR;
+    playerList[player.id].controllerL = player.controllerL;
+    // console.log('Player Object')
+    // console.log(player);
 }
 
 socket.on('playerDisconnected', (id) => {
     const disconnectedPlayer = playerList[id];
     if (disconnectedPlayer) {
-        // scene.getMeshByName('player_' + id).dispose();
-        // scene.getMeshByName('conR_' + id).dispose();
-        // scene.getMeshByName('conL_' + id).dispose();
+        console.log('Player disconnected: ', id);
+        disconnectedPlayer.headObj?.dispose();
+        disconnectedPlayer.controllerR?.dispose();
+        disconnectedPlayer.controllerL?.dispose();
     }
 });
 
@@ -511,13 +637,6 @@ window.addEventListener('keydown', function (event) {
     }
 });
 
-setInterval(function () {
-    if (clientPlayer) {
-        socket.emit('clientUpdate', {
-        });
-    }
-}, 20);
-
 // Register a render loop to repeatedly render the scene
 engine.runRenderLoop(function () {
     if (divFps) {
@@ -527,26 +646,16 @@ engine.runRenderLoop(function () {
     if (leftController && rightController) {
         leftSphere.position = leftController.pointer.position;
         rightSphere.position = rightController.pointer.position;
+        leftSphere.rotation = leftController.pointer.rotationQuaternion?.toEulerAngles() || new Vector3(0, 0, 0);
+        rightSphere.rotation = rightController.pointer.rotationQuaternion?.toEulerAngles() || new Vector3(0, 0, 0);
     }
 
-    // Object.keys(playerList).forEach((id) => {
-    //     if (playerList[id]) {
-    //         if (id != playerID) {
-    //             const playerElem = scene.getMeshByName('player_' + id);
-    //             const playerContrR = scene.getMeshByName('conR_' + id);
-    //             const playerContrL = scene.getMeshByName('conL_' + id);
-
-    //             playerElem.position = new Vector3(playerList[id].position.x, playerList[id].position.y, playerList[id].position.z);
-    //             playerElem.rotation = new Vector3(playerList[id].rotation.x, playerList[id].rotation.y, playerList[id].rotation.z);
-
-    //             playerContrR.position = new Vector3(playerList[id].contrPosR.x, playerList[id].contrPosR.y, playerList[id].contrPosR.z);
-    //             playerContrR.rotation = new Vector3(playerList[id].contrRotR.x, playerList[id].contrRotR.y, playerList[id].contrRotR.z);
-
-    //             playerContrL.position = new Vector3(playerList[id].contrPosL.x, playerList[id].contrPosL.y, playerList[id].contrPosL.z);
-    //             playerContrL.rotation = new Vector3(playerList[id].contrRotL.x, playerList[id].contrRotL.y, playerList[id].contrRotL.z);
-    //         }
-    //     }
-    // });
+    Object.keys(playerList).forEach((id) => {
+        if (playerList[id]) {
+            //console.log('Updating Player: ', id);
+            playerList[id].updateObj();
+        }
+    });
 
     scene.render();
 });

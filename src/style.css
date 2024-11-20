@@ -22,3 +22,25 @@ html, body {
     width: 60px;
     height: 20px;
 }
+#startScreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 50vh;
+    width: 50vw;
+    background-color: rgba(15, 15, 150, 0.5);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.slotSelection {
+    background-color: green;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin-top: 20px;
+    cursor: pointer;
+}

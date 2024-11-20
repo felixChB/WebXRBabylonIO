@@ -32,22 +32,37 @@ app.get('/', (req, res) => {
 
 app.use(express.static('.'));
 
-class Player {
-    constructor(player){
-        this.id = '';
-        this.color = '';
-        this.startPosition = { x: 0, y: 0, z: 0 };
-        this.position = { x: 0, y: 0, z: 0 };
+export class PlayerData {
+
+}
+
+export class Player {
+    constructor(id, startPosition, color, isVR) {
+        this.id = id;
+        this.color = color;
+        this.isVR = isVR;
+        this.startPosition = startPosition;
+        this.position = startPosition;
         this.rotation = { x: 0, y: 0, z: 0 };
-        this.contrPosR = { x: 0, y: 0, z: 0 };
-        this.contrPosL = { x: 0, y: 0, z: 0 };
+        this.contrPosR = startPosition;
+        this.contrPosL = startPosition;
         this.contrRotR = { x: 0, y: 0, z: 0 };
         this.contrRotL = { x: 0, y: 0, z: 0 };
     }
-}
 
-// Store all connected players
-let playerList = {};
+    setData(data) {
+        this.position = data.position;
+        this.rotation = data.rotation;
+        this.contrPosR = data.contrPosR;
+        this.contrPosL = data.contrPosL;
+        this.contrRotR = data.contrRotR;
+        this.contrRotL = data.contrRotL;
+    }
+
+    sendData() {
+        io.emit('playerUpdate', this);
+    }
+};
 
 /////////////////////////////  VARIABLES  //////////////////////////////////
 const color1 = '#d60040';
@@ -57,76 +72,96 @@ var activeColor;
 const maxPlayers = 4;
 const playerColors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00'];
 const startPositions = [{ x: 5, y: 2, z: 0 }, { x: -5, y: 2, z: 0 }, { x: 0, y: 2, z: 5 }, { x: 0, y: 2, z: -5 }];
+
+// Store all connected players
+let playerList = {};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Handle connections and logic
 io.on('connection', (socket) => {
     console.log(`Player connected: ${socket.id}`);
 
+    socket.join('watingRoom');
+    socket.emit('joinedWaitingRoom');
+
     // Check if the maximum number of players has been reached
-    if (Object.keys(playerList).length >= maxPlayers) {
-        console.log(`Maximum number of players reached. Disconnecting ${socket.id}`);
-        socket.emit('maxPlayersReached', { message: 'Maximum number of players reached. Try again later.' });
-        socket.disconnect();
-        return;
-    }
+    // if (Object.keys(playerList).length >= maxPlayers) {
+    //     console.log(`Maximum number of players reached. Disconnecting ${socket.id}`);
+    //     socket.emit('maxPlayersReached', { message: 'Maximum number of players reached. Try again later.' });
+    //     socket.disconnect();
+    //     return;
+    // }
 
-    // Set the start position for the new player
-    const playerStartPos = startPositions.shift();
+    socket.on('playerStartVR', isUsingVR => {
 
-    // Add new player to the game
-    playerList[socket.id] = {
-        id: socket.id,
-        startPosition: playerStartPos,
-        position: playerStartPos,
-        rotation: { x: 0, y: 0, z: 0 },
-        contrPosR: playerStartPos,
-        contrPosL: playerStartPos,
-        contrRotR: { x: 0, y: 0, z: 0 },
-        contrRotL: { x: 0, y: 0, z: 0 },
-        color: playerColors.shift()
-    };
-
-    // Send the player's information to the new player
-    socket.emit('yourPlayerInfo', playerList[socket.id]);
-
-    // Notify other players of the new player
-    socket.broadcast.emit('newPlayer', playerList[socket.id]);
-
-    // Send the current state to the new player
-    socket.emit('currentState', playerList, activeColor);
-
-    socket.on('clientUpdate', (data) => {
-        playerList[socket.id].position = data.position;
-        playerList[socket.id].rotation = data.rotation;
-        playerList[socket.id].contrPosR = data.contrPosR;
-        playerList[socket.id].contrPosL = data.contrPosL;
-        playerList[socket.id].contrRotR = data.contrRotR;
-        playerList[socket.id].contrRotL = data.contrRotL;
-    });
-
-    // Test color change for connection
-    socket.on('clicked', () => {
-        // console.log('Clicked');
-
-        if (activeColor == color1) {
-            activeColor = color2;
+        // Check if the maximum number of players has been reached
+        if (Object.keys(playerList).length >= maxPlayers) {
+            console.log(`Maximum number of players reached. Player ${socket.id} has to stay in the waiting room.`);
+            socket.emit('maxPlayersReached', { message: 'Maximum number of players reached. Try again later.' });
         } else {
-            activeColor = color1;
+            socket.leave('waitingRoom');
+            socket.join('gameRoom');
+
+            // Set the start position for the new player
+            const playerStartPos = startPositions.shift();
+            const playerColor = playerColors.shift();
+
+            const newPlayer = new Player(socket.id, playerStartPos, playerColor, socket.isVR);
+
+            // Add new player to the game
+            playerList[socket.id] = newPlayer;
+
+            // Send the player's information to the new player
+            socket.emit('yourPlayerInfo', playerList[socket.id]);
+
+            // Notify other players of the new player
+            socket.broadcast.emit('newPlayer', playerList[socket.id]);
+
+            // Send the current state to the new player
+            socket.emit('currentState', playerList, activeColor);
+
+            socket.on('clientUpdate', (data) => {
+                // console.log('Player data received:');
+                // console.log(data.contrRotR);
+                playerList[socket.id].setData(data);
+                // console.log('Player data updated:');
+                // console.log(playerList[socket.id].contrRotR);
+            });
+
+            // Test color change for connection
+            socket.on('clicked', () => {
+                // console.log('Clicked');
+
+                if (activeColor == color1) {
+                    activeColor = color2;
+                } else {
+                    activeColor = color1;
+                }
+                // console.log(activeColor);
+                io.emit('colorChanged', activeColor);
+            });
         }
-        // console.log(activeColor);
-        io.emit('colorChanged', activeColor);
     });
+
+
 
     // Handle player disconnection
     socket.on('disconnect', () => {
         console.log(`Player disconnected: ${socket.id}`);
 
-        // Return the player's color to the array
-        playerColors.push(playerList[socket.id].color);
-        startPositions.push(playerList[socket.id].startPosition);
+        if (socket.id in playerList) {
+            console.log(`Player ${socket.id} disconnected from the game.`);
 
-        delete playerList[socket.id];
+            // Return the player's color to the array
+            playerColors.push(playerList[socket.id].color);
+            startPositions.push(playerList[socket.id].startPosition);
+
+            delete playerList[socket.id];
+        } else {
+            console.log(`Player ${socket.id} disconnected from the waiting room.`);
+        }
+
         io.emit('playerDisconnected', socket.id);
     });
 });
@@ -139,5 +174,7 @@ httpsServer.listen(port, ipAdress, () => {
 
 // Game loop
 setInterval(function () {
-    io.emit('serverUpdate', playerList);
-}, 20);
+    // console.log('Sending server update');
+    // console.log(playerList);
+    io.to('waitingRoom').to('gameRoom').emit('serverUpdate', playerList);
+}, 1000);
