@@ -105,6 +105,8 @@ io.on('connection', (socket) => {
             socket.leave('waitingRoom');
             socket.join('gameRoom');
 
+            console.log(`Player ${socket.id} started playing.`);
+
             // Set the start position for the new player
             const playerStartPos = startPositions.shift();
             const playerColor = playerColors.shift();

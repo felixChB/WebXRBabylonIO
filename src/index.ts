@@ -19,7 +19,7 @@ if (rotationQuaternion) {
 let playerID: string;
 let clientPlayer: Player | null = null;
 let playerUsingVR: boolean = false;
-let clientStartPos = {x: 0, y: 0, z: 0};
+let clientStartPos = { x: 0, y: 0, z: 0 };
 
 let xrCamera: FreeCamera | null = null;
 let leftController: WebXRInputSource | null = null;
@@ -276,19 +276,20 @@ window.addEventListener('resize', function () {
     xr.teleportation.detach();
     xr.pointerSelection.detach();
 
-    xrCamera = xr.baseExperience.camera;
-    if (clientStartPos) {
-        xrCamera.position = new Vector3(clientStartPos.x, clientStartPos.y, clientStartPos.z);
-    }
-
-
     const hasImmersiveVR = await xr.baseExperience.sessionManager.isSessionSupportedAsync('immersive-vr');
 
     if (hasImmersiveVR) {
 
         xr.baseExperience.sessionManager.onXRSessionInit.add(() => {
+
+            xrCamera = xr.baseExperience.camera;
             playerUsingVR = true;
+
             console.log('Player is starting VR');
+            if (clientStartPos) {
+                console.log('XR Camera getting start position');
+                xrCamera.position = new Vector3(clientStartPos.x, clientStartPos.y, clientStartPos.z);
+            }
             socket.emit('playerStartVR', playerUsingVR);
         });
 
@@ -470,6 +471,7 @@ window.addEventListener('resize', function () {
             if (clientPlayer) {
                 if (playerUsingVR) {
                     if (xrCamera && leftController && rightController) {
+                        // console.log('Sending Data to Server while VR');
                         clientPlayer.sendData(xrCamera, leftController, rightController);
                     }
                 }
@@ -479,6 +481,7 @@ window.addEventListener('resize', function () {
             //     console.log('LeftController Grip Position: ', leftController.grip?.position);
             //     console.log('leftController Pointer Rotation: ', leftController.pointer.rotationQuaternion?.toEulerAngles());
             // }
+            console.log('XrCamera Position: ', xrCamera?.position);
         }, 100);
     }
 })();
@@ -494,7 +497,7 @@ socket.on('yourPlayerInfo', (socket) => {
 
     clientPlayer = new Player(socket);
 
-    clientStartPos = {x: socket.position.x, y: socket.position.y, z: socket.position.z};
+    clientStartPos = { x: socket.position.x, y: socket.position.y, z: socket.position.z };
 
     // console.log('Your Player Object before spawn');
     // console.log(clientPlayer);
@@ -514,6 +517,12 @@ socket.on('yourPlayerInfo', (socket) => {
 
     // Spawn yourself Entity
     addPlayer(socket, true);
+
+    // console.log('After Spawn Pos ', playerList[playerID].position);
+
+    if (xrCamera) {
+        xrCamera.position = new Vector3(playerList[playerID].position.x, playerList[playerID].position.y, playerList[playerID].position.z);
+    }
 
     // console.log('Your Player Object after spawn');
     // console.log(clientPlayer);
@@ -645,16 +654,16 @@ engine.runRenderLoop(function () {
         divFps.innerHTML = engine.getFps().toFixed() + ' fps';
     }
 
-    if (leftController && rightController) {
-        leftSphere.position = leftController.pointer.position;
-        rightSphere.position = rightController.pointer.position;
-        leftSphere.rotation = leftController.pointer.rotationQuaternion?.toEulerAngles() || new Vector3(0, 0, 0);
-        rightSphere.rotation = rightController.pointer.rotationQuaternion?.toEulerAngles() || new Vector3(0, 0, 0);
-    }
+    // if (leftController && rightController) {
+    //     leftSphere.position = leftController.pointer.position;
+    //     rightSphere.position = rightController.pointer.position;
+    //     leftSphere.rotation = leftController.pointer.rotationQuaternion?.toEulerAngles() || new Vector3(0, 0, 0);
+    //     rightSphere.rotation = rightController.pointer.rotationQuaternion?.toEulerAngles() || new Vector3(0, 0, 0);
+    // }
 
     Object.keys(playerList).forEach((id) => {
         if (playerList[id]) {
-            console.log('Updating Player: ', id);
+            // console.log('Updating Player: ', id);
             playerList[id].updateObj();
         }
     });
