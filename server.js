@@ -85,6 +85,8 @@ io.on('connection', (socket) => {
     socket.join('watingRoom');
     socket.emit('joinedWaitingRoom');
 
+    socket.emit('currentState', playerList, activeColor);
+
     // Check if the maximum number of players has been reached
     // if (Object.keys(playerList).length >= maxPlayers) {
     //     console.log(`Maximum number of players reached. Disconnecting ${socket.id}`);
@@ -119,7 +121,7 @@ io.on('connection', (socket) => {
             socket.broadcast.emit('newPlayer', playerList[socket.id]);
 
             // Send the current state to the new player
-            socket.emit('currentState', playerList, activeColor);
+            // socket.emit('currentState', playerList, activeColor);
 
             socket.on('clientUpdate', (data) => {
                 // console.log('Player data received:');
@@ -176,5 +178,5 @@ httpsServer.listen(port, ipAdress, () => {
 setInterval(function () {
     // console.log('Sending server update');
     // console.log(playerList);
-    io.to('waitingRoom').to('gameRoom').emit('serverUpdate', playerList);
-}, 1000);
+    io.emit('serverUpdate', playerList);
+}, 100);

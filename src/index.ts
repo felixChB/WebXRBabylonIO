@@ -466,7 +466,7 @@ window.addEventListener('resize', function () {
         });
 
         setInterval(function () {
-            console.log('Interval Function');
+            // console.log('Interval Function');
             if (clientPlayer) {
                 if (playerUsingVR) {
                     if (xrCamera && leftController && rightController) {
@@ -479,7 +479,7 @@ window.addEventListener('resize', function () {
             //     console.log('LeftController Grip Position: ', leftController.grip?.position);
             //     console.log('leftController Pointer Rotation: ', leftController.pointer.rotationQuaternion?.toEulerAngles());
             // }
-        }, 1000);
+        }, 100);
     }
 })();
 
@@ -496,8 +496,8 @@ socket.on('yourPlayerInfo', (socket) => {
 
     clientStartPos = {x: socket.position.x, y: socket.position.y, z: socket.position.z};
 
-    console.log('Your Player Object before spawn');
-    console.log(clientPlayer);
+    // console.log('Your Player Object before spawn');
+    // console.log(clientPlayer);
 
     // console.log('Socket Object')
     // console.log(socket);
@@ -515,8 +515,8 @@ socket.on('yourPlayerInfo', (socket) => {
     // Spawn yourself Entity
     addPlayer(socket, true);
 
-    console.log('Your Player Object after spawn');
-    console.log(clientPlayer);
+    // console.log('Your Player Object after spawn');
+    // console.log(clientPlayer);
 });
 
 // when the current player is already on the server and a new player joins
@@ -567,7 +567,7 @@ socket.on('colorChanged', (color) => {
 
 // update the players position and rotation from the server
 socket.on('serverUpdate', (players) => {
-    // console.log('Server Update');
+    // console.log('Recieving Server Update');
     // console.log(players);
     Object.keys(players).forEach((id) => {
         if (playerList[id]) {
@@ -621,6 +621,8 @@ socket.on('playerDisconnected', (id) => {
         disconnectedPlayer.headObj?.dispose();
         disconnectedPlayer.controllerR?.dispose();
         disconnectedPlayer.controllerL?.dispose();
+
+        delete playerList[id];
     }
 });
 
@@ -652,7 +654,7 @@ engine.runRenderLoop(function () {
 
     Object.keys(playerList).forEach((id) => {
         if (playerList[id]) {
-            //console.log('Updating Player: ', id);
+            console.log('Updating Player: ', id);
             playerList[id].updateObj();
         }
     });
