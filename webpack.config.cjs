@@ -1,3 +1,4 @@
+const { watch } = require('fs');
 const path = require('path');
 
 module.exports = {
@@ -11,10 +12,10 @@ module.exports = {
                 use: 'ts-loader',
                 exclude: /node_modules/,
             },
-            {
-                test: /\.css$/i,
-                use: ['style-loader', 'css-loader'],
-            },
+            // {
+            //     test: /\.css$/i,
+            //     use: ['style-loader', 'css-loader'],
+            // },
         ],
     },
     resolve: {
@@ -24,4 +25,9 @@ module.exports = {
         filename: 'bundle.js',
         path: path.resolve(__dirname, 'dist')
     },
+    watchOptions: {
+        ignored: /node_modules/,
+        poll: 1000,
+        aggregateTimeout: 1000,
+    }
 };

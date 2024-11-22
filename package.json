@@ -13,7 +13,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "webpack --watch",
     "build": "webpack --config webpack.config.cjs",
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "concurrently \"npm run watch\" \"npm run start\""
   },
   "keywords": [],
   "author": "",
@@ -22,6 +23,7 @@
     "@babylonjs/core": "^7.34.1",
     "@babylonjs/inspector": "^7.34.1",
     "@babylonjs/loaders": "^7.34.1",
+    "concurrently": "^9.1.0",
     "css-loader": "^7.1.2",
     "style-loader": "^4.0.0",
     "ts-loader": "^9.5.1",

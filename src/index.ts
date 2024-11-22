@@ -2,12 +2,12 @@ import { io } from 'socket.io-client';
 import { /*Camera,*/ Engine, FreeCamera, Scene } from '@babylonjs/core';
 import { ArcRotateCamera, HemisphericLight, MeshBuilder } from '@babylonjs/core';
 import { Mesh, StandardMaterial, Color3, Vector3 } from '@babylonjs/core';
-import { WebXRInputSource } from '@babylonjs/core/XR';
+import { WebXRDefaultExperience, WebXRInputSource } from '@babylonjs/core/XR';
 import { Inspector } from '@babylonjs/inspector';
 
 import '@babylonjs/core/Materials/Textures/Loaders'; // Required for EnvironmentHelper
 import '@babylonjs/loaders/glTF'; // Enable GLTF/GLB loader for loading controller models from WebXR Input registry
-import './style.css'
+// import './style.css'
 
 const socket = io();
 
@@ -19,8 +19,9 @@ if (rotationQuaternion) {
 let playerID: string;
 let clientPlayer: Player | null = null;
 let playerUsingVR: boolean = false;
-let clientStartPos = { x: 0, y: 0, z: 0 };
+let clientStartPos: { x: number, y: number, z: number };
 
+let xr: WebXRDefaultExperience;
 let xrCamera: FreeCamera | null = null;
 let leftController: WebXRInputSource | null = null;
 let rightController: WebXRInputSource | null = null;
@@ -86,15 +87,25 @@ rightSphere.material = rightMaterial;
 
 let playerList: { [key: string]: Player } = {};
 
+interface PlayerStartInfo {
+    player: number;
+    x: number;
+    y: number;
+    z: number;
+    color: string;
+    used: boolean;
+}
+
 interface PlayerData {
     id: string;
+    color: string;
+    playerNumber: number;
     position: { x: number, y: number, z: number };
     rotation: { x: number, y: number, z: number };
     contrPosR: { x: number, y: number, z: number };
     contrPosL: { x: number, y: number, z: number };
     contrRotR: { x: number, y: number, z: number };
     contrRotL: { x: number, y: number, z: number };
-    color: string;
 
     setData(player: PlayerData): void;
     updateObj(): void;
@@ -103,38 +114,28 @@ interface PlayerData {
 
 class Player implements PlayerData {
     id: string;
-    // position: Vector3;
-    // rotation: Vector3;
-    // contrPosR: Vector3;
-    // contrPosL: Vector3;
-    // contrRotR: Vector3;
-    // contrRotL: Vector3;
+    color: string;
+    playerNumber: number;
     position: { x: number, y: number, z: number };
     rotation: { x: number, y: number, z: number };
     contrPosR: { x: number, y: number, z: number };
     contrPosL: { x: number, y: number, z: number };
     contrRotR: { x: number, y: number, z: number };
     contrRotL: { x: number, y: number, z: number };
-    color: string;
     headObj?: Mesh | null;
     controllerR?: Mesh | null;
     controllerL?: Mesh | null;
 
     constructor(player: PlayerData, headObj?: Mesh, controllerR?: Mesh, controllerL?: Mesh) {
         this.id = player.id;
-        // this.position = new Vector3(player.position.x, player.position.y, player.position.z);
-        // this.rotation = new Vector3(player.rotation.x, player.rotation.y, player.rotation.z);
-        // this.contrPosR = new Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
-        // this.contrPosL = new Vector3(player.contrPosL.x, player.contrPosL.y, player.contrPosL.z);
-        // this.contrRotR = new Vector3(player.contrRotR.x, player.contrRotR.y, player.contrRotR.z);
-        // this.contrRotL = new Vector3(player.contrRotL.x, player.contrRotL.y, player.contrRotL.z);
+        this.color = player.color;
+        this.playerNumber = player.playerNumber;
         this.position = { x: player.position.x, y: player.position.y, z: player.position.z };
         this.rotation = { x: player.rotation.x, y: player.rotation.y, z: player.rotation.z };
         this.contrPosR = { x: player.contrPosR.x, y: player.contrPosR.y, z: player.contrPosR.z };
         this.contrPosL = { x: player.contrPosL.x, y: player.contrPosL.y, z: player.contrPosL.z };
         this.contrRotR = { x: player.contrRotR.x, y: player.contrRotR.y, z: player.contrRotR.z };
         this.contrRotL = { x: player.contrRotL.x, y: player.contrRotL.y, z: player.contrRotL.z };
-        this.color = player.color;
         this.headObj = headObj || null;
         this.controllerR = controllerR || null;
         this.controllerL = controllerL || null;
@@ -150,37 +151,21 @@ class Player implements PlayerData {
     }
 
     updateObj() {
-        //console.log('Updating player Mesh');
         if (this.headObj) {
-            // onsole.log('Updating Head Object');
             this.headObj.position = new Vector3(this.position.x, this.position.y, this.position.z);
             this.headObj.rotation = new Vector3(this.rotation.x, this.rotation.y, this.rotation.z);
         }
-
         if (this.controllerR) {
-            // console.log('Updating Controller Right');
             this.controllerR.position = new Vector3(this.contrPosR.x, this.contrPosR.y, this.contrPosR.z);
             this.controllerR.rotation = new Vector3(this.contrRotR.x, this.contrRotR.y, this.contrRotR.z);
         }
-
         if (this.controllerL) {
-            // console.log('Updating Controller Left');
             this.controllerL.position = new Vector3(this.contrPosL.x, this.contrPosL.y, this.contrPosL.z);
             this.controllerL.rotation = new Vector3(this.contrRotL.x, this.contrRotL.y, this.contrRotL.z);
         }
     }
 
     sendData(xrCamera?: FreeCamera, leftController?: WebXRInputSource, rightController?: WebXRInputSource) {
-
-        // console.log('Sending Data to Server');
-        // console.log('Player ID: ', this.id);
-        // console.log('Position: ', xrCamera?.position);
-        // console.log('Rotation: ', xrCamera?.rotation);
-        // console.log('Controller Position Right: ', rightController?.grip?.position);
-        // console.log('Controller Position Left: ', leftController?.grip?.position);
-        // console.log('Controller Rotation Right: ', rightController?.grip?.rotation);
-        // console.log('Controller Rotation Left: ', leftController?.grip?.rotation);
-
         if (xrCamera && leftController && rightController) {
             const headPos = {
                 x: xrCamera?.position.x,
@@ -213,10 +198,6 @@ class Player implements PlayerData {
                 z: leftController?.grip?.rotationQuaternion?.toEulerAngles().z
             };
 
-            // console.log('Sending Data to Server');
-            // console.log('headPos: ', headPos);
-            // console.log('headRot: ', headRot);
-
             socket.emit('clientUpdate', {
                 position: headPos,
                 rotation: headRot,
@@ -226,8 +207,6 @@ class Player implements PlayerData {
                 contrRotL: contrRotL,
             });
         }
-
-
     }
 }
 
@@ -238,7 +217,7 @@ window.addEventListener('resize', function () {
 
 (async function main() {
     // Create a WebXR experience
-    var xr = await scene.createDefaultXRExperienceAsync({
+    xr = await scene.createDefaultXRExperienceAsync({
         floorMeshes: [scene.getMeshByName('ground') as Mesh],
         inputOptions: {
             controllerOptions: {
@@ -261,7 +240,7 @@ window.addEventListener('resize', function () {
             const target = event.target as HTMLElement;
             const id = target.id;
             console.log(`Button with id ${id} clicked`);
-            socket.emit('requestStartPos', i);
+            socket.emit('requestGameStart', i + 1);
 
             // Perform actions based on the id
             xr.baseExperience.enterXRAsync('immersive-vr', 'local-floor').then(() => {
@@ -316,7 +295,7 @@ window.addEventListener('resize', function () {
         xr.baseExperience.sessionManager.onXRSessionEnded.add(() => {
             playerUsingVR = false;
             console.log('Player is leaving VR');
-            socket.emit('playerEndVR', playerUsingVR);
+            socket.emit('playerEndVR');
         });
 
         window.addEventListener('keydown', function (event) {
@@ -502,7 +481,7 @@ window.addEventListener('resize', function () {
             //     console.log('leftController Pointer Rotation: ', leftController.pointer.rotationQuaternion?.toEulerAngles());
             // }
             // console.log('XrCamera Position: ', xrCamera?.position);
-        }, 100);
+        }, 20);
     }
 })();
 
@@ -514,61 +493,78 @@ socket.on('startPosDenied', () => {
     console.log('Start Position denied. Select another one.');
 });
 
-socket.on('yourPlayerInfo', (socket) => {
-
-    startScreen?.style.setProperty('display', 'none');
-
-    // get the Connection ID of the Player
-    playerID = socket.id;
-
-    clientPlayer = new Player(socket);
-
-    clientStartPos = { x: socket.position.x, y: socket.position.y, z: socket.position.z };
-
-    playerList[playerID] = clientPlayer;
-
-    camera.position = new Vector3(clientStartPos.x, clientStartPos.y, clientStartPos.z);
-    camera.setTarget(Vector3.Zero());
-
-    // Spawn yourself Entity
-    addPlayer(playerList[playerID], true);
-
-    if (xrCamera) {
-        xrCamera.position = new Vector3(playerList[playerID].position.x, playerList[playerID].position.y, playerList[playerID].position.z);
-    }
-});
-
-// when the current player is already on the server and a new player joins
-socket.on('newPlayer', (player) => {
-    // console log about new player joined
-    console.log('New player joined: ', player.id);
-
-    // Add new player to the playerList
-    playerList[player.id] = new Player(player);
-
-    // Spawn new player Entity
-    addPlayer(playerList[player.id], false);
-});
-
 // get all current Player Information from the Server at the start
 // and spawning all current players except yourself
-socket.on('currentState', (players: { [key: string]: Player }, testColor: string, startPositions) => {
+socket.on('currentState', (players: { [key: string]: Player }, testColor: string, playerStartInfo: { [key: number]: PlayerStartInfo }) => {
+
+    console.log('Get the Current State');
 
     if (testSphere) {
         (testSphere.material as StandardMaterial).diffuseColor = Color3.FromHexString(testColor);
     }
 
     Object.keys(players).forEach((id) => {
-        if (id != playerID) {
-            // Add new player to the playerList
-            playerList[id] = new Player(players[id]);
+        // Add new player to the playerList
+        playerList[id] = new Player(players[id]);
 
-            // Spawn new player Entity
-            addPlayer(playerList[id], false);
-        }
+        // Spawn new player Entity
+        addPlayer(playerList[id], false);
     });
 
-    setStartButtonAvailability(startPositions);
+    setStartButtonAvailability(playerStartInfo);
+});
+
+// when the current player is already on the server and starts the game
+socket.on('startClientGame', (socket) => {
+
+    startScreen?.style.setProperty('display', 'none');
+
+    console.log('Socket Object: ', socket);
+
+    // Start VR Session for the client
+    xr.baseExperience.enterXRAsync('immersive-vr', 'local-floor').then(() => {
+        console.log('Starting VR from startClientGame');
+
+        // get the Connection ID of the Player
+        playerID = socket.id;
+        clientStartPos = socket.startPosition;
+
+        clientPlayer = new Player(socket);
+
+        clientStartPos = { x: socket.position.x, y: socket.position.y, z: socket.position.z };
+
+        playerList[playerID] = clientPlayer;
+
+        camera.position = new Vector3(clientStartPos.x, clientStartPos.y, clientStartPos.z);
+        camera.setTarget(Vector3.Zero());
+
+        // Spawn yourself Entity
+        addPlayer(playerList[playerID], true);
+
+        if (xrCamera) {
+            xrCamera.position = new Vector3(playerList[playerID].position.x, playerList[playerID].position.y, playerList[playerID].position.z);
+            camera.setTarget(Vector3.Zero());
+        }
+    }).catch((err) => {
+        console.error('Failed to enter VR', err);
+    });
+});
+
+// when the current player is already on the server and a new player joins
+socket.on('newPlayer', (newPlayer) => {
+    // console log about new player joined
+    console.log('New player joined: ', newPlayer.id);
+
+    // Add new player to the playerList
+    playerList[newPlayer.id] = new Player(newPlayer);
+
+    // Spawn new player Entity
+    addPlayer(playerList[newPlayer.id], false);
+
+    // set the availability of the start buttons according to the used startpositions on the server
+    if (!startPosButtons[newPlayer.playerNumber - 1].classList.contains('unavailable')) {
+        startPosButtons[newPlayer.playerNumber - 1].classList.add('unavailable');
+    }
 });
 
 // update the players position and rotation from the server
@@ -580,10 +576,10 @@ socket.on('serverUpdate', (players) => {
     });
 });
 
-// set the availability of the start buttons according to the startpositions on the server
-function setStartButtonAvailability(startPositions: { x: number, y: number, z: number, used: boolean }[]) {
+// set the availability of the start buttons according to the used startpositions on the server
+function setStartButtonAvailability(startPositions: { [key: number]: PlayerStartInfo }) {
     for (let i = 0; i < startPosButtons.length; i++) {
-        if (startPositions[i].used == true) {
+        if (startPositions[i + 1].used == true) {
             if (!startPosButtons[i].classList.contains('unavailable')) {
                 startPosButtons[i].classList.add('unavailable');
             }
@@ -634,6 +630,11 @@ socket.on('playerDisconnected', (id) => {
         disconnectedPlayer.headObj?.dispose();
         disconnectedPlayer.controllerR?.dispose();
         disconnectedPlayer.controllerL?.dispose();
+
+        // set the availability of the start buttons according to the used startpositions on the server
+        if (startPosButtons[playerList[id].playerNumber - 1].classList.contains('unavailable')) {
+            startPosButtons[playerList[id].playerNumber - 1].classList.remove('unavailable');
+        }
 
         delete playerList[id];
     }
