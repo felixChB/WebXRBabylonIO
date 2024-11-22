@@ -27,7 +27,10 @@ let rightController: WebXRInputSource | null = null;
 let leftColor = new Color3(0, 0, 0);
 let rightColor = new Color3(0, 0, 0);
 
+// Get HTML Elements
 let divFps = document.getElementById('fps');
+const startPosButtons = document.querySelectorAll('.posSelection');
+const startScreen = document.getElementById('startScreen');
 
 ////////////////////////////// CREATE BABYLON SCENE ETC. //////////////////////////////
 
@@ -251,6 +254,23 @@ window.addEventListener('resize', function () {
             // forceInputProfile: 'generic-trigger-squeeze-thumbstick',
         },
     });
+
+    // Add an event listener to each button
+    for (let i = 0; i < startPosButtons.length; i++) {
+        startPosButtons[i].addEventListener('click', (event) => {
+            const target = event.target as HTMLElement;
+            const id = target.id;
+            console.log(`Button with id ${id} clicked`);
+            socket.emit('requestStartPos', i);
+
+            // Perform actions based on the id
+            xr.baseExperience.enterXRAsync('immersive-vr', 'local-floor').then(() => {
+                console.log(`Starting VR from button ${id}`);
+            }).catch((err) => {
+                console.error('Failed to enter VR', err);
+            });
+        });
+    }
 
     // const playerRef = scene.getMeshByName('player_' + playerID);
     // playerRef.position = new Vector3(0, 0, 0);
@@ -481,7 +501,7 @@ window.addEventListener('resize', function () {
             //     console.log('LeftController Grip Position: ', leftController.grip?.position);
             //     console.log('leftController Pointer Rotation: ', leftController.pointer.rotationQuaternion?.toEulerAngles());
             // }
-            console.log('XrCamera Position: ', xrCamera?.position);
+            // console.log('XrCamera Position: ', xrCamera?.position);
         }, 100);
     }
 })();
@@ -490,7 +510,13 @@ socket.on('joinedWaitingRoom', () => {
     console.log('You joined the waiting Room. Enter VR to join the Game.');
 });
 
+socket.on('startPosDenied', () => {
+    console.log('Start Position denied. Select another one.');
+});
+
 socket.on('yourPlayerInfo', (socket) => {
+
+    startScreen?.style.setProperty('display', 'none');
 
     // get the Connection ID of the Player
     playerID = socket.id;
@@ -499,33 +525,17 @@ socket.on('yourPlayerInfo', (socket) => {
 
     clientStartPos = { x: socket.position.x, y: socket.position.y, z: socket.position.z };
 
-    // console.log('Your Player Object before spawn');
-    // console.log(clientPlayer);
-
-    // console.log('Socket Object')
-    // console.log(socket);
-
-    // console.log('Client Player Object')
-    // console.log(clientPlayer);
-
     playerList[playerID] = clientPlayer;
-    //playerList.push({ IdKey: playerID, player: clientPlayer });
-
 
     camera.position = new Vector3(clientStartPos.x, clientStartPos.y, clientStartPos.z);
     camera.setTarget(Vector3.Zero());
 
     // Spawn yourself Entity
-    addPlayer(socket, true);
-
-    // console.log('After Spawn Pos ', playerList[playerID].position);
+    addPlayer(playerList[playerID], true);
 
     if (xrCamera) {
         xrCamera.position = new Vector3(playerList[playerID].position.x, playerList[playerID].position.y, playerList[playerID].position.z);
     }
-
-    // console.log('Your Player Object after spawn');
-    // console.log(clientPlayer);
 });
 
 // when the current player is already on the server and a new player joins
@@ -534,16 +544,15 @@ socket.on('newPlayer', (player) => {
     console.log('New player joined: ', player.id);
 
     // Add new player to the playerList
-    //playerList.push({ IdKey: player.id, player: new Player(player) });
     playerList[player.id] = new Player(player);
 
     // Spawn new player Entity
-    addPlayer(player, false);
+    addPlayer(playerList[player.id], false);
 });
 
 // get all current Player Information from the Server at the start
 // and spawning all current players except yourself
-socket.on('currentState', (players: { [key: string]: Player }, testColor: string) => {
+socket.on('currentState', (players: { [key: string]: Player }, testColor: string, startPositions) => {
 
     if (testSphere) {
         (testSphere.material as StandardMaterial).diffuseColor = Color3.FromHexString(testColor);
@@ -552,42 +561,39 @@ socket.on('currentState', (players: { [key: string]: Player }, testColor: string
     Object.keys(players).forEach((id) => {
         if (id != playerID) {
             // Add new player to the playerList
-            //playerList.push({ IdKey: id, player: new Player(players[id]) });
             playerList[id] = new Player(players[id]);
 
             // Spawn new player Entity
-            addPlayer(players[id], false);
+            addPlayer(playerList[id], false);
         }
     });
-});
 
-document.addEventListener('click', () => {
-    if (playerUsingVR) {
-        socket.emit('clicked');
-    }
-});
-
-socket.on('colorChanged', (color) => {
-    // change color of the sphere
-    if (testSphere) {
-        (testSphere.material as StandardMaterial).diffuseColor = Color3.FromHexString(color);
-    }
+    setStartButtonAvailability(startPositions);
 });
 
 // update the players position and rotation from the server
 socket.on('serverUpdate', (players) => {
-    // console.log('Recieving Server Update');
-    // console.log(players);
     Object.keys(players).forEach((id) => {
         if (playerList[id]) {
-            // console.log('Old player');
-            // console.log(playerList[id]);
             playerList[id].setData(players[id]);
-            // console.log('updated Player');
-            // console.log(playerList[id]);
         }
     });
 });
+
+// set the availability of the start buttons according to the startpositions on the server
+function setStartButtonAvailability(startPositions: { x: number, y: number, z: number, used: boolean }[]) {
+    for (let i = 0; i < startPosButtons.length; i++) {
+        if (startPositions[i].used == true) {
+            if (!startPosButtons[i].classList.contains('unavailable')) {
+                startPosButtons[i].classList.add('unavailable');
+            }
+        } else {
+            if (startPosButtons[i].classList.contains('unavailable')) {
+                startPosButtons[i].classList.remove('unavailable');
+            }
+        }
+    }
+}
 
 // Spawn Player Entity with the Connection ID
 function addPlayer(player: Player, isPlayer: boolean) {
@@ -619,8 +625,6 @@ function addPlayer(player: Player, isPlayer: boolean) {
     playerList[player.id].headObj = player.headObj;
     playerList[player.id].controllerR = player.controllerR;
     playerList[player.id].controllerL = player.controllerL;
-    // console.log('Player Object')
-    // console.log(player);
 }
 
 socket.on('playerDisconnected', (id) => {
@@ -635,6 +639,8 @@ socket.on('playerDisconnected', (id) => {
     }
 });
 
+///////////////////////////// TESTING GROUND ////////////////////////////
+
 window.addEventListener('keydown', function (event) {
     // Check if the key combination is Ctrl + I
     if (event.ctrlKey && event.key === 'i') {
@@ -648,12 +654,28 @@ window.addEventListener('keydown', function (event) {
     }
 });
 
+document.addEventListener('click', () => {
+    if (playerUsingVR) {
+        socket.emit('clicked');
+    }
+});
+
+socket.on('colorChanged', (color) => {
+    // change color of the sphere
+    if (testSphere) {
+        (testSphere.material as StandardMaterial).diffuseColor = Color3.FromHexString(color);
+    }
+});
+
+////////////////////////// END TESTING GROUND //////////////////////////////            
+
 // Register a render loop to repeatedly render the scene
 engine.runRenderLoop(function () {
     if (divFps) {
         divFps.innerHTML = engine.getFps().toFixed() + ' fps';
     }
 
+    // Direct controller movement
     // if (leftController && rightController) {
     //     leftSphere.position = leftController.pointer.position;
     //     rightSphere.position = rightController.pointer.position;

@@ -26,9 +26,9 @@ html, body {
     position: absolute;
     top: 0;
     left: 0;
-    height: 50vh;
-    width: 50vw;
-    background-color: rgba(15, 15, 150, 0.5);
+    height: 100vh;
+    width: 100vw;
+    background-color: rgba(0, 0, 0, 0.6);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -36,11 +36,22 @@ html, body {
     z-index: 100;
 }
 
-.slotSelection {
-    background-color: green;
+.posSelection {
+    background-color: #ffd311;
     color: white;
     border: none;
-    padding: 10px 20px;
+    padding: 15px 30px;
     margin-top: 20px;
     cursor: pointer;
+    border-radius: 10px;
+    font-size: 20px;
+}
+
+.unavailable {
+    background-color: crimson;
+    cursor: default;
+}
+
+.xr-button-overlay {
+    display: none;
 }

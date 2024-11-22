@@ -41,11 +41,11 @@ export class Player {
         this.id = id;
         this.color = color;
         this.isVR = isVR;
-        this.startPosition = startPosition;
-        this.position = startPosition;
+        this.startPosition = {x: startPosition.x, y: startPosition.y, z: startPosition.z};
+        this.position = {x: startPosition.x, y: startPosition.y, z: startPosition.z};
         this.rotation = { x: 0, y: 0, z: 0 };
-        this.contrPosR = startPosition;
-        this.contrPosL = startPosition;
+        this.contrPosR = {x: startPosition.x, y: startPosition.y, z: startPosition.z};
+        this.contrPosL = {x: startPosition.x, y: startPosition.y, z: startPosition.z};
         this.contrRotR = { x: 0, y: 0, z: 0 };
         this.contrRotL = { x: 0, y: 0, z: 0 };
     }
@@ -73,6 +73,13 @@ const maxPlayers = 4;
 const playerColors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00'];
 const startPositions = [{ x: 5, y: 2, z: 0 }, { x: -5, y: 2, z: 0 }, { x: 0, y: 2, z: 5 }, { x: 0, y: 2, z: -5 }];
 
+let startPositions2 = {
+    0: { x: 5, y: 2, z: 0, used: false},
+    1: { x: -5, y: 2, z: 0, used: false},
+    2: { x: 0, y: 2, z: 5, used: false},
+    3: { x: 0, y: 2, z: -5, used: false}
+}
+
 // Store all connected players
 let playerList = {};
 
@@ -85,15 +92,16 @@ io.on('connection', (socket) => {
     socket.join('watingRoom');
     socket.emit('joinedWaitingRoom');
 
-    socket.emit('currentState', playerList, activeColor);
+    socket.emit('currentState', playerList, activeColor, startPositions2);
 
-    // Check if the maximum number of players has been reached
-    // if (Object.keys(playerList).length >= maxPlayers) {
-    //     console.log(`Maximum number of players reached. Disconnecting ${socket.id}`);
-    //     socket.emit('maxPlayersReached', { message: 'Maximum number of players reached. Try again later.' });
-    //     socket.disconnect();
-    //     return;
-    // }
+    socket.on('requestStartPos', (buttonNum) => {
+        if (startPositions2[buttonNum].used == false) {
+            startPositions2[buttonNum].used = true;
+            socket.emit('startPosGranted', startPositions2[buttonNum]);
+        } else {
+            socket.emit('startPosDenied');
+        }
+    });
 
     socket.on('playerStartVR', isUsingVR => {
 
@@ -148,7 +156,21 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('playerEndVR', () => {
 
+        if (socket.id in playerList) {
+            console.log(`Player ${socket.id} left the Game.`);
+
+            // Return the player's color to the array
+            playerColors.push(playerList[socket.id].color);
+            startPositions.push(playerList[socket.id].startPosition);
+
+            delete playerList[socket.id];
+
+            socket.leave('gameRoom');
+            socket.join('waitingRoom');
+        }
+    });
 
     // Handle player disconnection
     socket.on('disconnect', () => {
