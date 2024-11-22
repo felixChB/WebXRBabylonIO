@@ -2,7 +2,7 @@ import { io } from 'socket.io-client';
 import { /*Camera,*/ Engine, FreeCamera, Scene } from '@babylonjs/core';
 import { ArcRotateCamera, HemisphericLight, MeshBuilder } from '@babylonjs/core';
 import { Mesh, StandardMaterial, Color3, Vector3 } from '@babylonjs/core';
-import { WebXRInputSource } from '@babylonjs/core/XR';
+import { WebXRDefaultExperience, WebXRInputSource } from '@babylonjs/core/XR';
 import { Inspector } from '@babylonjs/inspector';
 
 import '@babylonjs/core/Materials/Textures/Loaders'; // Required for EnvironmentHelper
@@ -19,8 +19,9 @@ if (rotationQuaternion) {
 let playerID: string;
 let clientPlayer: Player | null = null;
 let playerUsingVR: boolean = false;
-let clientStartPos = { x: 0, y: 0, z: 0 };
+let clientStartPos: { x: number, y: number, z: number, color: string, used: boolean };
 
+let xr: WebXRDefaultExperience;
 let xrCamera: FreeCamera | null = null;
 let leftController: WebXRInputSource | null = null;
 let rightController: WebXRInputSource | null = null;
@@ -238,7 +239,7 @@ window.addEventListener('resize', function () {
 
 (async function main() {
     // Create a WebXR experience
-    var xr = await scene.createDefaultXRExperienceAsync({
+    xr = await scene.createDefaultXRExperienceAsync({
         floorMeshes: [scene.getMeshByName('ground') as Mesh],
         inputOptions: {
             controllerOptions: {
@@ -261,14 +262,14 @@ window.addEventListener('resize', function () {
             const target = event.target as HTMLElement;
             const id = target.id;
             console.log(`Button with id ${id} clicked`);
-            socket.emit('requestStartPos', i);
+            socket.emit('requestGameStart', i);
 
             // Perform actions based on the id
-            xr.baseExperience.enterXRAsync('immersive-vr', 'local-floor').then(() => {
-                console.log(`Starting VR from button ${id}`);
-            }).catch((err) => {
-                console.error('Failed to enter VR', err);
-            });
+            // xr.baseExperience.enterXRAsync('immersive-vr', 'local-floor').then(() => {
+            //     console.log(`Request Game start from button ${id}`);
+            // }).catch((err) => {
+            //     console.error('Failed to enter VR', err);
+            // });
         });
     }
 
@@ -504,6 +505,8 @@ window.addEventListener('resize', function () {
             // console.log('XrCamera Position: ', xrCamera?.position);
         }, 100);
     }
+
+    return xr;
 })();
 
 socket.on('joinedWaitingRoom', () => {
@@ -514,28 +517,35 @@ socket.on('startPosDenied', () => {
     console.log('Start Position denied. Select another one.');
 });
 
-socket.on('yourPlayerInfo', (socket) => {
+// when the current player is already on the server and starts the game
+socket.on('startClientGame', (socket, startPos) => {
 
     startScreen?.style.setProperty('display', 'none');
 
-    // get the Connection ID of the Player
-    playerID = socket.id;
+    // Start VR Session for the client
+    xr.baseExperience.enterXRAsync('immersive-vr', 'local-floor').then(() => {
+        console.log('Starting VR from startClientGame');
 
-    clientPlayer = new Player(socket);
+        // get the Connection ID of the Player
+        playerID = socket.id;
+        clientStartPos = startPos;
 
-    clientStartPos = { x: socket.position.x, y: socket.position.y, z: socket.position.z };
+        clientPlayer = new Player(socket);
 
-    playerList[playerID] = clientPlayer;
+        playerList[playerID] = clientPlayer;
 
-    camera.position = new Vector3(clientStartPos.x, clientStartPos.y, clientStartPos.z);
-    camera.setTarget(Vector3.Zero());
+        camera.position = new Vector3(clientStartPos.x, clientStartPos.y, clientStartPos.z);
+        camera.setTarget(Vector3.Zero());
 
-    // Spawn yourself Entity
-    addPlayer(playerList[playerID], true);
+        // Spawn yourself Entity
+        addPlayer(playerList[playerID], true);
 
-    if (xrCamera) {
-        xrCamera.position = new Vector3(playerList[playerID].position.x, playerList[playerID].position.y, playerList[playerID].position.z);
-    }
+        if (xrCamera) {
+            xrCamera.position = new Vector3(playerList[playerID].position.x, playerList[playerID].position.y, playerList[playerID].position.z);
+        }
+    }).catch((err) => {
+        console.error('Failed to enter VR', err);
+    });
 });
 
 // when the current player is already on the server and a new player joins
@@ -581,7 +591,7 @@ socket.on('serverUpdate', (players) => {
 });
 
 // set the availability of the start buttons according to the startpositions on the server
-function setStartButtonAvailability(startPositions: { x: number, y: number, z: number, used: boolean }[]) {
+function setStartButtonAvailability(startPositions: { x: number, y: number, z: number, color: string, used: boolean }[]) {
     for (let i = 0; i < startPosButtons.length; i++) {
         if (startPositions[i].used == true) {
             if (!startPosButtons[i].classList.contains('unavailable')) {
