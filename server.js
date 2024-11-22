@@ -39,6 +39,7 @@ export class PlayerData {
 export class Player {
     constructor(id, playerStartInfo, isVR) {
         this.id = id;
+        this.color = playerStartInfo.color;
         this.isVR = isVR;
         this.playerNumber = playerStartInfo.player;
         this.startPosition = { x: playerStartInfo.x, y: playerStartInfo.y, z: playerStartInfo.z };
