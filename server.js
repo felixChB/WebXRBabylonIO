@@ -147,58 +147,58 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('playerStartVR', isUsingVR => {
+    // socket.on('playerStartVR', isUsingVR => {
 
-        // Check if the maximum number of players has been reached
-        if (Object.keys(playerList).length >= maxPlayers) {
-            console.log(`Maximum number of players reached. Player ${socket.id} has to stay in the waiting room.`);
-            socket.emit('maxPlayersReached', { message: 'Maximum number of players reached. Try again later.' });
-        } else {
-            socket.leave('waitingRoom');
-            socket.join('gameRoom');
+    //     // Check if the maximum number of players has been reached
+    //     if (Object.keys(playerList).length >= maxPlayers) {
+    //         console.log(`Maximum number of players reached. Player ${socket.id} has to stay in the waiting room.`);
+    //         socket.emit('maxPlayersReached', { message: 'Maximum number of players reached. Try again later.' });
+    //     } else {
+    //         socket.leave('waitingRoom');
+    //         socket.join('gameRoom');
 
-            console.log(`Player ${socket.id} started playing.`);
+    //         console.log(`Player ${socket.id} started playing.`);
 
-            // Set the start position for the new player
-            const playerStartPos = startPositions.shift();
-            const playerColor = playerColors.shift();
+    //         // Set the start position for the new player
+    //         const playerStartPos = startPositions.shift();
+    //         const playerColor = playerColors.shift();
 
-            const newPlayer = new Player(socket.id, playerStartPos, playerColor, socket.isVR);
+    //         const newPlayer = new Player(socket.id, playerStartPos, playerColor, socket.isVR);
 
-            // Add new player to the game
-            playerList[socket.id] = newPlayer;
+    //         // Add new player to the game
+    //         playerList[socket.id] = newPlayer;
 
-            // Send the player's information to the new player
-            socket.emit('yourPlayerInfo', playerList[socket.id]);
+    //         // Send the player's information to the new player
+    //         socket.emit('yourPlayerInfo', playerList[socket.id]);
 
-            // Notify other players of the new player
-            socket.broadcast.emit('newPlayer', playerList[socket.id]);
+    //         // Notify other players of the new player
+    //         socket.broadcast.emit('newPlayer', playerList[socket.id]);
 
-            // Send the current state to the new player
-            // socket.emit('currentState', playerList, activeColor);
+    //         // Send the current state to the new player
+    //         // socket.emit('currentState', playerList, activeColor);
 
-            socket.on('clientUpdate', (data) => {
-                // console.log('Player data received:');
-                // console.log(data.contrRotR);
-                playerList[socket.id].setData(data);
-                // console.log('Player data updated:');
-                // console.log(playerList[socket.id].contrRotR);
-            });
+    //         socket.on('clientUpdate', (data) => {
+    //             // console.log('Player data received:');
+    //             // console.log(data.contrRotR);
+    //             playerList[socket.id].setData(data);
+    //             // console.log('Player data updated:');
+    //             // console.log(playerList[socket.id].contrRotR);
+    //         });
 
-            // Test color change for connection
-            socket.on('clicked', () => {
-                // console.log('Clicked');
+    //         // Test color change for connection
+    //         socket.on('clicked', () => {
+    //             // console.log('Clicked');
 
-                if (activeColor == color1) {
-                    activeColor = color2;
-                } else {
-                    activeColor = color1;
-                }
-                // console.log(activeColor);
-                io.emit('colorChanged', activeColor);
-            });
-        }
-    });
+    //             if (activeColor == color1) {
+    //                 activeColor = color2;
+    //             } else {
+    //                 activeColor = color1;
+    //             }
+    //             // console.log(activeColor);
+    //             io.emit('colorChanged', activeColor);
+    //         });
+    //     }
+    // });
 
     socket.on('playerEndVR', () => {
 
@@ -215,6 +215,8 @@ io.on('connection', (socket) => {
 
             socket.leave('gameRoom');
             socket.join('waitingRoom');
+
+            io.emit('playerDisconnected', socket.id);
         }
     });
 

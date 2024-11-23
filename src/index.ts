@@ -242,12 +242,12 @@ window.addEventListener('resize', function () {
             console.log(`Button with id ${id} clicked`);
             socket.emit('requestGameStart', i + 1);
 
-            // Perform actions based on the id
-            xr.baseExperience.enterXRAsync('immersive-vr', 'local-floor').then(() => {
-                console.log(`Starting VR from button ${id}`);
-            }).catch((err) => {
-                console.error('Failed to enter VR', err);
-            });
+            // // Perform actions based on the id
+            // xr.baseExperience.enterXRAsync('immersive-vr', 'local-floor').then(() => {
+            //     console.log(`Starting VR from button ${id}`);
+            // }).catch((err) => {
+            //     console.error('Failed to enter VR', err);
+            // });
         });
     }
 
@@ -284,12 +284,12 @@ window.addEventListener('resize', function () {
             xrCamera = xr.baseExperience.camera;
             playerUsingVR = true;
 
-            console.log('Player is starting VR');
-            if (clientStartPos) {
-                console.log('XR Camera getting start position');
-                xrCamera.position = new Vector3(clientStartPos.x, clientStartPos.y, clientStartPos.z);
-            }
-            socket.emit('playerStartVR', playerUsingVR);
+            // console.log('Player is starting VR');
+            // if (clientStartPos) {
+            //     console.log('XR Camera getting start position');
+            //     xrCamera.position = new Vector3(clientStartPos.x, clientStartPos.y, clientStartPos.z);
+            // }
+            // socket.emit('playerStartVR', playerUsingVR);
         });
 
         xr.baseExperience.sessionManager.onXRSessionEnded.add(() => {
@@ -531,7 +531,7 @@ socket.on('startClientGame', (socket) => {
 
         clientPlayer = new Player(socket);
 
-        clientStartPos = { x: socket.position.x, y: socket.position.y, z: socket.position.z };
+        // clientStartPos = { x: socket.position.x, y: socket.position.y, z: socket.position.z };
 
         playerList[playerID] = clientPlayer;
 
