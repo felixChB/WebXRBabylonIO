@@ -14,7 +14,8 @@
     "watch": "webpack --watch",
     "build": "webpack --config webpack.config.cjs",
     "start": "node server.js",
-    "dev": "concurrently \"npm run watch\" \"npm run start\""
+    "dev": "concurrently \"npm run watch\" \"npm run serve\"",
+    "serve": "nodemon server.js"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +26,7 @@
     "@babylonjs/loaders": "^7.34.1",
     "concurrently": "^9.1.0",
     "css-loader": "^7.1.2",
+    "nodemon": "^3.1.7",
     "style-loader": "^4.0.0",
     "ts-loader": "^9.5.1",
     "typescript": "^5.6.3",

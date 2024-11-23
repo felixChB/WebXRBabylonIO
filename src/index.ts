@@ -210,6 +210,8 @@ class Player implements PlayerData {
     }
 }
 
+console.log('Player Class: ', Player);
+
 // Watch for browser/canvas resize events
 window.addEventListener('resize', function () {
     engine.resize();
