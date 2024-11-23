@@ -210,8 +210,6 @@ class Player implements PlayerData {
     }
 }
 
-console.log('Player Class: ', Player);
-
 // Watch for browser/canvas resize events
 window.addEventListener('resize', function () {
     engine.resize();
@@ -487,8 +485,14 @@ window.addEventListener('resize', function () {
     }
 })();
 
+// socket.on('reload', () => {
+//     console.log('Server restarted, reloading page...');
+//     window.location.reload();
+// });
+
 socket.on('joinedWaitingRoom', () => {
     console.log('You joined the waiting Room. Enter VR to join the Game.');
+    
 });
 
 socket.on('startPosDenied', () => {
@@ -695,3 +699,21 @@ engine.runRenderLoop(function () {
 
     scene.render();
 });
+
+setInterval(function () {
+    if (playerList[playerID]) {
+        let safePlayer = {
+            id: playerID,
+            color: playerList[playerID].color,
+            playerNumber: playerList[playerID].playerNumber,
+            position: playerList[playerID].position,
+            rotation: playerList[playerID].rotation,
+            contrPosR: playerList[playerID].contrPosR,
+            contrPosL: playerList[playerID].contrPosL,
+            contrRotR: playerList[playerID].contrRotR,
+            contrRotL: playerList[playerID].contrRotL
+        };
+        let jsonPlayer = JSON.stringify(safePlayer);
+        console.log(jsonPlayer);
+    }
+}, 10000);

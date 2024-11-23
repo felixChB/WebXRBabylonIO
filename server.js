@@ -88,6 +88,10 @@ let playerList = {};
 
 // Handle connections and logic
 io.on('connection', (socket) => {
+
+    // Reload the page for all clients
+    socket.emit('reload');
+
     console.log(`Player connected: ${socket.id}`);
 
     if (Object.keys(playerList).length >= maxPlayers) {
