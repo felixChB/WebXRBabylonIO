@@ -70,9 +70,9 @@ const color1 = '#d60040';
 const color2 = '#91ff42';
 var activeColor;
 
+let serverStartTime;
+
 const maxPlayers = 4;
-const playerColors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00'];
-const startPositions = [{ x: 5, y: 2, z: 0 }, { x: -5, y: 2, z: 0 }, { x: 0, y: 2, z: 5 }, { x: 0, y: 2, z: -5 }];
 
 let playerStartInfos = {
     1: { player: 1, x: 5, y: 2, z: 0, color: '#ff0000', used: false },
@@ -88,11 +88,16 @@ let playerList = {};
 
 // Handle connections and logic
 io.on('connection', (socket) => {
-
-    // Reload the page for all clients
-    socket.emit('reload');
-
     console.log(`Player connected: ${socket.id}`);
+
+    socket.on('clientStartTime', (clientStartTime) => {
+        if (clientStartTime < serverStartTime) {
+            console.log(`Client start time (${clientStartTime}) is lower than server start time (${serverStartTime}). Forcing reload.`);
+            socket.emit('reload');
+        } else {
+            console.log(`Client start time (${clientStartTime}) is higher than server start time (${serverStartTime}).`);
+        }
+    });
 
     if (Object.keys(playerList).length >= maxPlayers) {
         console.log(`Maximum number of players reached. Player ${socket.id} has to wait in the waiting room.`);
@@ -226,7 +231,7 @@ io.on('connection', (socket) => {
 
     // Handle player disconnection
     socket.on('disconnect', () => {
-        console.log(`Player disconnected: ${socket.id}`);
+        // console.log(`Player disconnected: ${socket.id}`);
 
         if (socket.id in playerList) {
             console.log(`Player ${socket.id} disconnected from the game.`);
@@ -242,9 +247,11 @@ io.on('connection', (socket) => {
     });
 });
 
-httpsServer.listen(port, ipAdress, () => {
+httpsServer.listen(port, /*ipAdress,*/() => {
     // console.log('Server is listening on port https://localhost:' + port);        // for localhost network
-    console.log('Server is listening on port https://' + ipAdress + ':' + port);    // for local ip network
+    console.log('Server is listening on port https://' + /*ipAdress +*/ ':' + port);    // for local ip network
+    serverStartTime = Date.now();
+    console.log('Server start time: ' + serverStartTime);
 });
 
 

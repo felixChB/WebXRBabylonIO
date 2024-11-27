@@ -11,6 +11,8 @@ import '@babylonjs/loaders/glTF'; // Enable GLTF/GLB loader for loading controll
 
 const socket = io();
 
+let clientStartTime = Date.now();
+
 const rotationQuaternion = null;
 if (rotationQuaternion) {
     //console.log('Rotation Quaternion: ', rotationQuaternion);
@@ -25,8 +27,6 @@ let xr: WebXRDefaultExperience;
 let xrCamera: FreeCamera | null = null;
 let leftController: WebXRInputSource | null = null;
 let rightController: WebXRInputSource | null = null;
-let leftColor = new Color3(0, 0, 0);
-let rightColor = new Color3(0, 0, 0);
 
 // Get HTML Elements
 let divFps = document.getElementById('fps');
@@ -67,23 +67,6 @@ const ground = MeshBuilder.CreateGround('ground',
     { width: 6, height: 6 }, scene);
 
 ground.material = new StandardMaterial('matGround', scene);
-
-const leftSphere = MeshBuilder.CreateBox('xBox', { size: 0.3 }, scene);
-const rightSphere = MeshBuilder.CreateBox('xBox', { size: 0.3 }, scene);
-const leftMaterial = new StandardMaterial('matR', scene);
-const rightMaterial = new StandardMaterial('matR', scene);
-
-leftMaterial.diffuseColor = leftColor;
-rightMaterial.diffuseColor = rightColor;
-
-leftMaterial.alpha = 0.5;
-rightMaterial.alpha = 0.5;
-
-leftSphere.position.x = -0.5;
-rightSphere.position.x = 0.5;
-
-leftSphere.material = leftMaterial;
-rightSphere.material = rightMaterial;
 
 let playerList: { [key: string]: Player } = {};
 
@@ -485,14 +468,19 @@ window.addEventListener('resize', function () {
     }
 })();
 
-// socket.on('reload', () => {
-//     console.log('Server restarted, reloading page...');
-//     window.location.reload();
-// });
+// Send the client's start time to the server upon connection
+socket.on('connect', () => {
+    socket.emit('clientStartTime', clientStartTime);
+});
+
+socket.on('reload', () => {
+    console.log('Server requested reload');
+    window.location.reload();
+});
 
 socket.on('joinedWaitingRoom', () => {
     console.log('You joined the waiting Room. Enter VR to join the Game.');
-    
+    console.log('Client Start Time: ', clientStartTime);
 });
 
 socket.on('startPosDenied', () => {
@@ -525,7 +513,7 @@ socket.on('startClientGame', (socket) => {
 
     startScreen?.style.setProperty('display', 'none');
 
-    console.log('Socket Object: ', socket);
+    // console.log('Socket Object: ', socket);
 
     // Start VR Session for the client
     xr.baseExperience.enterXRAsync('immersive-vr', 'local-floor').then(() => {
@@ -700,6 +688,7 @@ engine.runRenderLoop(function () {
     scene.render();
 });
 
+// set up Interval function for the local storage of the player data
 setInterval(function () {
     if (playerList[playerID]) {
         let safePlayer = {
@@ -715,5 +704,12 @@ setInterval(function () {
         };
         let jsonPlayer = JSON.stringify(safePlayer);
         console.log(jsonPlayer);
+    }
+    if (typeof (Storage) !== "undefined") {
+        // Code for localStorage/sessionStorage.
+        localStorage.setItem('testKey', 'testValue');
+    } else {
+        // Sorry! No Web Storage support..
+        console.log('No Web Storage support');
     }
 }, 10000);
