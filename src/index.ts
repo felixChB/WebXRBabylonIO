@@ -23,6 +23,10 @@ let clientPlayer: Player | null = null;
 let playerUsingVR: boolean = false;
 let clientStartPos: { x: number, y: number, z: number };
 
+// let oldPlayerData = localStorage.getItem('playerID');
+let oldPlayer: OldPlayerData | null = null;
+getLocalStorage();
+
 let xr: WebXRDefaultExperience;
 let xrCamera: FreeCamera | null = null;
 let leftController: WebXRInputSource | null = null;
@@ -32,6 +36,7 @@ let rightController: WebXRInputSource | null = null;
 let divFps = document.getElementById('fps');
 const startPosButtons = document.querySelectorAll('.posSelection');
 const startScreen = document.getElementById('startScreen');
+const continueAsOldPlayer = document.getElementById('continueAsOldPlayer');
 
 ////////////////////////////// CREATE BABYLON SCENE ETC. //////////////////////////////
 
@@ -90,9 +95,22 @@ interface PlayerData {
     contrRotR: { x: number, y: number, z: number };
     contrRotL: { x: number, y: number, z: number };
 
-    setData(player: PlayerData): void;
-    updateObj(): void;
-    sendData(): void;
+    // setData(player: PlayerData): void;
+    // updateObj(): void;
+    // sendData(): void;
+}
+
+interface OldPlayerData {
+    id: string;
+    color: string;
+    playerNumber: number;
+    position: { x: number, y: number, z: number };
+    rotation: { x: number, y: number, z: number };
+    contrPosR: { x: number, y: number, z: number };
+    contrPosL: { x: number, y: number, z: number };
+    contrRotR: { x: number, y: number, z: number };
+    contrRotL: { x: number, y: number, z: number };
+    playerTime: number;
 }
 
 class Player implements PlayerData {
@@ -224,36 +242,8 @@ window.addEventListener('resize', function () {
             const id = target.id;
             console.log(`Button with id ${id} clicked`);
             socket.emit('requestGameStart', i + 1);
-
-            // // Perform actions based on the id
-            // xr.baseExperience.enterXRAsync('immersive-vr', 'local-floor').then(() => {
-            //     console.log(`Starting VR from button ${id}`);
-            // }).catch((err) => {
-            //     console.error('Failed to enter VR', err);
-            // });
         });
     }
-
-    // const playerRef = scene.getMeshByName('player_' + playerID);
-    // playerRef.position = new Vector3(0, 0, 0);
-    // playerRef.rotation = new Vector3(xrCamera.rotation.x, xrCamera.rotation.y, xrCamera.rotation.z);
-
-    // const defaultXRExperience = await scene.createDefaultXRExperienceAsync({
-    //     floorMeshes: [scene.getMeshByName('ground')],
-    //     inputOptions: {
-    //         controllerOptions: {
-    //             // disableMotionControllerAnimation: true,
-    //             // doNotLoadControllerMesh: true,
-    //             // forceControllerProfile: <string>,
-    //             // renderingGroupId: <number>
-    //         },
-    //         // customControllersRepositoryURL: <string>,
-    //         // disableControllerAnimation: true,
-    //         // disableOnlineControllerRepository: true,
-    //         doNotLoadControllerMeshes: true, // move, but hide controllers
-    //         // forceInputProfile: 'generic-trigger-squeeze-thumbstick',
-    //     },
-    // });
 
     xr.teleportation.detach();
     xr.pointerSelection.detach();
@@ -266,13 +256,6 @@ window.addEventListener('resize', function () {
 
             xrCamera = xr.baseExperience.camera;
             playerUsingVR = true;
-
-            // console.log('Player is starting VR');
-            // if (clientStartPos) {
-            //     console.log('XR Camera getting start position');
-            //     xrCamera.position = new Vector3(clientStartPos.x, clientStartPos.y, clientStartPos.z);
-            // }
-            // socket.emit('playerStartVR', playerUsingVR);
         });
 
         xr.baseExperience.sessionManager.onXRSessionEnded.add(() => {
@@ -312,11 +295,8 @@ window.addEventListener('resize', function () {
                     triggerComponent.onButtonStateChangedObservable.add(() => {
                         if (triggerComponent.pressed) {
                             socket.emit('clicked');
-                            // Box_Left_Trigger.scaling = new Vector3(1.2, 1.2, 1.2);
 
                         } else {
-                            // Box_Left_Trigger.scaling = new Vector3(1, 1, 1);
-
                         }
                     });
 
@@ -324,10 +304,9 @@ window.addEventListener('resize', function () {
                     squeezeComponent.onButtonStateChangedObservable.add(() => {
                         if (squeezeComponent.pressed) {
                             socket.emit('clicked');
-                            // Box_Left_Squeeze.scaling = new Vector3(1.2, 1.2, 1.2);
 
                         } else {
-                            // Box_Left_Squeeze.scaling = new Vector3(1, 1, 1);
+
                         }
                     });
 
@@ -335,25 +314,18 @@ window.addEventListener('resize', function () {
                     thumbstickComponent.onButtonStateChangedObservable.add(() => {
                         if (thumbstickComponent.pressed) {
                             socket.emit('clicked');
-                            // Box_Left_ThumbStick.scaling = new Vector3(1.2, 1.2, 1.2);
                         } else {
-                            // Box_Left_ThumbStick.scaling = new Vector3(1, 1, 1);
+
                         }
-                        /*
-                            let axes = thumbstickComponent.axes;
-                            Box_Left_ThumbStick.position.x += axes.x;
-                            Box_Left_ThumbStick.position.y += axes.y;
-                        */
                     });
 
                     let xbuttonComponent = motionController.getComponent(xrIDs[3]);//x-button
                     xbuttonComponent.onButtonStateChangedObservable.add(() => {
                         if (xbuttonComponent.pressed) {
                             socket.emit('clicked');
-                            // Sphere_Left_XButton.scaling = new Vector3(1.2, 1.2, 1.2);
 
                         } else {
-                            // Sphere_Left_XButton.scaling = new Vector3(1, 1, 1);
+
                         }
                     });
 
@@ -361,10 +333,9 @@ window.addEventListener('resize', function () {
                     ybuttonComponent.onButtonStateChangedObservable.add(() => {
                         if (ybuttonComponent.pressed) {
                             socket.emit('clicked');
-                            // Sphere_Left_YButton.scaling = new Vector3(1.2, 1.2, 1.2);
 
                         } else {
-                            // Sphere_Left_YButton.scaling = new Vector3(1, 1, 1);
+
                         }
                     });
                     /* not worked.
@@ -394,10 +365,8 @@ window.addEventListener('resize', function () {
                     triggerComponent.onButtonStateChangedObservable.add(() => {
                         if (triggerComponent.pressed) {
                             socket.emit('clicked');
-                            // Box_Right_Trigger.scaling = new Vector3(1.2, 1.2, 1.2);
 
                         } else {
-                            // Box_Right_Trigger.scaling = new Vector3(1, 1, 1);
 
                         }
                     });
@@ -406,10 +375,9 @@ window.addEventListener('resize', function () {
                     squeezeComponent.onButtonStateChangedObservable.add(() => {
                         if (squeezeComponent.pressed) {
                             socket.emit('clicked');
-                            // Box_Right_Squeeze.scaling = new Vector3(1.2, 1.2, 1.2);
 
                         } else {
-                            // Box_Right_Squeeze.scaling = new Vector3(1, 1, 1);
+
                         }
                     });
 
@@ -417,9 +385,9 @@ window.addEventListener('resize', function () {
                     thumbstickComponent.onButtonStateChangedObservable.add(() => {
                         if (thumbstickComponent.pressed) {
                             socket.emit('clicked');
-                            // Box_Right_ThumbStick.scaling = new Vector3(1.2, 1.2, 1.2);
+
                         } else {
-                            // Box_Right_ThumbStick.scaling = new Vector3(1, 1, 1);
+
                         }
 
                     });
@@ -428,9 +396,9 @@ window.addEventListener('resize', function () {
                     abuttonComponent.onButtonStateChangedObservable.add(() => {
                         if (abuttonComponent.pressed) {
                             socket.emit('clicked');
-                            // Sphere_Right_AButton.scaling = new Vector3(1.2, 1.2, 1.2);
+
                         } else {
-                            // Sphere_Right_AButton.scaling = new Vector3(1, 1, 1);
+
                         }
                     });
 
@@ -438,10 +406,9 @@ window.addEventListener('resize', function () {
                     bbuttonComponent.onButtonStateChangedObservable.add(() => {
                         if (bbuttonComponent.pressed) {
                             socket.emit('clicked');
-                            // Sphere_Right_BButton.scaling = new Vector3(1.2, 1.2, 1.2);
 
                         } else {
-                            // Sphere_Right_BButton.scaling = new Vector3(1, 1, 1);
+
                         }
                     });
                 }
@@ -471,6 +438,7 @@ window.addEventListener('resize', function () {
 // Send the client's start time to the server upon connection
 socket.on('connect', () => {
     socket.emit('clientStartTime', clientStartTime);
+    // console.log('Old Player Data: ', oldPlayer);
 });
 
 socket.on('reload', () => {
@@ -478,9 +446,29 @@ socket.on('reload', () => {
     window.location.reload();
 });
 
+socket.on('timeForOldPlayers', (serverStartTime) => {
+    if (oldPlayer) {
+        let timeDiffOldPlayer = serverStartTime - oldPlayer.playerTime;
+
+        if (timeDiffOldPlayer < 20000) {
+            console.log('Old Player found.');
+
+            if (continueAsOldPlayer) {
+                continueAsOldPlayer.style.display = 'block';
+                continueAsOldPlayer.innerHTML = `Continue as Player ${oldPlayer.playerNumber}`;
+                continueAsOldPlayer.addEventListener('click', () => {
+                    console.log('Pressed continue as Old Player');
+                    socket.emit('continueAsOldPlayer', oldPlayer);
+                });
+            }
+        } else {
+            localStorage.removeItem('player');
+        }
+    }
+});
+
 socket.on('joinedWaitingRoom', () => {
     console.log('You joined the waiting Room. Enter VR to join the Game.');
-    console.log('Client Start Time: ', clientStartTime);
 });
 
 socket.on('startPosDenied', () => {
@@ -524,6 +512,8 @@ socket.on('startClientGame', (socket) => {
         clientStartPos = socket.startPosition;
 
         clientPlayer = new Player(socket);
+
+        localStorage.setItem('playerID', `${playerID}`);
 
         // clientStartPos = { x: socket.position.x, y: socket.position.y, z: socket.position.z };
 
@@ -690,8 +680,12 @@ engine.runRenderLoop(function () {
 
 // set up Interval function for the local storage of the player data
 setInterval(function () {
+    setLocalStorage();
+}, 10000);
+
+function setLocalStorage() {
     if (playerList[playerID]) {
-        let safePlayer = {
+        let safedOldPlayer = {
             id: playerID,
             color: playerList[playerID].color,
             playerNumber: playerList[playerID].playerNumber,
@@ -700,16 +694,75 @@ setInterval(function () {
             contrPosR: playerList[playerID].contrPosR,
             contrPosL: playerList[playerID].contrPosL,
             contrRotR: playerList[playerID].contrRotR,
-            contrRotL: playerList[playerID].contrRotL
+            contrRotL: playerList[playerID].contrRotL,
+            playerTime: Date.now()
         };
-        let jsonPlayer = JSON.stringify(safePlayer);
-        console.log(jsonPlayer);
+        let jsonOldPlayer = JSON.stringify(safedOldPlayer);
+        // console.log(`Old safed Player: ${jsonOldPlayer}`);
+
+        if (typeof (Storage) !== "undefined") {
+            localStorage.setItem('player', jsonOldPlayer);
+        } else {
+            console.log('No Web Storage support');
+        }
     }
+}
+
+function getLocalStorage() {
     if (typeof (Storage) !== "undefined") {
         // Code for localStorage/sessionStorage.
-        localStorage.setItem('testKey', 'testValue');
+        // localStorage.setItem('playerID', `${playerID}`);
+        if (localStorage.getItem('player') != null) {
+            let parsedJsonOldPlayer = JSON.parse(localStorage.getItem('player') || '{}');
+            oldPlayer = {
+                id: parsedJsonOldPlayer.id,
+                color: parsedJsonOldPlayer.color,
+                playerNumber: Number(parsedJsonOldPlayer.playerNumber),
+                position:
+                {
+                    x: Number(parsedJsonOldPlayer.position.x),
+                    y: Number(parsedJsonOldPlayer.position.y),
+                    z: Number(parsedJsonOldPlayer.position.z)
+                },
+                rotation:
+                {
+                    x: Number(parsedJsonOldPlayer.rotation.x),
+                    y: Number(parsedJsonOldPlayer.rotation.y),
+                    z: Number(parsedJsonOldPlayer.rotation.z)
+                },
+                contrPosR:
+                {
+                    x: Number(parsedJsonOldPlayer.contrPosR.x),
+                    y: Number(parsedJsonOldPlayer.contrPosR.y),
+                    z: Number(parsedJsonOldPlayer.contrPosR.z)
+                },
+                contrPosL:
+                {
+                    x: Number(parsedJsonOldPlayer.contrPosL.x),
+                    y: Number(parsedJsonOldPlayer.contrPosL.y),
+                    z: Number(parsedJsonOldPlayer.contrPosL.z)
+                },
+                contrRotR:
+                {
+                    x: Number(parsedJsonOldPlayer.contrRotR.x),
+                    y: Number(parsedJsonOldPlayer.contrRotR.y),
+                    z: Number(parsedJsonOldPlayer.contrRotR.z)
+                },
+                contrRotL:
+                {
+                    x: Number(parsedJsonOldPlayer.contrRotL.x),
+                    y: Number(parsedJsonOldPlayer.contrRotL.y),
+                    z: Number(parsedJsonOldPlayer.contrRotL.z)
+                },
+                playerTime: Number(parsedJsonOldPlayer.playerTime)
+            }
+
+            console.log('Old Player Data: ', oldPlayer);
+        } else {
+            oldPlayer = null;
+        }
     } else {
         // Sorry! No Web Storage support..
         console.log('No Web Storage support');
     }
-}, 10000);
+}

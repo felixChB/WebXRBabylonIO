@@ -36,15 +36,18 @@ html, body {
     z-index: 100;
 }
 
-.posSelection {
-    background-color: #ffd311;
-    color: white;
+.btn {
     border: none;
     padding: 15px 30px;
     margin-top: 20px;
     cursor: pointer;
     border-radius: 10px;
-    font-size: 20px;
+    font-size: 20px;   
+}
+
+.posSelection {
+    background-color: #ffd311;
+    color: white;
 }
 
 .unavailable {
@@ -54,4 +57,9 @@ html, body {
 
 .xr-button-overlay {
     display: none;
+}
+
+#continueAsOldPlayer {
+    display: none;
+    background-color: blueviolet;
 }

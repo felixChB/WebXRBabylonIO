@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { Server } from "socket.io";
 import { SocketAddress } from "net";
+import { start } from "repl";
 
 const port = process.env.PORT || 3000;
 const ipAdress = '192.168.178.156'; // for local network // Desktop
@@ -92,10 +93,10 @@ io.on('connection', (socket) => {
 
     socket.on('clientStartTime', (clientStartTime) => {
         if (clientStartTime < serverStartTime) {
-            console.log(`Client start time (${clientStartTime}) is lower than server start time (${serverStartTime}). Forcing reload.`);
+            // console.log(`Client start time (${clientStartTime}) is lower than server start time (${serverStartTime}). Forcing reload.`);
             socket.emit('reload');
         } else {
-            console.log(`Client start time (${clientStartTime}) is higher than server start time (${serverStartTime}).`);
+            // console.log(`Client start time (${clientStartTime}) is higher than server start time (${serverStartTime}).`);
         }
     });
 
@@ -106,9 +107,25 @@ io.on('connection', (socket) => {
 
     socket.join('waitingRoom');
     socket.emit('joinedWaitingRoom');
+    socket.emit('timeForOldPlayers', serverStartTime);
 
     // Send the current state to the new player
     socket.emit('currentState', playerList, activeColor, playerStartInfos);
+
+    socket.on('continueAsOldPlayer', (oldPlayerData) => {
+        if (playerStartInfos[oldPlayerData.playerNumber].used == false) {
+            const newPlayer = new Player(socket.id, playerStartInfos[oldPlayerData.playerNumber], oldPlayerData.isVR);
+
+            playerStartInfos[oldPlayerData.playerNumber].used = true;
+
+            socket.leave('waitingRoom');
+            socket.join('gameRoom');
+
+            startClientGame();
+        } else {
+            socket.emit('startPosDenied');
+        }
+    });
 
     socket.on('requestGameStart', (startPlayerNum) => {
         if (playerStartInfos[startPlayerNum].used == false) {
@@ -156,67 +173,10 @@ io.on('connection', (socket) => {
         }
     });
 
-    // socket.on('playerStartVR', isUsingVR => {
-
-    //     // Check if the maximum number of players has been reached
-    //     if (Object.keys(playerList).length >= maxPlayers) {
-    //         console.log(`Maximum number of players reached. Player ${socket.id} has to stay in the waiting room.`);
-    //         socket.emit('maxPlayersReached', { message: 'Maximum number of players reached. Try again later.' });
-    //     } else {
-    //         socket.leave('waitingRoom');
-    //         socket.join('gameRoom');
-
-    //         console.log(`Player ${socket.id} started playing.`);
-
-    //         // Set the start position for the new player
-    //         const playerStartPos = startPositions.shift();
-    //         const playerColor = playerColors.shift();
-
-    //         const newPlayer = new Player(socket.id, playerStartPos, playerColor, socket.isVR);
-
-    //         // Add new player to the game
-    //         playerList[socket.id] = newPlayer;
-
-    //         // Send the player's information to the new player
-    //         socket.emit('yourPlayerInfo', playerList[socket.id]);
-
-    //         // Notify other players of the new player
-    //         socket.broadcast.emit('newPlayer', playerList[socket.id]);
-
-    //         // Send the current state to the new player
-    //         // socket.emit('currentState', playerList, activeColor);
-
-    //         socket.on('clientUpdate', (data) => {
-    //             // console.log('Player data received:');
-    //             // console.log(data.contrRotR);
-    //             playerList[socket.id].setData(data);
-    //             // console.log('Player data updated:');
-    //             // console.log(playerList[socket.id].contrRotR);
-    //         });
-
-    //         // Test color change for connection
-    //         socket.on('clicked', () => {
-    //             // console.log('Clicked');
-
-    //             if (activeColor == color1) {
-    //                 activeColor = color2;
-    //             } else {
-    //                 activeColor = color1;
-    //             }
-    //             // console.log(activeColor);
-    //             io.emit('colorChanged', activeColor);
-    //         });
-    //     }
-    // });
-
     socket.on('playerEndVR', () => {
 
         if (socket.id in playerList) {
             console.log(`Player ${socket.id} left the Game.`);
-
-            // Return the player's color to the array
-            // playerColors.push(playerList[socket.id].color);
-            // startPositions.push(playerList[socket.id].startPosition);
 
             playerStartInfos[playerList[socket.id].playerNumber].used = false;
 
@@ -231,7 +191,6 @@ io.on('connection', (socket) => {
 
     // Handle player disconnection
     socket.on('disconnect', () => {
-        // console.log(`Player disconnected: ${socket.id}`);
 
         if (socket.id in playerList) {
             console.log(`Player ${socket.id} disconnected from the game.`);
@@ -254,10 +213,48 @@ httpsServer.listen(port, /*ipAdress,*/() => {
     console.log('Server start time: ' + serverStartTime);
 });
 
-
 // Game loop
 setInterval(function () {
-    // console.log('Sending server update');
-    // console.log(playerList);
     io.emit('serverUpdate', playerList);
 }, 20);
+
+function startClientGame(newPlayer) {
+    playerStartInfos[startPlayerNum].used = true;
+    //socket.emit('startPosAccepted', playerStartInfos[buttonNum]);
+
+    socket.leave('waitingRoom');
+    socket.join('gameRoom');
+
+    console.log(`Player ${socket.id} started playing.`);
+    
+    // Add new player to the game
+    playerList[socket.id] = newPlayer;
+
+    // Start the Game on client side and send the player's information to the new player
+    socket.emit('startClientGame', playerList[socket.id]);
+
+    // Notify other players of the new player (waitingRoom and gameRoom)
+    socket.to('waitingRoom').to('gameRoom').emit('newPlayer', playerList[socket.id]);
+
+    socket.on('clientUpdate', (data) => {
+        // console.log('Player data received:');
+        // console.log(data.contrRotR);
+        playerList[socket.id].setData(data);
+        // console.log('Player data updated:');
+        // console.log(playerList[socket.id].contrRotR);
+    });
+
+    // Test color change for connection
+    socket.on('clicked', () => {
+        // console.log('Clicked');
+
+        if (activeColor == color1) {
+            activeColor = color2;
+        } else {
+            activeColor = color1;
+        }
+        // console.log(activeColor);
+        io.emit('colorChanged', activeColor);
+    });
+    io.emit('startClientGame');
+};
