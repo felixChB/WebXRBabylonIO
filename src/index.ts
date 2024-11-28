@@ -76,10 +76,9 @@ ground.material = new StandardMaterial('matGround', scene);
 let playerList: { [key: string]: Player } = {};
 
 interface PlayerStartInfo {
-    player: number;
-    x: number;
-    y: number;
-    z: number;
+    playerNumber: number;
+    position: { x: number, y: number, z: number };
+    rotation: { x: number, y: number, z: number };
     color: string;
     used: boolean;
 }
@@ -238,10 +237,10 @@ window.addEventListener('resize', function () {
     // Add an event listener to each button
     for (let i = 0; i < startPosButtons.length; i++) {
         startPosButtons[i].addEventListener('click', (event) => {
-            const target = event.target as HTMLElement;
-            const id = target.id;
-            console.log(`Button with id ${id} clicked`);
-            socket.emit('requestGameStart', i + 1);
+            const htmlBtnId = (event.target as HTMLElement).id;
+            const btnPlayerNumber = Number(htmlBtnId.split('-')[1]);
+            console.log(`Button with id ${htmlBtnId} clicked`);
+            socket.emit('requestGameStart', btnPlayerNumber);
         });
     }
 
@@ -477,7 +476,7 @@ socket.on('startPosDenied', () => {
 
 // get all current Player Information from the Server at the start
 // and spawning all current players except yourself
-socket.on('currentState', (players: { [key: string]: Player }, testColor: string, playerStartInfo: { [key: number]: PlayerStartInfo }) => {
+socket.on('currentState', (players: { [key: string]: Player }, testColor: string, playerStartInfos: { [key: number]: PlayerStartInfo }) => {
 
     console.log('Get the Current State');
 
@@ -493,29 +492,25 @@ socket.on('currentState', (players: { [key: string]: Player }, testColor: string
         addPlayer(playerList[id], false);
     });
 
-    setStartButtonAvailability(playerStartInfo);
+    setStartButtonAvailability(playerStartInfos);
 });
 
 // when the current player is already on the server and starts the game
-socket.on('startClientGame', (socket) => {
+socket.on('startClientGame', (newSocketPlayer) => {
 
     startScreen?.style.setProperty('display', 'none');
-
-    // console.log('Socket Object: ', socket);
 
     // Start VR Session for the client
     xr.baseExperience.enterXRAsync('immersive-vr', 'local-floor').then(() => {
         console.log('Starting VR from startClientGame');
 
         // get the Connection ID of the Player
-        playerID = socket.id;
-        clientStartPos = socket.startPosition;
+        playerID = newSocketPlayer.id;
+        clientStartPos = newSocketPlayer.startPosition;
 
-        clientPlayer = new Player(socket);
+        clientPlayer = new Player(newSocketPlayer);
 
         localStorage.setItem('playerID', `${playerID}`);
-
-        // clientStartPos = { x: socket.position.x, y: socket.position.y, z: socket.position.z };
 
         playerList[playerID] = clientPlayer;
 

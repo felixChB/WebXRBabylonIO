@@ -38,18 +38,17 @@ export class PlayerData {
 }
 
 export class Player {
-    constructor(id, playerStartInfo, isVR) {
+    constructor(id, startData) {
         this.id = id;
-        this.color = playerStartInfo.color;
-        this.isVR = isVR;
-        this.playerNumber = playerStartInfo.player;
-        this.startPosition = { x: playerStartInfo.x, y: playerStartInfo.y, z: playerStartInfo.z };
-        this.position = { x: playerStartInfo.x, y: playerStartInfo.y, z: playerStartInfo.z };
-        this.rotation = { x: 0, y: 0, z: 0 };
-        this.contrPosR = { x: playerStartInfo.x, y: playerStartInfo.y, z: playerStartInfo.z };
-        this.contrPosL = { x: playerStartInfo.x, y: playerStartInfo.y, z: playerStartInfo.z };
-        this.contrRotR = { x: 0, y: 0, z: 0 };
-        this.contrRotL = { x: 0, y: 0, z: 0 };
+        this.color = startData.color;
+        this.playerNumber = startData.playerNumber;
+        this.startPosition = { x: startData.position.x, y: startData.position.y, z: startData.position.z };
+        this.position = { x: startData.position.x, y: startData.position.y, z: startData.position.z };
+        this.rotation = { x: startData.rotation.x, y: startData.rotation.y, z: startData.rotation.z };
+        this.contrPosR = { x: startData.position.x, y: startData.position.y, z: startData.position.z };
+        this.contrPosL = { x: startData.position.x, y: startData.position.y, z: startData.position.z };
+        this.contrRotR = { x: startData.rotation.x, y: startData.rotation.y, z: startData.rotation.z };
+        this.contrRotL = { x: startData.rotation.x, y: startData.rotation.y, z: startData.rotation.z };
     }
 
     setData(data) {
@@ -76,10 +75,34 @@ let serverStartTime;
 const maxPlayers = 4;
 
 let playerStartInfos = {
-    1: { player: 1, x: 5, y: 2, z: 0, color: '#ff0000', used: false },
-    2: { player: 2, x: -5, y: 2, z: 0, color: '#00ff00', used: false },
-    3: { player: 3, x: 0, y: 2, z: 5, color: '#0000ff', used: false },
-    4: { player: 4, x: 0, y: 2, z: -5, color: '#ffff00', used: false }
+    1: {
+        playerNumber: 1,
+        position: { x: 5, y: 2, z: 0 },
+        rotation: { x: 0, y: 0, z: 0 },
+        color: '#ff0000',
+        used: false
+    },
+    2: {
+        playerNumber: 2,
+        position: { x: -5, y: 2, z: 0 },
+        rotation: { x: 0, y: 0, z: 0 },
+        color: '#00ff00',
+        used: false
+    },
+    3: {
+        playerNumber: 3,
+        position: { x: 0, y: 2, z: 5 },
+        rotation: { x: 0, y: 0, z: 0 },
+        color: '#0000ff',
+        used: false
+    },
+    4: {
+        playerNumber: 4,
+        position: { x: 0, y: 2, z: -5 },
+        rotation: { x: 0, y: 0, z: 0 },
+        color: '#ffff00',
+        used: false
+    }
 }
 
 // Store all connected players
@@ -114,14 +137,11 @@ io.on('connection', (socket) => {
 
     socket.on('continueAsOldPlayer', (oldPlayerData) => {
         if (playerStartInfos[oldPlayerData.playerNumber].used == false) {
-            const newPlayer = new Player(socket.id, playerStartInfos[oldPlayerData.playerNumber], oldPlayerData.isVR);
-
             playerStartInfos[oldPlayerData.playerNumber].used = true;
 
-            socket.leave('waitingRoom');
-            socket.join('gameRoom');
+            const newPlayer = new Player(socket.id, oldPlayerData);
 
-            startClientGame();
+            startClientGame(newPlayer, socket);
         } else {
             socket.emit('startPosDenied');
         }
@@ -130,44 +150,10 @@ io.on('connection', (socket) => {
     socket.on('requestGameStart', (startPlayerNum) => {
         if (playerStartInfos[startPlayerNum].used == false) {
             playerStartInfos[startPlayerNum].used = true;
-            //socket.emit('startPosAccepted', playerStartInfos[buttonNum]);
 
-            socket.leave('waitingRoom');
-            socket.join('gameRoom');
+            const newPlayer = new Player(socket.id, playerStartInfos[startPlayerNum]);
 
-            console.log(`Player ${socket.id} started playing.`);
-
-            const newPlayer = new Player(socket.id, playerStartInfos[startPlayerNum], socket.isVR);
-
-            // Add new player to the game
-            playerList[socket.id] = newPlayer;
-
-            // Start the Game on client side and send the player's information to the new player
-            socket.emit('startClientGame', playerList[socket.id]);
-
-            // Notify other players of the new player (waitingRoom and gameRoom)
-            socket.to('waitingRoom').to('gameRoom').emit('newPlayer', playerList[socket.id]);
-
-            socket.on('clientUpdate', (data) => {
-                // console.log('Player data received:');
-                // console.log(data.contrRotR);
-                playerList[socket.id].setData(data);
-                // console.log('Player data updated:');
-                // console.log(playerList[socket.id].contrRotR);
-            });
-
-            // Test color change for connection
-            socket.on('clicked', () => {
-                // console.log('Clicked');
-
-                if (activeColor == color1) {
-                    activeColor = color2;
-                } else {
-                    activeColor = color1;
-                }
-                // console.log(activeColor);
-                io.emit('colorChanged', activeColor);
-            });
+            startClientGame(newPlayer, socket);
         } else {
             socket.emit('startPosDenied');
         }
@@ -218,23 +204,23 @@ setInterval(function () {
     io.emit('serverUpdate', playerList);
 }, 20);
 
-function startClientGame(newPlayer) {
-    playerStartInfos[startPlayerNum].used = true;
-    //socket.emit('startPosAccepted', playerStartInfos[buttonNum]);
+// Start the game for the new player
+// can be called from a new player or an old player
+function startClientGame(newPlayer, socket) {
 
     socket.leave('waitingRoom');
     socket.join('gameRoom');
 
-    console.log(`Player ${socket.id} started playing.`);
-    
+    console.log(`Player ${newPlayer.id} started playing.`);
+
     // Add new player to the game
-    playerList[socket.id] = newPlayer;
+    playerList[newPlayer.id] = newPlayer;
 
     // Start the Game on client side and send the player's information to the new player
-    socket.emit('startClientGame', playerList[socket.id]);
+    socket.emit('startClientGame', playerList[newPlayer.id]);
 
     // Notify other players of the new player (waitingRoom and gameRoom)
-    socket.to('waitingRoom').to('gameRoom').emit('newPlayer', playerList[socket.id]);
+    socket.to('waitingRoom').to('gameRoom').emit('newPlayer', playerList[newPlayer.id]);
 
     socket.on('clientUpdate', (data) => {
         // console.log('Player data received:');
@@ -256,5 +242,4 @@ function startClientGame(newPlayer) {
         // console.log(activeColor);
         io.emit('colorChanged', activeColor);
     });
-    io.emit('startClientGame');
 };
