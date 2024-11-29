@@ -17,7 +17,7 @@ Node.js is requiered to run the server and git Bash ist used to create the ssl c
 Clone the git repository
 
 ```bash
-https://github.com/felixChB/WebXRBabylonIO.git
+git clone https://github.com/felixChB/WebXRBabylonIO.git
 ```
 ### Create ssl certificates and keys for https
 
