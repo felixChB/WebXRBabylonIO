@@ -445,12 +445,14 @@ socket.on('reload', () => {
     window.location.reload();
 });
 
-socket.on('timeForOldPlayers', (serverStartTime) => {
-    if (oldPlayer) {
-        let timeDiffOldPlayer = serverStartTime - oldPlayer.playerTime;
+socket.on('timeForOldPlayers', () => {
+    if (oldPlayer != null) {
+        let timeDiffOldPlayer = clientStartTime - oldPlayer.playerTime;
+
+        console.log('Time Difference to Old Player: ', timeDiffOldPlayer);
 
         if (timeDiffOldPlayer < 20000) {
-            console.log('Old Player found.');
+            console.log(`Old Player ${oldPlayer.playerNumber} found.`);
 
             if (continueAsOldPlayer) {
                 continueAsOldPlayer.style.display = 'block';
@@ -461,8 +463,11 @@ socket.on('timeForOldPlayers', (serverStartTime) => {
                 });
             }
         } else {
+            console.log('Old Player found, but too late.');
             localStorage.removeItem('player');
         }
+    } else {
+        console.log('No Old Player found.');
     }
 });
 
@@ -572,9 +577,9 @@ function setStartButtonAvailability(startPositions: { [key: number]: PlayerStart
 
 // Spawn Player Entity with the Connection ID
 function addPlayer(player: Player, isPlayer: boolean) {
-    console.log('Spawning player: ', player.id);
+    console.log(`Spawning Player: ${player.id} as Player ${player.playerNumber}`);
 
-    player.headObj = MeshBuilder.CreateBox('player_' + player.id, { size: 1 }, scene);
+    player.headObj = MeshBuilder.CreateBox('player_' + player.id, { size: 0.5 }, scene);
     player.headObj.position = new Vector3(player.position.x, player.position.y, player.position.z);
     player.headObj.rotation = new Vector3(player.rotation.x, player.rotation.y, player.rotation.z);
     player.headObj.material = new StandardMaterial('mat_' + player.id, scene);
@@ -676,7 +681,7 @@ engine.runRenderLoop(function () {
 // set up Interval function for the local storage of the player data
 setInterval(function () {
     setLocalStorage();
-}, 10000);
+}, 1000);
 
 function setLocalStorage() {
     if (playerList[playerID]) {
