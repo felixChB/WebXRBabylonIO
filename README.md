@@ -40,8 +40,12 @@ It should create a folder called node_modules with all dependencies.
 
 ## Starting the Server
 
-To start the Server and to play the Game, the `ipAdress` variable in the `server.js` file has to be changed to your individual ip adress.
-After that type the following in the terminal:
+To start the application, the `ipAdress` variable in the `server.js` file has to be changed to your individual ip adress.
+Type the following in the terminal to build the bundle.js file:
+```bash
+npm run build
+```
+After that type the following to start the server and the application:
 ```bash
 npm run dev
 ```
