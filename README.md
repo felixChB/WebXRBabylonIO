@@ -19,7 +19,7 @@ Clone the git repository
 ```bash
 https://github.com/felixChB/WebXRBabylonIO.git
 ```
-### create ssl certificates and keys for https
+### Create ssl certificates and keys for https
 
 1. create a folder called sslcerts in the main folder of the repository
 2. open git bash
@@ -29,7 +29,7 @@ https://github.com/felixChB/WebXRBabylonIO.git
 openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -keyout sslcerts/selfsigned.key -out sslcerts/selfsigned.cert
 ```
 
-### install dependencies
+### Install dependencies
 
 Open the main folder of the repository in a coding software (e.x. Visual Studio Code) and open the terminal.
 To install all required dependencies, type:
