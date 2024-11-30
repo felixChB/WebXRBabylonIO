@@ -7,23 +7,21 @@ import { Inspector } from '@babylonjs/inspector';
 
 import '@babylonjs/core/Materials/Textures/Loaders'; // Required for EnvironmentHelper
 import '@babylonjs/loaders/glTF'; // Enable GLTF/GLB loader for loading controller models from WebXR Input registry
-// import './style.css'
 
 const socket = io();
-
-let clientStartTime = Date.now();
 
 const rotationQuaternion = null;
 if (rotationQuaternion) {
     //console.log('Rotation Quaternion: ', rotationQuaternion);
 }
+let clientStartTime = Date.now();
 
 let playerID: string;
 let clientPlayer: Player | null = null;
 let playerUsingVR: boolean = false;
 let clientStartPos: { x: number, y: number, z: number };
 
-// let oldPlayerData = localStorage.getItem('playerID');
+let playerList: { [key: string]: Player } = {};
 let oldPlayer: OldPlayerData | null = null;
 getLocalStorage();
 
@@ -38,21 +36,6 @@ const startPosButtons = document.querySelectorAll('.posSelection');
 const startScreen = document.getElementById('startScreen');
 const continueAsOldPlayer = document.getElementById('continueAsOldPlayer');
 const loadingScreen = document.getElementById('loadingScreen');
-// const htmlBody = document.querySelector('body');
-
-/*
-document.onreadystatechange = function () {
-    if (document.readyState !== 'complete') {
-        if (loadingScreen) {
-            loadingScreen.style.display = 'none';
-        }
-    } else {
-        if (loadingScreen) {
-            loadingScreen.style.display = 'block';
-        }
-    }
-};
-*/
 
 ////////////////////////////// CREATE BABYLON SCENE ETC. //////////////////////////////
 
@@ -78,18 +61,23 @@ light.intensity = 0.7;
 // Built-in 'sphere' shape.
 const testSphere = MeshBuilder.CreateSphere('testSphere',
     { diameter: 2, segments: 32 }, scene);
-testSphere.material = new StandardMaterial('mat', scene);
-
-// Move the sphere upward 1/2 its height
 testSphere.position.y = 1;
 
 // Built-in 'ground' shape.
 const ground = MeshBuilder.CreateGround('ground',
-    { width: 6, height: 6 }, scene);
+    { width: 60, height: 60 }, scene);
 
-ground.material = new StandardMaterial('matGround', scene);
+// Materials //
+const groundMaterial = new StandardMaterial('groundMaterial', scene);
+groundMaterial.diffuseColor = new Color3(0.5, 0.5, 0.5);
+const testMaterial = new StandardMaterial('testMaterial', scene);
+const staticBlocksMat = new StandardMaterial('staticBlocksMat', scene);
+staticBlocksMat.diffuseColor = Color3.FromHexString('#f7b705');
 
-let playerList: { [key: string]: Player } = {};
+ground.material = groundMaterial;
+testSphere.material = testMaterial;
+
+////////////////////////////// END CREATE BABYLON SCENE ETC. //////////////////////////////
 
 interface PlayerStartInfo {
     playerNumber: number;
@@ -505,9 +493,7 @@ socket.on('currentState', (players: { [key: string]: Player }, testColor: string
 
     console.log('Get the Current State');
 
-    if (testSphere) {
-        (testSphere.material as StandardMaterial).diffuseColor = Color3.FromHexString(testColor);
-    }
+    testMaterial.diffuseColor = Color3.FromHexString(testColor);
 
     Object.keys(players).forEach((id) => {
         // Add new player to the playerList
@@ -667,9 +653,7 @@ document.addEventListener('click', () => {
 
 socket.on('colorChanged', (color) => {
     // change color of the sphere
-    if (testSphere) {
-        (testSphere.material as StandardMaterial).diffuseColor = Color3.FromHexString(color);
-    }
+    testMaterial.diffuseColor = Color3.FromHexString(color);
 });
 
 ////////////////////////// END TESTING GROUND //////////////////////////////            
