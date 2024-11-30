@@ -1,15 +1,18 @@
-html, body {
+html,
+body {
     overflow: hidden;
     width: 100%;
     height: 100%;
     margin: 0;
     padding: 0;
 }
+
 #renderCanvas {
     width: 100%;
     height: 100%;
     touch-action: none;
 }
+
 #fps {
     position: absolute;
     background-color: black;
@@ -22,6 +25,55 @@ html, body {
     width: 60px;
     height: 20px;
 }
+
+#loadingScreen {
+    position: absolute;
+    display: block;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 100vw;
+    background-color: rgb(78, 78, 255);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+}
+
+#loader-bubble {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(165deg,
+            rgba(255, 255, 255, 1) 0%,
+            rgb(220, 220, 220) 40%,
+            rgb(170, 170, 170) 98%,
+            rgb(10, 10, 10) 100%);
+    border-radius: 50%;
+    position: relative;
+}
+
+#loader-bubble:before {
+    position: absolute;
+    content: "";
+    width: 100%;
+    height: 100%;
+    border-radius: 100%;
+    border-bottom: 0 solid #ffffff05;
+    box-shadow: 0 -10px 20px 20px #ffffff40 inset,
+        0 -5px 15px 10px #ffffff50 inset, 0 -2px 5px #ffffff80 inset,
+        0 -3px 2px #ffffffbb inset, 0 2px 0px #ffffff, 0 2px 3px #ffffff,
+        0 5px 5px #ffffff90, 0 10px 15px #ffffff60, 0 10px 20px 20px #ffffff40;
+    filter: blur(3px);
+    animation: 2s rotate linear infinite;
+}
+
+@keyframes rotate {
+    100% {
+        transform: rotate(360deg)
+    }
+}
+
 #startScreen {
     position: absolute;
     top: 0;
@@ -33,7 +85,7 @@ html, body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    z-index: 100;
+    z-index: 10;
 }
 
 .btn {
@@ -42,7 +94,7 @@ html, body {
     margin-top: 20px;
     cursor: pointer;
     border-radius: 10px;
-    font-size: 20px;   
+    font-size: 20px;
 }
 
 .posSelection {

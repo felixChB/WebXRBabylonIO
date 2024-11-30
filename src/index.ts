@@ -37,6 +37,22 @@ let divFps = document.getElementById('fps');
 const startPosButtons = document.querySelectorAll('.posSelection');
 const startScreen = document.getElementById('startScreen');
 const continueAsOldPlayer = document.getElementById('continueAsOldPlayer');
+const loadingScreen = document.getElementById('loadingScreen');
+// const htmlBody = document.querySelector('body');
+
+/*
+document.onreadystatechange = function () {
+    if (document.readyState !== 'complete') {
+        if (loadingScreen) {
+            loadingScreen.style.display = 'none';
+        }
+    } else {
+        if (loadingScreen) {
+            loadingScreen.style.display = 'block';
+        }
+    }
+};
+*/
 
 ////////////////////////////// CREATE BABYLON SCENE ETC. //////////////////////////////
 
@@ -473,6 +489,10 @@ socket.on('timeForOldPlayers', () => {
 
 socket.on('joinedWaitingRoom', () => {
     console.log('You joined the waiting Room. Enter VR to join the Game.');
+
+    if (loadingScreen) {
+        loadingScreen.style.display = 'none';
+    }
 });
 
 socket.on('startPosDenied', () => {
