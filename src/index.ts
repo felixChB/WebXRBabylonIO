@@ -1,6 +1,7 @@
 import { io } from 'socket.io-client';
 import { /*Camera,*/ Engine, FreeCamera, Scene } from '@babylonjs/core';
-import { ArcRotateCamera, HemisphericLight, MeshBuilder } from '@babylonjs/core';
+import { ArcRotateCamera, MeshBuilder, ShadowGenerator } from '@babylonjs/core';
+import { HemisphericLight, DirectionalLight, PointLight } from '@babylonjs/core';
 import { Mesh, StandardMaterial, Color3, Vector3 } from '@babylonjs/core';
 import { WebXRDefaultExperience, WebXRInputSource } from '@babylonjs/core/XR';
 import { Inspector } from '@babylonjs/inspector';
@@ -39,43 +40,83 @@ const loadingScreen = document.getElementById('loadingScreen');
 
 ////////////////////////////// CREATE BABYLON SCENE ETC. //////////////////////////////
 
+// Basic Setup ---------------------------------------------------------------------------------
 // Create a canvas element for rendering
 const canvas = document.createElement('canvas');
 canvas.id = 'renderCanvas';
 document.body.appendChild(canvas);
 
-// Create engine and a scene
 const engine = new Engine(canvas, true);
 const scene = new Scene(engine);
 
+// Camera --------------------------------------------------------------------------------------
 // Add a camera for the non-VR view in browser
 const camera = new ArcRotateCamera('Camera', -(Math.PI / 4) * 3, Math.PI / 4, 10, new Vector3(0, 0, 0), scene);
 camera.attachControl(true);
 
+// Lights --------------------------------------------------------------------------------------
 // Creates a light, aiming 0,1,0 - to the sky
-const light = new HemisphericLight('light',
-    new Vector3(0, 1, 0), scene);
-// Dim the light a small amount - 0 to 1
-light.intensity = 0.7;
+const hemiLight = new HemisphericLight('hemiLight', new Vector3(0, 1, 0), scene);
+hemiLight.intensity = 0.1;
 
+var dirLight = new DirectionalLight("DirectionalLight", new Vector3(-0.7, -0.5, 0.4), scene);
+dirLight.position = new Vector3(9, 11, -17);
+dirLight.intensity = 0.2;
+dirLight.shadowMaxZ = 130;
+dirLight.shadowMinZ = 10;
+
+const pointLight = new PointLight('pointLight', new Vector3(0, 10, 0), scene);
+pointLight.intensity = 0.3;
+pointLight.position = new Vector3(12, 3, -6);
+pointLight.diffuse = new Color3(1, 1, 1);
+
+// Meshes --------------------------------------------------------------------------------------
 // Built-in 'sphere' shape.
-const testSphere = MeshBuilder.CreateSphere('testSphere',
-    { diameter: 2, segments: 32 }, scene);
+const testSphere = MeshBuilder.CreateSphere('testSphere', { diameter: 2, segments: 32 }, scene);
 testSphere.position.y = 1;
 
 // Built-in 'ground' shape.
-const ground = MeshBuilder.CreateGround('ground',
-    { width: 60, height: 60 }, scene);
+const ground = MeshBuilder.CreateGround('ground', { width: 60, height: 60 }, scene);
 
-// Materials //
+// static blocks standing around
+const staticBlock1 = MeshBuilder.CreateBox('staticBlock1', { size: 1 }, scene);
+staticBlock1.position = new Vector3(-3, 2, 7);
+staticBlock1.scaling = new Vector3(1, 4, 6);
+
+const staticBlock2 = MeshBuilder.CreateBox('staticBlock2', { size: 1 }, scene);
+staticBlock2.position = new Vector3(-10, 0.5, 5);
+staticBlock2.scaling = new Vector3(3, 0.5, 6);
+
+// Shadows --------------------------------------------------------------------------------------
+var shadowGenerator = new ShadowGenerator(1024, dirLight);
+shadowGenerator.addShadowCaster(testSphere);
+shadowGenerator.addShadowCaster(staticBlock1);
+shadowGenerator.addShadowCaster(staticBlock2);
+//shadowGenerator.bias = 0.0001;
+
+shadowGenerator.useContactHardeningShadow = true;
+shadowGenerator.setDarkness(0.5);
+shadowGenerator.usePoissonSampling = true;
+
+// var shadowGenerator2 = new ShadowGenerator(1024, pointLight);
+
+ground.receiveShadows = true;
+
+// Materials --------------------------------------------------------------------------------------
 const groundMaterial = new StandardMaterial('groundMaterial', scene);
-groundMaterial.diffuseColor = new Color3(0.5, 0.5, 0.5);
-const testMaterial = new StandardMaterial('testMaterial', scene);
-const staticBlocksMat = new StandardMaterial('staticBlocksMat', scene);
-staticBlocksMat.diffuseColor = Color3.FromHexString('#f7b705');
+groundMaterial.diffuseColor = Color3.FromHexString('#f5f5f5'); // white
+// groundMaterial.diffuseTexture = new Texture('../assets/figma_grid1.png', scene);
 
+const testMaterial = new StandardMaterial('testMaterial', scene);
+
+const staticBlocksMat = new StandardMaterial('staticBlocksMat', scene);
+staticBlocksMat.diffuseColor = Color3.FromHexString('#f7b705'); // orange
+
+// Setting Materials
 ground.material = groundMaterial;
 testSphere.material = testMaterial;
+staticBlock1.material = staticBlocksMat;
+staticBlock2.material = staticBlocksMat;
 
 ////////////////////////////// END CREATE BABYLON SCENE ETC. //////////////////////////////
 
