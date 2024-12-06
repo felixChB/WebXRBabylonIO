@@ -80,28 +80,28 @@ const maxPlayers = 4;
 let playerStartInfos = {
     1: {
         playerNumber: 1,
-        position: { x: 5, y: 0, z: 0 },
+        position: { x: 8, y: 0, z: 0 },
         rotation: { x: 0, y: 0, z: 0 },
         color: '#ff0000',
         used: false
     },
     2: {
         playerNumber: 2,
-        position: { x: -5, y: 0, z: 0 },
+        position: { x: -8, y: 0, z: 0 },
         rotation: { x: 0, y: 0, z: 0 },
         color: '#00ff00',
         used: false
     },
     3: {
         playerNumber: 3,
-        position: { x: 0, y: 0, z: 5 },
+        position: { x: 0, y: 0, z: 8 },
         rotation: { x: 0, y: 0, z: 0 },
         color: '#0000ff',
         used: false
     },
     4: {
         playerNumber: 4,
-        position: { x: 0, y: 0, z: -5 },
+        position: { x: 0, y: 0, z: -8 },
         rotation: { x: 0, y: 0, z: 0 },
         color: '#ffff00',
         used: false

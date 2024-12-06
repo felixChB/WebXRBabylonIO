@@ -1,8 +1,8 @@
 import { io } from 'socket.io-client';
 import { /*Camera,*/ Engine, FreeCamera, Scene } from '@babylonjs/core';
-import { ArcRotateCamera, MeshBuilder, ShadowGenerator } from '@babylonjs/core';
-import { HemisphericLight, DirectionalLight, PointLight } from '@babylonjs/core';
-import { Mesh, StandardMaterial, Color3, Vector3 } from '@babylonjs/core';
+import { ArcRotateCamera, MeshBuilder, ShadowGenerator, GlowLayer } from '@babylonjs/core';
+import { HemisphericLight, DirectionalLight } from '@babylonjs/core';
+import { Mesh, StandardMaterial, Texture, Color3, Vector3 } from '@babylonjs/core';
 import { WebXRDefaultExperience, WebXRInputSource } from '@babylonjs/core/XR';
 import { Inspector } from '@babylonjs/inspector';
 
@@ -51,7 +51,7 @@ const scene = new Scene(engine);
 
 // Camera --------------------------------------------------------------------------------------
 // Add a camera for the non-VR view in browser
-const camera = new ArcRotateCamera('Camera', -(Math.PI / 4) * 3, Math.PI / 4, 10, new Vector3(0, 0, 0), scene);
+const camera = new ArcRotateCamera('Camera', -(Math.PI / 4) * 3, Math.PI / 4, 15, new Vector3(0, 0, 0), scene);
 camera.attachControl(true);
 
 // Lights --------------------------------------------------------------------------------------
@@ -65,10 +65,15 @@ dirLight.intensity = 0.2;
 dirLight.shadowMaxZ = 130;
 dirLight.shadowMinZ = 10;
 
-const pointLight = new PointLight('pointLight', new Vector3(0, 10, 0), scene);
-pointLight.intensity = 0.3;
-pointLight.position = new Vector3(12, 3, -6);
-pointLight.diffuse = new Color3(1, 1, 1);
+// const pointLight = new PointLight('pointLight', new Vector3(0, 10, 0), scene);
+// pointLight.intensity = 0.3;
+// pointLight.position = new Vector3(12, 3, -6);
+// pointLight.diffuse = new Color3(1, 0.09, 0.043);
+
+// const pointLight2 = new PointLight('pointLight2', new Vector3(0, 10, 0), scene);
+// pointLight2.intensity = 0.3;
+// pointLight2.position = new Vector3(-12, 3, -6);
+// pointLight2.diffuse = new Color3(0.459, 0.047, 1);
 
 // Meshes --------------------------------------------------------------------------------------
 // Built-in 'sphere' shape.
@@ -87,6 +92,23 @@ const staticBlock2 = MeshBuilder.CreateBox('staticBlock2', { size: 1 }, scene);
 staticBlock2.position = new Vector3(-10, 0.5, 5);
 staticBlock2.scaling = new Vector3(3, 0.5, 6);
 
+// Grounds for the Player Start Positions
+const player1Ground = MeshBuilder.CreateBox('player1GroundBox', { size: 1 }, scene);
+player1Ground.position = new Vector3(8, -0.1, 0);
+player1Ground.scaling = new Vector3(4.5, 0.2, 8.5);
+
+const player2Ground = MeshBuilder.CreateBox('player2GroundBox', { size: 1 }, scene);
+player2Ground.position = new Vector3(-8, -0.1, 0);
+player2Ground.scaling = new Vector3(4.5, 0.2, 8.5);
+
+const player3Ground = MeshBuilder.CreateBox('player3GroundBox', { size: 1 }, scene);
+player3Ground.position = new Vector3(0, -0.1, 8);
+player3Ground.scaling = new Vector3(8.5, 0.2, 4.5);
+
+const player4Ground = MeshBuilder.CreateBox('player4GroundBox', { size: 1 }, scene);
+player4Ground.position = new Vector3(0, -0.1, -8);
+player4Ground.scaling = new Vector3(8.5, 0.2, 4.5);
+
 // Shadows --------------------------------------------------------------------------------------
 var shadowGenerator = new ShadowGenerator(1024, dirLight);
 shadowGenerator.addShadowCaster(testSphere);
@@ -100,14 +122,27 @@ shadowGenerator.usePoissonSampling = true;
 
 // var shadowGenerator2 = new ShadowGenerator(1024, pointLight);
 
-ground.receiveShadows = true;
+// ground.receiveShadows = true;
+player1Ground.receiveShadows = true;
+player2Ground.receiveShadows = true;
+player3Ground.receiveShadows = true;
+player4Ground.receiveShadows = true;
+
+// add a Glowlayer to let emissive materials glow
+const gl = new GlowLayer("glow", scene, {
+    mainTextureFixedSize: 1024,
+    blurKernelSize: 64,
+});
+gl.intensity = 0.5;
 
 // Materials --------------------------------------------------------------------------------------
 const groundMaterial = new StandardMaterial('groundMaterial', scene);
 groundMaterial.diffuseColor = Color3.FromHexString('#f5f5f5'); // white
-// groundMaterial.diffuseTexture = new Texture('../assets/figma_grid1.png', scene);
+groundMaterial.roughness = 1;
+groundMaterial.emissiveTexture = new Texture('./assets/figma_grid1.png', scene);
 
 const testMaterial = new StandardMaterial('testMaterial', scene);
+testMaterial.emissiveColor = Color3.White();
 
 const staticBlocksMat = new StandardMaterial('staticBlocksMat', scene);
 staticBlocksMat.diffuseColor = Color3.FromHexString('#f7b705'); // orange
@@ -117,6 +152,13 @@ ground.material = groundMaterial;
 testSphere.material = testMaterial;
 staticBlock1.material = staticBlocksMat;
 staticBlock2.material = staticBlocksMat;
+
+player1Ground.material = groundMaterial;
+player2Ground.material = groundMaterial;
+player3Ground.material = groundMaterial;
+player4Ground.material = groundMaterial;
+
+// ground.isVisible = false;
 
 ////////////////////////////// END CREATE BABYLON SCENE ETC. //////////////////////////////
 
@@ -534,7 +576,7 @@ socket.on('currentState', (players: { [key: string]: Player }, testColor: string
 
     console.log('Get the Current State');
 
-    testMaterial.diffuseColor = Color3.FromHexString(testColor);
+    testMaterial.emissiveColor = Color3.FromHexString(testColor);
 
     Object.keys(players).forEach((id) => {
         // Add new player to the playerList
@@ -630,7 +672,7 @@ function addPlayer(player: Player, isPlayer: boolean) {
     player.headObj.position = new Vector3(player.position.x, player.position.y, player.position.z);
     player.headObj.rotation = new Vector3(player.rotation.x, player.rotation.y, player.rotation.z);
     player.headObj.material = new StandardMaterial('mat_' + player.id, scene);
-    (player.headObj.material as StandardMaterial).diffuseColor = Color3.FromHexString(player.color);
+    (player.headObj.material as StandardMaterial).emissiveColor = Color3.FromHexString(player.color);
 
     if (isPlayer) {
         player.headObj.isVisible = false;
@@ -652,6 +694,10 @@ function addPlayer(player: Player, isPlayer: boolean) {
     playerList[player.id].headObj = player.headObj;
     playerList[player.id].controllerR = player.controllerR;
     playerList[player.id].controllerL = player.controllerL;
+
+    shadowGenerator.addShadowCaster(playerList[player.id].headObj as Mesh);
+    shadowGenerator.addShadowCaster(playerList[player.id].controllerR as Mesh);
+    shadowGenerator.addShadowCaster(playerList[player.id].controllerL as Mesh);
 }
 
 socket.on('playerDisconnected', (id) => {
@@ -694,7 +740,7 @@ document.addEventListener('click', () => {
 
 socket.on('colorChanged', (color) => {
     // change color of the sphere
-    testMaterial.diffuseColor = Color3.FromHexString(color);
+    testMaterial.emissiveColor = Color3.FromHexString(color);
 });
 
 ////////////////////////// END TESTING GROUND //////////////////////////////            
