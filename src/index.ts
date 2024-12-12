@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
 import { /*Camera,*/ Engine, FreeCamera, Scene } from '@babylonjs/core';
-import { ArcRotateCamera, MeshBuilder, ShadowGenerator, GlowLayer } from '@babylonjs/core';
+import { ArcRotateCamera, MeshBuilder, /*ShadowGenerator,*/ GlowLayer } from '@babylonjs/core';
 import { HemisphericLight, DirectionalLight } from '@babylonjs/core';
 import { Mesh, StandardMaterial, Texture, Color3, Vector3 } from '@babylonjs/core';
 import { WebXRDefaultExperience, WebXRInputSource } from '@babylonjs/core/XR';
@@ -23,7 +23,7 @@ let playerUsingVR: boolean = false;
 let clientStartPos: { x: number, y: number, z: number };
 
 let playerList: { [key: string]: Player } = {};
-let oldPlayer: OldPlayerData | null = null;
+let previousPlayer: PreviousPlayerData | null = null;
 getLocalStorage();
 
 let xr: WebXRDefaultExperience;
@@ -32,10 +32,11 @@ let leftController: WebXRInputSource | null = null;
 let rightController: WebXRInputSource | null = null;
 
 // Get HTML Elements
-let divFps = document.getElementById('fps');
+const divFps = document.getElementById('fps');
+const divID = document.getElementById('playerID');
 const startPosButtons = document.querySelectorAll('.posSelection');
 const startScreen = document.getElementById('startScreen');
-const continueAsOldPlayer = document.getElementById('continueAsOldPlayer');
+const continueAsPreviousPlayer = document.getElementById('continueAsPreviousPlayer');
 const loadingScreen = document.getElementById('loadingScreen');
 
 ////////////////////////////// CREATE BABYLON SCENE ETC. //////////////////////////////
@@ -83,42 +84,37 @@ testSphere.position.y = 1;
 // Built-in 'ground' shape.
 const ground = MeshBuilder.CreateGround('ground', { width: 60, height: 60 }, scene);
 
-// static blocks standing around
-const staticBlock1 = MeshBuilder.CreateBox('staticBlock1', { size: 1 }, scene);
-staticBlock1.position = new Vector3(-3, 2, 7);
-staticBlock1.scaling = new Vector3(1, 4, 6);
-
-const staticBlock2 = MeshBuilder.CreateBox('staticBlock2', { size: 1 }, scene);
-staticBlock2.position = new Vector3(-10, 0.5, 5);
-staticBlock2.scaling = new Vector3(3, 0.5, 6);
+const playBox = MeshBuilder.CreateBox('playBox', { size: 1 }, scene);
+playBox.position = new Vector3(0, 1, 0);
+playBox.scaling = new Vector3(8.5, 2.5, 8.5);
 
 // Grounds for the Player Start Positions
 const player1Ground = MeshBuilder.CreateBox('player1GroundBox', { size: 1 }, scene);
-player1Ground.position = new Vector3(8, -0.1, 0);
-player1Ground.scaling = new Vector3(4.5, 0.2, 8.5);
+player1Ground.position = new Vector3(6.51, -25.001, 0);
+player1Ground.scaling = new Vector3(4.5, 50, 8.5);
 
 const player2Ground = MeshBuilder.CreateBox('player2GroundBox', { size: 1 }, scene);
-player2Ground.position = new Vector3(-8, -0.1, 0);
-player2Ground.scaling = new Vector3(4.5, 0.2, 8.5);
+player2Ground.position = new Vector3(-6.51, -25.001, 0);
+player2Ground.scaling = new Vector3(4.5, 50, 8.5);
 
 const player3Ground = MeshBuilder.CreateBox('player3GroundBox', { size: 1 }, scene);
-player3Ground.position = new Vector3(0, -0.1, 8);
-player3Ground.scaling = new Vector3(8.5, 0.2, 4.5);
+player3Ground.position = new Vector3(0, -25.001, 6.51);
+player3Ground.scaling = new Vector3(8.5, 50, 4.5);
 
 const player4Ground = MeshBuilder.CreateBox('player4GroundBox', { size: 1 }, scene);
-player4Ground.position = new Vector3(0, -0.1, -8);
-player4Ground.scaling = new Vector3(8.5, 0.2, 4.5);
+player4Ground.position = new Vector3(0, -25.001, -6.51);
+player4Ground.scaling = new Vector3(8.5, 50, 4.5);
 
 // Shadows --------------------------------------------------------------------------------------
-var shadowGenerator = new ShadowGenerator(1024, dirLight);
-shadowGenerator.addShadowCaster(testSphere);
-shadowGenerator.addShadowCaster(staticBlock1);
-shadowGenerator.addShadowCaster(staticBlock2);
-//shadowGenerator.bias = 0.0001;
+// var shadowGenerator = new ShadowGenerator(1024, dirLight);
+// shadowGenerator.addShadowCaster(testSphere);
+// shadowGenerator.addShadowCaster(staticBlock1);
+// shadowGenerator.addShadowCaster(staticBlock2);
+// //shadowGenerator.bias = 0.0001;
 
-shadowGenerator.useContactHardeningShadow = true;
-shadowGenerator.setDarkness(0.5);
-shadowGenerator.usePoissonSampling = true;
+// shadowGenerator.useContactHardeningShadow = true;
+// shadowGenerator.setDarkness(0.5);
+// shadowGenerator.usePoissonSampling = true;
 
 // var shadowGenerator2 = new ShadowGenerator(1024, pointLight);
 
@@ -136,10 +132,19 @@ const gl = new GlowLayer("glow", scene, {
 gl.intensity = 0.5;
 
 // Materials --------------------------------------------------------------------------------------
-const groundMaterial = new StandardMaterial('groundMaterial', scene);
-groundMaterial.diffuseColor = Color3.FromHexString('#f5f5f5'); // white
-groundMaterial.roughness = 1;
-groundMaterial.emissiveTexture = new Texture('./assets/figma_grid1.png', scene);
+
+const wireframeTexture = new Texture('./assets/figma_grid_thin_white.png', scene);
+wireframeTexture.uScale = 10;
+wireframeTexture.vScale = 10;
+// const simpleGridTexture = new Texture('./assets/figma_grid_wireframe_blue.png', scene);
+
+const wireframeMat = new StandardMaterial('wireframeMat', scene);
+wireframeMat.roughness = 1;
+wireframeMat.diffuseTexture = wireframeTexture;
+wireframeMat.emissiveTexture = wireframeTexture;
+wireframeMat.diffuseTexture.hasAlpha = true;
+wireframeMat.useAlphaFromDiffuseTexture = true;
+wireframeMat.backFaceCulling = false;
 
 const testMaterial = new StandardMaterial('testMaterial', scene);
 testMaterial.emissiveColor = Color3.White();
@@ -147,16 +152,24 @@ testMaterial.emissiveColor = Color3.White();
 const staticBlocksMat = new StandardMaterial('staticBlocksMat', scene);
 staticBlocksMat.diffuseColor = Color3.FromHexString('#f7b705'); // orange
 
-// Setting Materials
-ground.material = groundMaterial;
-testSphere.material = testMaterial;
-staticBlock1.material = staticBlocksMat;
-staticBlock2.material = staticBlocksMat;
+const playerStartMat = new StandardMaterial('playerStartMat', scene);
+// playerStartMat.diffuseTexture = simpleGridTexture;
+playerStartMat.diffuseColor = Color3.FromHexString('#2b2b2b');
+// playerStartMat.emissiveTexture = simpleGridTexture;
+// playerStartMat.diffuseTexture.hasAlpha = true;
+// playerStartMat.useAlphaFromDiffuseTexture = true;
+// playerStartMat.backFaceCulling = false;
 
-player1Ground.material = groundMaterial;
-player2Ground.material = groundMaterial;
-player3Ground.material = groundMaterial;
-player4Ground.material = groundMaterial;
+// Setting Materials
+ground.material = wireframeMat;
+testSphere.material = testMaterial;
+
+playBox.material = wireframeMat;
+
+player1Ground.material = playerStartMat;
+player2Ground.material = playerStartMat;
+player3Ground.material = playerStartMat;
+player4Ground.material = playerStartMat;
 
 // ground.isVisible = false;
 
@@ -186,7 +199,7 @@ interface PlayerData {
     // sendData(): void;
 }
 
-interface OldPlayerData {
+interface PreviousPlayerData {
     id: string;
     color: string;
     playerNumber: number;
@@ -356,6 +369,7 @@ window.addEventListener('resize', function () {
                 // console.log('Escape Key pressed');
                 if (playerUsingVR) {
                     xr.baseExperience.exitXRAsync()
+                    startScreen?.style.setProperty('display', 'flex');
                 }
             }
         });
@@ -524,7 +538,7 @@ window.addEventListener('resize', function () {
 // Send the client's start time to the server upon connection
 socket.on('connect', () => {
     socket.emit('clientStartTime', clientStartTime);
-    // console.log('Old Player Data: ', oldPlayer);
+    // console.log('Previous Player Data: ', previousPlayer);
 });
 
 socket.on('reload', () => {
@@ -532,29 +546,29 @@ socket.on('reload', () => {
     window.location.reload();
 });
 
-socket.on('timeForOldPlayers', () => {
-    if (oldPlayer != null) {
-        let timeDiffOldPlayer = clientStartTime - oldPlayer.playerTime;
+socket.on('timeForPreviousPlayers', () => {
+    if (previousPlayer != null) {
+        let timeDiffPreviousPlayer = clientStartTime - previousPlayer.playerTime;
 
-        console.log('Time Difference to Old Player: ', timeDiffOldPlayer);
+        console.log('Time Difference to Previous Player: ', timeDiffPreviousPlayer);
 
-        if (timeDiffOldPlayer < 20000) {
-            console.log(`Old Player ${oldPlayer.playerNumber} found.`);
+        if (timeDiffPreviousPlayer < 20000) {
+            console.log(`Previous Player ${previousPlayer.playerNumber} found.`);
 
-            if (continueAsOldPlayer) {
-                continueAsOldPlayer.style.display = 'block';
-                continueAsOldPlayer.innerHTML = `Continue as Player ${oldPlayer.playerNumber}`;
-                continueAsOldPlayer.addEventListener('click', () => {
-                    console.log('Pressed continue as Old Player');
-                    socket.emit('continueAsOldPlayer', oldPlayer);
+            if (continueAsPreviousPlayer) {
+                continueAsPreviousPlayer.style.display = 'block';
+                continueAsPreviousPlayer.innerHTML = `Continue as Player ${previousPlayer.playerNumber}`;
+                continueAsPreviousPlayer.addEventListener('click', () => {
+                    console.log('Pressed continue as Previous Player');
+                    socket.emit('continueAsPreviousPlayer', previousPlayer);
                 });
             }
         } else {
-            console.log('Old Player found, but too late.');
+            console.log('Previous Player found, but too late.');
             localStorage.removeItem('player');
         }
     } else {
-        console.log('No Old Player found.');
+        console.log('No Previous Player found.');
     }
 });
 
@@ -593,6 +607,10 @@ socket.on('currentState', (players: { [key: string]: Player }, testColor: string
 socket.on('startClientGame', (newSocketPlayer) => {
 
     startScreen?.style.setProperty('display', 'none');
+
+    if (divID) {
+        divID.innerHTML = `Player ID: ${newSocketPlayer.id}`;
+    }
 
     // Start VR Session for the client
     xr.baseExperience.enterXRAsync('immersive-vr', 'local-floor').then(() => {
@@ -682,22 +700,22 @@ function addPlayer(player: Player, isPlayer: boolean) {
     player.controllerR.position = new Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
     player.controllerR.rotation = new Vector3(player.contrRotR.x, player.contrRotR.y, player.contrRotR.z);
     player.controllerR.material = new StandardMaterial('matConR_' + player.id, scene);
-    (player.controllerR.material as StandardMaterial).diffuseColor = Color3.FromHexString(player.color);
+    (player.controllerR.material as StandardMaterial).emissiveColor = Color3.FromHexString(player.color);
 
     player.controllerL = MeshBuilder.CreateBox('conL_' + player.id, { size: 0.2 });
     player.controllerL.position = new Vector3(player.contrPosL.x, player.contrPosL.y, player.contrPosL.z);
     player.controllerL.rotation = new Vector3(player.contrRotL.x, player.contrRotL.y, player.contrRotL.z);
     player.controllerL.material = new StandardMaterial('matConL' + player.id, scene);
-    (player.controllerL.material as StandardMaterial).diffuseColor = Color3.FromHexString(player.color);
+    (player.controllerL.material as StandardMaterial).emissiveColor = Color3.FromHexString(player.color);
 
 
     playerList[player.id].headObj = player.headObj;
     playerList[player.id].controllerR = player.controllerR;
     playerList[player.id].controllerL = player.controllerL;
 
-    shadowGenerator.addShadowCaster(playerList[player.id].headObj as Mesh);
-    shadowGenerator.addShadowCaster(playerList[player.id].controllerR as Mesh);
-    shadowGenerator.addShadowCaster(playerList[player.id].controllerL as Mesh);
+    // shadowGenerator.addShadowCaster(playerList[player.id].headObj as Mesh);
+    // shadowGenerator.addShadowCaster(playerList[player.id].controllerR as Mesh);
+    // shadowGenerator.addShadowCaster(playerList[player.id].controllerL as Mesh);
 }
 
 socket.on('playerDisconnected', (id) => {
@@ -776,7 +794,7 @@ setInterval(function () {
 
 function setLocalStorage() {
     if (playerList[playerID]) {
-        let safedOldPlayer = {
+        let safedPreviousPlayer = {
             id: playerID,
             color: playerList[playerID].color,
             playerNumber: playerList[playerID].playerNumber,
@@ -788,11 +806,11 @@ function setLocalStorage() {
             contrRotL: playerList[playerID].contrRotL,
             playerTime: Date.now()
         };
-        let jsonOldPlayer = JSON.stringify(safedOldPlayer);
-        // console.log(`Old safed Player: ${jsonOldPlayer}`);
+        let jsonPreviousPlayer = JSON.stringify(safedPreviousPlayer);
+        // console.log(`Previous safed Player: ${jsonPreviousPlayer}`);
 
         if (typeof (Storage) !== "undefined") {
-            localStorage.setItem('player', jsonOldPlayer);
+            localStorage.setItem('player', jsonPreviousPlayer);
         } else {
             console.log('No Web Storage support');
         }
@@ -804,53 +822,53 @@ function getLocalStorage() {
         // Code for localStorage/sessionStorage.
         // localStorage.setItem('playerID', `${playerID}`);
         if (localStorage.getItem('player') != null) {
-            let parsedJsonOldPlayer = JSON.parse(localStorage.getItem('player') || '{}');
-            oldPlayer = {
-                id: parsedJsonOldPlayer.id,
-                color: parsedJsonOldPlayer.color,
-                playerNumber: Number(parsedJsonOldPlayer.playerNumber),
+            let parsedJsonPreviousPlayer = JSON.parse(localStorage.getItem('player') || '{}');
+            previousPlayer = {
+                id: parsedJsonPreviousPlayer.id,
+                color: parsedJsonPreviousPlayer.color,
+                playerNumber: Number(parsedJsonPreviousPlayer.playerNumber),
                 position:
                 {
-                    x: Number(parsedJsonOldPlayer.position.x),
-                    y: Number(parsedJsonOldPlayer.position.y),
-                    z: Number(parsedJsonOldPlayer.position.z)
+                    x: Number(parsedJsonPreviousPlayer.position.x),
+                    y: Number(parsedJsonPreviousPlayer.position.y),
+                    z: Number(parsedJsonPreviousPlayer.position.z)
                 },
                 rotation:
                 {
-                    x: Number(parsedJsonOldPlayer.rotation.x),
-                    y: Number(parsedJsonOldPlayer.rotation.y),
-                    z: Number(parsedJsonOldPlayer.rotation.z)
+                    x: Number(parsedJsonPreviousPlayer.rotation.x),
+                    y: Number(parsedJsonPreviousPlayer.rotation.y),
+                    z: Number(parsedJsonPreviousPlayer.rotation.z)
                 },
                 contrPosR:
                 {
-                    x: Number(parsedJsonOldPlayer.contrPosR.x),
-                    y: Number(parsedJsonOldPlayer.contrPosR.y),
-                    z: Number(parsedJsonOldPlayer.contrPosR.z)
+                    x: Number(parsedJsonPreviousPlayer.contrPosR.x),
+                    y: Number(parsedJsonPreviousPlayer.contrPosR.y),
+                    z: Number(parsedJsonPreviousPlayer.contrPosR.z)
                 },
                 contrPosL:
                 {
-                    x: Number(parsedJsonOldPlayer.contrPosL.x),
-                    y: Number(parsedJsonOldPlayer.contrPosL.y),
-                    z: Number(parsedJsonOldPlayer.contrPosL.z)
+                    x: Number(parsedJsonPreviousPlayer.contrPosL.x),
+                    y: Number(parsedJsonPreviousPlayer.contrPosL.y),
+                    z: Number(parsedJsonPreviousPlayer.contrPosL.z)
                 },
                 contrRotR:
                 {
-                    x: Number(parsedJsonOldPlayer.contrRotR.x),
-                    y: Number(parsedJsonOldPlayer.contrRotR.y),
-                    z: Number(parsedJsonOldPlayer.contrRotR.z)
+                    x: Number(parsedJsonPreviousPlayer.contrRotR.x),
+                    y: Number(parsedJsonPreviousPlayer.contrRotR.y),
+                    z: Number(parsedJsonPreviousPlayer.contrRotR.z)
                 },
                 contrRotL:
                 {
-                    x: Number(parsedJsonOldPlayer.contrRotL.x),
-                    y: Number(parsedJsonOldPlayer.contrRotL.y),
-                    z: Number(parsedJsonOldPlayer.contrRotL.z)
+                    x: Number(parsedJsonPreviousPlayer.contrRotL.x),
+                    y: Number(parsedJsonPreviousPlayer.contrRotL.y),
+                    z: Number(parsedJsonPreviousPlayer.contrRotL.z)
                 },
-                playerTime: Number(parsedJsonOldPlayer.playerTime)
+                playerTime: Number(parsedJsonPreviousPlayer.playerTime)
             }
 
-            console.log('Old Player Data: ', oldPlayer);
+            console.log('Previous Player Data: ', previousPlayer);
         } else {
-            oldPlayer = null;
+            previousPlayer = null;
         }
     } else {
         // Sorry! No Web Storage support..
