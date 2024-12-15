@@ -80,30 +80,31 @@ dirLight.shadowMinZ = 10;
 // Built-in 'sphere' shape.
 const testSphere = MeshBuilder.CreateSphere('testSphere', { diameter: 2, segments: 32 }, scene);
 testSphere.position.y = 1;
+testSphere.scaling = new Vector3(0.5, 0.5, 0.5);
 
 // Built-in 'ground' shape.
 const ground = MeshBuilder.CreateGround('ground', { width: 60, height: 60 }, scene);
 
 const playBox = MeshBuilder.CreateBox('playBox', { size: 1 }, scene);
 playBox.position = new Vector3(0, 1, 0);
-playBox.scaling = new Vector3(8.5, 2.5, 8.5);
+playBox.scaling = new Vector3(3, 2.5, 3);
 
 // Grounds for the Player Start Positions
 const player1Ground = MeshBuilder.CreateBox('player1GroundBox', { size: 1 }, scene);
-player1Ground.position = new Vector3(6.51, -25.001, 0);
-player1Ground.scaling = new Vector3(4.5, 50, 8.5);
+player1Ground.position = new Vector3(2.26, -25.001, 0);
+player1Ground.scaling = new Vector3(1.5, 50, 3);
 
 const player2Ground = MeshBuilder.CreateBox('player2GroundBox', { size: 1 }, scene);
-player2Ground.position = new Vector3(-6.51, -25.001, 0);
-player2Ground.scaling = new Vector3(4.5, 50, 8.5);
+player2Ground.position = new Vector3(-2.26, -25.001, 0);
+player2Ground.scaling = new Vector3(1.5, 50, 3);
 
 const player3Ground = MeshBuilder.CreateBox('player3GroundBox', { size: 1 }, scene);
-player3Ground.position = new Vector3(0, -25.001, 6.51);
-player3Ground.scaling = new Vector3(8.5, 50, 4.5);
+player3Ground.position = new Vector3(0, -25.001, 2.26);
+player3Ground.scaling = new Vector3(3, 50, 1.5);
 
 const player4Ground = MeshBuilder.CreateBox('player4GroundBox', { size: 1 }, scene);
-player4Ground.position = new Vector3(0, -25.001, -6.51);
-player4Ground.scaling = new Vector3(8.5, 50, 4.5);
+player4Ground.position = new Vector3(0, -25.001, -2.26);
+player4Ground.scaling = new Vector3(3, 50, 1.5);
 
 // Shadows --------------------------------------------------------------------------------------
 // var shadowGenerator = new ShadowGenerator(1024, dirLight);
@@ -134,8 +135,8 @@ gl.intensity = 0.5;
 // Materials --------------------------------------------------------------------------------------
 
 const wireframeTexture = new Texture('./assets/figma_grid_thin_white.png', scene);
-wireframeTexture.uScale = 10;
-wireframeTexture.vScale = 10;
+wireframeTexture.uScale = 1;
+wireframeTexture.vScale = 1;
 // const simpleGridTexture = new Texture('./assets/figma_grid_wireframe_blue.png', scene);
 
 const wireframeMat = new StandardMaterial('wireframeMat', scene);
@@ -171,7 +172,8 @@ player2Ground.material = playerStartMat;
 player3Ground.material = playerStartMat;
 player4Ground.material = playerStartMat;
 
-// ground.isVisible = false;
+ground.isVisible = false;
+
 
 ////////////////////////////// END CREATE BABYLON SCENE ETC. //////////////////////////////
 
@@ -327,8 +329,8 @@ window.addEventListener('resize', function () {
                 // renderingGroupId: <number>
             },
             // customControllersRepositoryURL: <string>,
-            // disableControllerAnimation: true,
-            // disableOnlineControllerRepository: true,
+            disableControllerAnimation: true,
+            disableOnlineControllerRepository: true,
             doNotLoadControllerMeshes: true, // move, but hide controllers
             // forceInputProfile: 'generic-trigger-squeeze-thumbstick',
         },
@@ -339,7 +341,7 @@ window.addEventListener('resize', function () {
         startPosButtons[i].addEventListener('click', (event) => {
             const htmlBtnId = (event.target as HTMLElement).id;
             const btnPlayerNumber = Number(htmlBtnId.split('-')[1]);
-            console.log(`Button with id ${htmlBtnId} clicked`);
+            // console.log(`Button with id ${htmlBtnId} clicked`);
             socket.emit('requestGameStart', btnPlayerNumber);
         });
     }
@@ -374,9 +376,113 @@ window.addEventListener('resize', function () {
             }
         });
 
+        setInterval(function () {
+            // console.log('Interval Function');
+            if (clientPlayer) {
+                if (playerUsingVR) {
+                    if (xrCamera && leftController && rightController) {
+                        // console.log('Sending Data to Server while VR');
+                        clientPlayer.sendData(xrCamera, leftController, rightController);
+                    }
+                }
+            }
+            // if (leftController && rightController) {
+            //     console.log('LeftController Pointer Position: ', leftController.pointer.position);
+            //     console.log('LeftController Grip Position: ', leftController.grip?.position);
+            //     console.log('leftController Pointer Rotation: ', leftController.pointer.rotationQuaternion?.toEulerAngles());
+            // }
+            // console.log('XrCamera Position: ', xrCamera?.position);
+        }, 20);
+    }
+})();
+
+// Send the client's start time to the server upon connection
+socket.on('connect', () => {
+    socket.emit('clientStartTime', clientStartTime);
+    // console.log('Previous Player Data: ', previousPlayer);
+});
+
+socket.on('reload', () => {
+    console.log('Server requested reload');
+    window.location.reload();
+});
+
+socket.on('timeForPreviousPlayers', () => {
+    if (previousPlayer != null) {
+        let timeDiffPreviousPlayer = clientStartTime - previousPlayer.playerTime;
+
+        console.log('Time Difference to Previous Player: ', timeDiffPreviousPlayer);
+
+        if (timeDiffPreviousPlayer < 20000) {
+            console.log(`Previous Player ${previousPlayer.playerNumber} found.`);
+
+            if (continueAsPreviousPlayer) {
+                continueAsPreviousPlayer.style.display = 'block';
+                continueAsPreviousPlayer.innerHTML = `Continue as Player ${previousPlayer.playerNumber}`;
+                continueAsPreviousPlayer.addEventListener('click', () => {
+                    console.log('Pressed continue as Previous Player');
+                    socket.emit('continueAsPreviousPlayer', previousPlayer);
+                });
+            }
+        } else {
+            console.log('Previous Player found, but too late.');
+            localStorage.removeItem('player');
+        }
+    } else {
+        console.log('No Previous Player found.');
+    }
+});
+
+socket.on('joinedWaitingRoom', () => {
+    console.log('You joined the waiting Room. Enter VR to join the Game.');
+
+    if (loadingScreen) {
+        loadingScreen.style.display = 'none';
+    }
+});
+
+socket.on('startPosDenied', () => {
+    console.log('Start Position denied. Select another one.');
+});
+
+// get all current Player Information from the Server at the start
+// and spawning all current players except yourself
+socket.on('currentState', (players: { [key: string]: Player }, testColor: string, playerStartInfos: { [key: number]: PlayerStartInfo }) => {
+
+    console.log('Get the Current State');
+
+    testMaterial.emissiveColor = Color3.FromHexString(testColor);
+
+    Object.keys(players).forEach((id) => {
+        // Add new player to the playerList
+        playerList[id] = new Player(players[id]);
+
+        // Spawn new player Entity
+        addPlayer(playerList[id], false);
+    });
+
+    setStartButtonAvailability(playerStartInfos);
+});
+
+// when the current player is already on the server and starts the game
+socket.on('startClientGame', (newSocketPlayer) => {
+
+    startScreen?.style.setProperty('display', 'none');
+
+    if (divID) {
+        divID.innerHTML = `Player ID: ${newSocketPlayer.id}`;
+    }
+
+    // Start VR Session for the client
+    xr.baseExperience.enterXRAsync('immersive-vr', 'local-floor').then(() => {
+        console.log('Starting VR from startClientGame');
+
         // Create a box for each controller
         xr.input.onControllerAddedObservable.add((controller) => {
             controller.onMotionControllerInitObservable.add((motionController) => {
+
+                motionController.disableAnimation = true;
+                motionController._doNotLoadControllerMesh = true;
 
                 // let color: Color3;
                 // let sphere: Mesh;
@@ -515,106 +621,7 @@ window.addEventListener('resize', function () {
             })
         });
 
-        setInterval(function () {
-            // console.log('Interval Function');
-            if (clientPlayer) {
-                if (playerUsingVR) {
-                    if (xrCamera && leftController && rightController) {
-                        // console.log('Sending Data to Server while VR');
-                        clientPlayer.sendData(xrCamera, leftController, rightController);
-                    }
-                }
-            }
-            // if (leftController && rightController) {
-            //     console.log('LeftController Pointer Position: ', leftController.pointer.position);
-            //     console.log('LeftController Grip Position: ', leftController.grip?.position);
-            //     console.log('leftController Pointer Rotation: ', leftController.pointer.rotationQuaternion?.toEulerAngles());
-            // }
-            // console.log('XrCamera Position: ', xrCamera?.position);
-        }, 20);
-    }
-})();
 
-// Send the client's start time to the server upon connection
-socket.on('connect', () => {
-    socket.emit('clientStartTime', clientStartTime);
-    // console.log('Previous Player Data: ', previousPlayer);
-});
-
-socket.on('reload', () => {
-    console.log('Server requested reload');
-    window.location.reload();
-});
-
-socket.on('timeForPreviousPlayers', () => {
-    if (previousPlayer != null) {
-        let timeDiffPreviousPlayer = clientStartTime - previousPlayer.playerTime;
-
-        console.log('Time Difference to Previous Player: ', timeDiffPreviousPlayer);
-
-        if (timeDiffPreviousPlayer < 20000) {
-            console.log(`Previous Player ${previousPlayer.playerNumber} found.`);
-
-            if (continueAsPreviousPlayer) {
-                continueAsPreviousPlayer.style.display = 'block';
-                continueAsPreviousPlayer.innerHTML = `Continue as Player ${previousPlayer.playerNumber}`;
-                continueAsPreviousPlayer.addEventListener('click', () => {
-                    console.log('Pressed continue as Previous Player');
-                    socket.emit('continueAsPreviousPlayer', previousPlayer);
-                });
-            }
-        } else {
-            console.log('Previous Player found, but too late.');
-            localStorage.removeItem('player');
-        }
-    } else {
-        console.log('No Previous Player found.');
-    }
-});
-
-socket.on('joinedWaitingRoom', () => {
-    console.log('You joined the waiting Room. Enter VR to join the Game.');
-
-    if (loadingScreen) {
-        loadingScreen.style.display = 'none';
-    }
-});
-
-socket.on('startPosDenied', () => {
-    console.log('Start Position denied. Select another one.');
-});
-
-// get all current Player Information from the Server at the start
-// and spawning all current players except yourself
-socket.on('currentState', (players: { [key: string]: Player }, testColor: string, playerStartInfos: { [key: number]: PlayerStartInfo }) => {
-
-    console.log('Get the Current State');
-
-    testMaterial.emissiveColor = Color3.FromHexString(testColor);
-
-    Object.keys(players).forEach((id) => {
-        // Add new player to the playerList
-        playerList[id] = new Player(players[id]);
-
-        // Spawn new player Entity
-        addPlayer(playerList[id], false);
-    });
-
-    setStartButtonAvailability(playerStartInfos);
-});
-
-// when the current player is already on the server and starts the game
-socket.on('startClientGame', (newSocketPlayer) => {
-
-    startScreen?.style.setProperty('display', 'none');
-
-    if (divID) {
-        divID.innerHTML = `Player ID: ${newSocketPlayer.id}`;
-    }
-
-    // Start VR Session for the client
-    xr.baseExperience.enterXRAsync('immersive-vr', 'local-floor').then(() => {
-        console.log('Starting VR from startClientGame');
 
         // get the Connection ID of the Player
         playerID = newSocketPlayer.id;
@@ -627,14 +634,19 @@ socket.on('startClientGame', (newSocketPlayer) => {
         playerList[playerID] = clientPlayer;
 
         camera.position = new Vector3(clientStartPos.x, clientStartPos.y, clientStartPos.z);
+        camera.rotation = new Vector3(0, 0, 0);
         camera.setTarget(Vector3.Zero());
 
         // Spawn yourself Entity
         addPlayer(playerList[playerID], true);
 
+        console.log('Camera Rotation: ', camera.rotationQuaternion?.toEulerAngles());
+
         if (xrCamera) {
             xrCamera.position = new Vector3(playerList[playerID].position.x, playerList[playerID].position.y, playerList[playerID].position.z);
             camera.setTarget(Vector3.Zero());
+
+            console.log('XrCamera Rotation: ', xrCamera.rotationQuaternion?.toEulerAngles());
         }
     }).catch((err) => {
         console.error('Failed to enter VR', err);

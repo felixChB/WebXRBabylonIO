@@ -125,7 +125,7 @@ body {
     display: none;
 }
 
-#continueAsOldPlayer {
+#continueAsPreviousPlayer {
     display: none;
     background-color: blueviolet;
 }

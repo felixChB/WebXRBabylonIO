@@ -12,6 +12,7 @@ const port = process.env.PORT || 3000;
 
 ////////////// CHANGE THIS TO YOUR LOCAL IP ADDRESS ///////////////////
 const ipAdress = '192.168.178.156'; // for local network // Desktop
+// const ipAdress = '192.168.1.11'; // for local network // Router
 ///////////////////////////////////////////////////////////////////////
 
 const app = express();
@@ -80,28 +81,28 @@ const maxPlayers = 4;
 let playerStartInfos = {
     1: {
         playerNumber: 1,
-        position: { x: 6.51, y: 0, z: 0 },
+        position: { x: 2.5, y: 0, z: 0 },
         rotation: { x: 0, y: 0, z: 0 },
         color: '#ff0000',
         used: false
     },
     2: {
         playerNumber: 2,
-        position: { x: -6.51, y: 0, z: 0 },
+        position: { x: -2.5, y: 0, z: 0 },
         rotation: { x: 0, y: 0, z: 0 },
         color: '#00ff00',
         used: false
     },
     3: {
         playerNumber: 3,
-        position: { x: 0, y: 0, z: 6.51 },
+        position: { x: 0, y: 0, z: 2.5 },
         rotation: { x: 0, y: 0, z: 0 },
         color: '#0000ff',
         used: false
     },
     4: {
         playerNumber: 4,
-        position: { x: 0, y: 0, z: -6.51 },
+        position: { x: 0, y: 0, z: -2.5 },
         rotation: { x: 0, y: 0, z: 0 },
         color: '#ffff00',
         used: false
@@ -170,6 +171,8 @@ io.on('connection', (socket) => {
             playerStartInfos[playerList[socket.id].playerNumber].used = false;
 
             delete playerList[socket.id];
+
+            // socket.removeListener('clientUpdate');
 
             socket.leave('gameRoom');
             socket.join('waitingRoom');
