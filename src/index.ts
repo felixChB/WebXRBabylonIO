@@ -79,7 +79,7 @@ dirLight.shadowMinZ = 10;
 // Meshes --------------------------------------------------------------------------------------
 // Built-in 'sphere' shape.
 const testSphere = MeshBuilder.CreateSphere('testSphere', { diameter: 2, segments: 32 }, scene);
-testSphere.position.y = 1;
+testSphere.position.y = 4;
 testSphere.scaling = new Vector3(0.5, 0.5, 0.5);
 
 // Built-in 'ground' shape.
@@ -87,7 +87,7 @@ const ground = MeshBuilder.CreateGround('ground', { width: 60, height: 60 }, sce
 
 const playBox = MeshBuilder.CreateBox('playBox', { size: 1 }, scene);
 playBox.position = new Vector3(0, 1, 0);
-playBox.scaling = new Vector3(3, 2.5, 3);
+playBox.scaling = new Vector3(3, 2, 3);
 
 // Grounds for the Player Start Positions
 const player1Ground = MeshBuilder.CreateBox('player1GroundBox', { size: 1 }, scene);
@@ -173,6 +173,12 @@ player3Ground.material = playerStartMat;
 player4Ground.material = playerStartMat;
 
 ground.isVisible = false;
+
+
+let lineMesh = MeshBuilder.CreateLines("line", {
+    points: [testSphere.position, new Vector3(0, 1, 1)],
+}, scene);
+lineMesh.color = new Color3(1, 0, 0);
 
 
 ////////////////////////////// END CREATE BABYLON SCENE ETC. //////////////////////////////
@@ -796,8 +802,15 @@ engine.runRenderLoop(function () {
         }
     });
 
+    lineMesh?.dispose();
+    lineMesh = MeshBuilder.CreateLines("line", {
+        points: [testSphere.position, rightController?.grip?.position || new Vector3(0, 1, 1)],
+    }, scene);
+
     scene.render();
 });
+
+/////////////////////////// LOCAL STORAGE //////////////////////////////
 
 // set up Interval function for the local storage of the player data
 setInterval(function () {
@@ -887,3 +900,5 @@ function getLocalStorage() {
         console.log('No Web Storage support');
     }
 }
+
+/////////////////////////// END LOCAL STORAGE //////////////////////////////
