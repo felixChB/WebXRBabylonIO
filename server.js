@@ -82,21 +82,21 @@ let playerStartInfos = {
     1: {
         playerNumber: 1,
         position: { x: 2.5, y: 0, z: 0 },
-        rotation: { x: 0, y: 0, z: 0 },
+        rotation: { x: 0, y: -Math.PI / 2, z: 0 },
         color: '#ff0000',
         used: false
     },
     2: {
         playerNumber: 2,
         position: { x: -2.5, y: 0, z: 0 },
-        rotation: { x: 0, y: 0, z: 0 },
+        rotation: { x: 0, y: Math.PI / 2, z: 0 },
         color: '#00ff00',
         used: false
     },
     3: {
         playerNumber: 3,
         position: { x: 0, y: 0, z: 2.5 },
-        rotation: { x: 0, y: 0, z: 0 },
+        rotation: { x: 0, y: Math.PI, z: 0 },
         color: '#0000ff',
         used: false
     },
@@ -214,7 +214,7 @@ setInterval(function () {
 // can be called from a new player or an previous player
 function startClientGame(newPlayer, socket) {
 
-    console.log('Playercount before join: ', Object.keys(playerList).length);
+    // console.log('Playercount before join: ', Object.keys(playerList).length);
 
     socket.leave('waitingRoom');
     socket.join('gameRoom');
@@ -224,7 +224,7 @@ function startClientGame(newPlayer, socket) {
     // Add new player to the game
     playerList[newPlayer.id] = newPlayer;
 
-    console.log('Playercount after join: ', Object.keys(playerList).length);
+    // console.log('Playercount after join: ', Object.keys(playerList).length);
 
     // Start the Game on client side and send the player's information to the new player
     socket.emit('startClientGame', playerList[newPlayer.id]);

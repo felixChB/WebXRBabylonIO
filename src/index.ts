@@ -2,7 +2,7 @@ import { io } from 'socket.io-client';
 import { /*Camera,*/ Engine, FreeCamera, Scene } from '@babylonjs/core';
 import { ArcRotateCamera, MeshBuilder, /*ShadowGenerator,*/ GlowLayer } from '@babylonjs/core';
 import { HemisphericLight, DirectionalLight } from '@babylonjs/core';
-import { Mesh, StandardMaterial, Texture, Color3, Vector3 } from '@babylonjs/core';
+import { Mesh, StandardMaterial, Texture, Color3, Vector3, Quaternion } from '@babylonjs/core';
 import { WebXRDefaultExperience, WebXRInputSource } from '@babylonjs/core/XR';
 import { Inspector } from '@babylonjs/inspector';
 // import * as GUI from '@babylonjs/gui'
@@ -21,7 +21,7 @@ let clientStartTime = Date.now();
 let playerID: string;
 let clientPlayer: Player | null = null;
 let playerUsingVR: boolean = false;
-let clientStartPos: { x: number, y: number, z: number };
+// let clientStartPos: { x: number, y: number, z: number };
 
 let playerList: { [key: string]: Player } = {};
 let previousPlayer: PreviousPlayerData | null = null;
@@ -371,6 +371,12 @@ window.addEventListener('resize', function () {
             console.log('Player is leaving VR');
             socket.emit('playerEndVR');
             startScreen?.style.setProperty('display', 'flex');
+
+            // Reset Camera Position
+            camera.alpha = -(Math.PI / 4) * 3;
+            camera.beta = Math.PI / 4;
+            camera.radius = 15;
+            camera.target = new Vector3(0, 0, 0);
         });
 
         window.addEventListener('keydown', function (event) {
@@ -502,7 +508,7 @@ socket.on('startClientGame', (newSocketPlayer) => {
                 if (motionController.handness === 'left') {
 
                     leftController = controller;
-                    
+
                     // sphere = leftSphere;
                     // material = leftMaterial;
                     // color = leftColor;
@@ -532,7 +538,7 @@ socket.on('startClientGame', (newSocketPlayer) => {
                     thumbstickComponent.onButtonStateChangedObservable.add(() => {
                         if (thumbstickComponent.pressed) {
                             socket.emit('clicked');
-                            socket.emit('testClick', playerID);
+                            debugTestclick();
                         } else {
 
                         }
@@ -604,8 +610,7 @@ socket.on('startClientGame', (newSocketPlayer) => {
                     thumbstickComponent.onButtonStateChangedObservable.add(() => {
                         if (thumbstickComponent.pressed) {
                             socket.emit('clicked');
-                            socket.emit('testClick', playerID);
-
+                            debugTestclick();
                         } else {
 
                         }
@@ -635,11 +640,9 @@ socket.on('startClientGame', (newSocketPlayer) => {
             })
         });
 
-
-
         // get the Connection ID of the Player
         playerID = newSocketPlayer.id;
-        clientStartPos = newSocketPlayer.startPosition;
+        // clientStartPos = newSocketPlayer.startPosition;
 
         clientPlayer = new Player(newSocketPlayer);
 
@@ -647,21 +650,18 @@ socket.on('startClientGame', (newSocketPlayer) => {
 
         playerList[playerID] = clientPlayer;
 
-        camera.position = new Vector3(clientStartPos.x, clientStartPos.y, clientStartPos.z);
-        camera.rotation = new Vector3(0, 0, 0);
-        camera.setTarget(Vector3.Zero());
+        // camera.position = new Vector3(clientStartPos.x, clientStartPos.y, clientStartPos.z);
+        // camera.rotation = new Vector3(0, 0, 0);
+        // camera.setTarget(Vector3.Zero());
 
         // Spawn yourself Entity
         addPlayer(playerList[playerID], true);
 
-        console.log('Non-XR Camera: ', camera);
-
         if (xrCamera) {
             xrCamera.position = new Vector3(playerList[playerID].position.x, playerList[playerID].position.y, playerList[playerID].position.z);
-            xrCamera.rotation = new Vector3(0, 0, 0);
-            // camera.setTarget(Vector3.Zero());
+            xrCamera.rotationQuaternion = Quaternion.FromEulerAngles(playerList[playerID].rotation.x, playerList[playerID].rotation.y, playerList[playerID].rotation.z);
 
-            console.log('XrCamera Rotation: ', xrCamera.rotation);
+            console.log('XrCamera Rotation: ', xrCamera.rotationQuaternion);
         }
     }).catch((err) => {
         console.error('Failed to enter VR', err);
@@ -787,6 +787,12 @@ socket.on('colorChanged', (color) => {
     // change color of the sphere
     testMaterial.emissiveColor = Color3.FromHexString(color);
 });
+
+function debugTestclick() {
+    socket.emit('testClick', playerID);
+    console.log('XRCam Rotation Quat: ', xrCamera?.rotationQuaternion);
+    console.log('XRCam Rotation: ', xrCamera?.rotationQuaternion.toEulerAngles());
+}
 
 ////////////////////////// END TESTING GROUND //////////////////////////////            
 
