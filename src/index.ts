@@ -5,6 +5,7 @@ import { HemisphericLight, DirectionalLight } from '@babylonjs/core';
 import { Mesh, StandardMaterial, Texture, Color3, Vector3 } from '@babylonjs/core';
 import { WebXRDefaultExperience, WebXRInputSource } from '@babylonjs/core/XR';
 import { Inspector } from '@babylonjs/inspector';
+// import * as GUI from '@babylonjs/gui'
 
 import '@babylonjs/core/Materials/Textures/Loaders'; // Required for EnvironmentHelper
 import '@babylonjs/loaders/glTF'; // Enable GLTF/GLB loader for loading controller models from WebXR Input registry
@@ -369,6 +370,7 @@ window.addEventListener('resize', function () {
             playerUsingVR = false;
             console.log('Player is leaving VR');
             socket.emit('playerEndVR');
+            startScreen?.style.setProperty('display', 'flex');
         });
 
         window.addEventListener('keydown', function (event) {
@@ -377,7 +379,6 @@ window.addEventListener('resize', function () {
                 // console.log('Escape Key pressed');
                 if (playerUsingVR) {
                     xr.baseExperience.exitXRAsync()
-                    startScreen?.style.setProperty('display', 'flex');
                 }
             }
         });
@@ -459,7 +460,11 @@ socket.on('currentState', (players: { [key: string]: Player }, testColor: string
 
     testMaterial.emissiveColor = Color3.FromHexString(testColor);
 
+    console.log('Playercount: ', Object.keys(players).length);
+
     Object.keys(players).forEach((id) => {
+
+        console.log('Found a Player')
         // Add new player to the playerList
         playerList[id] = new Player(players[id]);
 
@@ -497,6 +502,7 @@ socket.on('startClientGame', (newSocketPlayer) => {
                 if (motionController.handness === 'left') {
 
                     leftController = controller;
+                    
                     // sphere = leftSphere;
                     // material = leftMaterial;
                     // color = leftColor;
@@ -526,6 +532,7 @@ socket.on('startClientGame', (newSocketPlayer) => {
                     thumbstickComponent.onButtonStateChangedObservable.add(() => {
                         if (thumbstickComponent.pressed) {
                             socket.emit('clicked');
+                            socket.emit('testClick', playerID);
                         } else {
 
                         }
@@ -597,6 +604,7 @@ socket.on('startClientGame', (newSocketPlayer) => {
                     thumbstickComponent.onButtonStateChangedObservable.add(() => {
                         if (thumbstickComponent.pressed) {
                             socket.emit('clicked');
+                            socket.emit('testClick', playerID);
 
                         } else {
 
@@ -646,13 +654,14 @@ socket.on('startClientGame', (newSocketPlayer) => {
         // Spawn yourself Entity
         addPlayer(playerList[playerID], true);
 
-        console.log('Camera Rotation: ', camera.rotationQuaternion?.toEulerAngles());
+        console.log('Non-XR Camera: ', camera);
 
         if (xrCamera) {
             xrCamera.position = new Vector3(playerList[playerID].position.x, playerList[playerID].position.y, playerList[playerID].position.z);
-            camera.setTarget(Vector3.Zero());
+            xrCamera.rotation = new Vector3(0, 0, 0);
+            // camera.setTarget(Vector3.Zero());
 
-            console.log('XrCamera Rotation: ', xrCamera.rotationQuaternion?.toEulerAngles());
+            console.log('XrCamera Rotation: ', xrCamera.rotation);
         }
     }).catch((err) => {
         console.error('Failed to enter VR', err);
@@ -811,7 +820,6 @@ engine.runRenderLoop(function () {
 });
 
 /////////////////////////// LOCAL STORAGE //////////////////////////////
-
 // set up Interval function for the local storage of the player data
 setInterval(function () {
     setLocalStorage();
@@ -900,5 +908,22 @@ function getLocalStorage() {
         console.log('No Web Storage support');
     }
 }
-
 /////////////////////////// END LOCAL STORAGE //////////////////////////////
+
+// function renderPlayerLines() {
+//     let playerCount = playerList.length;
+//     Object.keys(playerList).forEach((id) => {
+//         if (playerList[id]) {
+//             let playerOne = playerList[id];
+//             Object.keys(playerList).forEach((id) => {
+//                 if (playerList[id]) {
+//                     let playerTwo = playerList[id];
+//                     if (playerOne.id != playerTwo.id) {
+//                     let lineMesh = MeshBuilder.CreateLines("line", {
+//                         points: [player.position, player.contrPosR],
+//                     }, scene);
+//                 }
+//             });
+//         }
+//     });
+// }

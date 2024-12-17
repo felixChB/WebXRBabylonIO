@@ -11,8 +11,8 @@ import { start } from "repl";
 const port = process.env.PORT || 3000;
 
 ////////////// CHANGE THIS TO YOUR LOCAL IP ADDRESS ///////////////////
-const ipAdress = '192.168.178.156'; // for local network // Desktop
-// const ipAdress = '192.168.1.11'; // for local network // Router
+//const ipAdress = '192.168.178.156'; // for local network // Desktop
+const ipAdress = '192.168.1.11'; // for local network // Router
 ///////////////////////////////////////////////////////////////////////
 
 const app = express();
@@ -72,7 +72,7 @@ export class Player {
 /////////////////////////////  VARIABLES  //////////////////////////////////
 const color1 = '#d60040';
 const color2 = '#91ff42';
-var activeColor;
+var activeColor = '#ffffff';
 
 let serverStartTime;
 
@@ -214,6 +214,8 @@ setInterval(function () {
 // can be called from a new player or an previous player
 function startClientGame(newPlayer, socket) {
 
+    console.log('Playercount before join: ', Object.keys(playerList).length);
+
     socket.leave('waitingRoom');
     socket.join('gameRoom');
 
@@ -221,6 +223,8 @@ function startClientGame(newPlayer, socket) {
 
     // Add new player to the game
     playerList[newPlayer.id] = newPlayer;
+
+    console.log('Playercount after join: ', Object.keys(playerList).length);
 
     // Start the Game on client side and send the player's information to the new player
     socket.emit('startClientGame', playerList[newPlayer.id]);
@@ -247,5 +251,10 @@ function startClientGame(newPlayer, socket) {
         }
         // console.log(activeColor);
         io.emit('colorChanged', activeColor);
+    });
+
+    socket.on('testClick', (id) => {
+        console.log(`Player Position: x: ${playerList[id].position.x}, y: ${playerList[id].position.y}, z: ${playerList[id].position.z}`);
+        console.log(`Player Rotation: x: ${playerList[id].rotation.x}, y: ${playerList[id].rotation.y}, z: ${playerList[id].rotation.z}`);
     });
 };
