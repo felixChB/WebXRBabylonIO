@@ -861,12 +861,16 @@ function setLocalStorage() {
             id: playerID,
             color: playerList[playerID].color,
             playerNumber: playerList[playerID].playerNumber,
-            position: playerList[playerID].position,
-            rotation: playerList[playerID].rotation,
+            // position: playerList[playerID].position,
+            position: {x: playerList[playerID].position.x, y: 0, z: playerList[playerID].position.z}, // dont save the y position (xr adds the head hight automatically)
+            rotation: {x: 0, y: playerList[playerID].rotation.y , z: 0},    //only save the y rotation
+            // rotation: playerList[playerID].rotation,
             contrPosR: playerList[playerID].contrPosR,
             contrPosL: playerList[playerID].contrPosL,
-            contrRotR: playerList[playerID].contrRotR,
-            contrRotL: playerList[playerID].contrRotL,
+            // contrRotR: playerList[playerID].contrRotR,
+            contrRotR: {x: 0, y: 0 , z: 0},                                 //reset the controller rotation
+            // contrRotL: playerList[playerID].contrRotL,
+            contrRotL: {x: 0, y: 0 , z: 0},                                 //reset the controller rotation
             playerTime: Date.now()
         };
         let jsonPreviousPlayer = JSON.stringify(safedPreviousPlayer);
