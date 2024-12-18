@@ -83,28 +83,32 @@ let playerStartInfos = {
         playerNumber: 1,
         position: { x: 2.5, y: 0, z: 0 },
         rotation: { x: 0, y: -Math.PI / 2, z: 0 },
-        color: '#ff0000',
+        color: '#00ffff', //CMY //Cyan
+        // color: '#ff0000', //RGB
         used: false
     },
     2: {
         playerNumber: 2,
         position: { x: -2.5, y: 0, z: 0 },
         rotation: { x: 0, y: Math.PI / 2, z: 0 },
-        color: '#00ff00',
+        color: '#ff00ff', //CMY //Magenta
+        // color: '#00ff00', //RGB
         used: false
     },
     3: {
         playerNumber: 3,
         position: { x: 0, y: 0, z: 2.5 },
         rotation: { x: 0, y: Math.PI, z: 0 },
-        color: '#0000ff',
+        color: '#ffff00', //CMY //Yellow
+        // color: '#0000ff', //RGB
         used: false
     },
     4: {
         playerNumber: 4,
         position: { x: 0, y: 0, z: -2.5 },
         rotation: { x: 0, y: 0, z: 0 },
-        color: '#ffff00',
+        color: '#1aa543', //CMY //Green
+        // color: '#ffff00', //RGB
         used: false
     }
 }

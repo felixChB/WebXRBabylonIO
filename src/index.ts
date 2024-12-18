@@ -2,7 +2,7 @@ import { io } from 'socket.io-client';
 import { /*Camera,*/ Engine, FreeCamera, Scene } from '@babylonjs/core';
 import { ArcRotateCamera, MeshBuilder, /*ShadowGenerator,*/ GlowLayer } from '@babylonjs/core';
 import { HemisphericLight, DirectionalLight } from '@babylonjs/core';
-import { Mesh, StandardMaterial, Texture, Color3, Vector3, Quaternion } from '@babylonjs/core';
+import { Mesh, StandardMaterial, Texture, Color3, Vector3, Quaternion, LinesMesh } from '@babylonjs/core';
 import { WebXRDefaultExperience, WebXRInputSource } from '@babylonjs/core/XR';
 import { Inspector } from '@babylonjs/inspector';
 // import * as GUI from '@babylonjs/gui'
@@ -176,10 +176,13 @@ player4Ground.material = playerStartMat;
 ground.isVisible = false;
 
 
-let lineMesh = MeshBuilder.CreateLines("line", {
-    points: [testSphere.position, new Vector3(0, 1, 1)],
-}, scene);
-lineMesh.color = new Color3(1, 0, 0);
+// let lineMesh = MeshBuilder.CreateLines("line", {
+//     points: [testSphere.position, new Vector3(0, 1, 1)],
+// }, scene);
+// lineMesh.color = new Color3(1, 0, 0);
+
+
+let allLineMesh: LinesMesh;
 
 
 ////////////////////////////// END CREATE BABYLON SCENE ETC. //////////////////////////////
@@ -817,13 +820,34 @@ engine.runRenderLoop(function () {
         }
     });
 
-    lineMesh?.dispose();
-    lineMesh = MeshBuilder.CreateLines("line", {
-        points: [testSphere.position, rightController?.grip?.position || new Vector3(0, 1, 1)],
-    }, scene);
+    // lineMesh?.dispose();
+    // lineMesh = MeshBuilder.CreateLines("line", {
+    //     points: [testSphere.position, rightController?.grip?.position || new Vector3(0, 1, 1)],
+    // }, scene);
+
+    renderPlayerLines();
 
     scene.render();
 });
+
+function renderPlayerLines() {
+    let linePoints: Vector3[] = [];
+    allLineMesh?.dispose();
+    if (Object.keys(playerList).length > 1) {
+        Object.keys(playerList).forEach((id) => {
+            if (playerList[id]) {
+                linePoints.push(new Vector3(playerList[id].contrPosR.x, playerList[id].contrPosR.y, playerList[id].contrPosR.z));
+            }
+        });
+        if (Object.keys(playerList).length > 2) {
+            linePoints.push(new Vector3(playerList[Object.keys(playerList)[0]].contrPosR.x, playerList[Object.keys(playerList)[0]].contrPosR.y, playerList[Object.keys(playerList)[0]].contrPosR.z));
+        }
+        allLineMesh = MeshBuilder.CreateLines("allLine", {
+            points: linePoints,
+        }, scene);
+        allLineMesh.color = new Color3(0, 1, 0);
+    }
+}
 
 /////////////////////////// LOCAL STORAGE //////////////////////////////
 // set up Interval function for the local storage of the player data
@@ -915,21 +939,3 @@ function getLocalStorage() {
     }
 }
 /////////////////////////// END LOCAL STORAGE //////////////////////////////
-
-// function renderPlayerLines() {
-//     let playerCount = playerList.length;
-//     Object.keys(playerList).forEach((id) => {
-//         if (playerList[id]) {
-//             let playerOne = playerList[id];
-//             Object.keys(playerList).forEach((id) => {
-//                 if (playerList[id]) {
-//                     let playerTwo = playerList[id];
-//                     if (playerOne.id != playerTwo.id) {
-//                     let lineMesh = MeshBuilder.CreateLines("line", {
-//                         points: [player.position, player.contrPosR],
-//                     }, scene);
-//                 }
-//             });
-//         }
-//     });
-// }

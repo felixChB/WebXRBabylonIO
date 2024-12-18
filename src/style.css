@@ -5,6 +5,7 @@ body {
     height: 100%;
     margin: 0;
     padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 #renderCanvas {
@@ -47,12 +48,17 @@ body {
     left: 0;
     height: 100vh;
     width: 100vw;
-    background-color: rgb(78, 78, 255);
+    background-color: rgb(60, 60, 107);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     z-index: 20;
+}
+
+#loading-header {
+    margin-top: 20px;
+    font-size: 24px;
 }
 
 #loader-bubble {
@@ -94,7 +100,7 @@ body {
     left: 0;
     height: 100vh;
     width: 100vw;
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: rgba(0, 0, 0, 0.4);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -112,12 +118,28 @@ body {
 }
 
 .posSelection {
-    background-color: #ffd311;
-    color: white;
+    background-color: #0030b6;
+    color: rgb(0, 0, 0);
+}
+
+#startPos-1 {
+    background-color: #00ffff;
+}
+
+#startPos-2 {
+    background-color: #ff00ff;
+}
+
+#startPos-3 {
+    background-color: #ffff00;
+}
+
+#startPos-4 {
+    background-color: #1aa543;
 }
 
 .unavailable {
-    background-color: crimson;
+    background-color: rgb(133, 133, 133) !important;
     cursor: default;
 }
 
