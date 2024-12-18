@@ -87,8 +87,8 @@ testSphere.scaling = new Vector3(0.5, 0.5, 0.5);
 const ground = MeshBuilder.CreateGround('ground', { width: 60, height: 60 }, scene);
 
 const playBox = MeshBuilder.CreateBox('playBox', { size: 1 }, scene);
-playBox.position = new Vector3(0, 1, 0);
-playBox.scaling = new Vector3(3, 2, 3);
+playBox.position = new Vector3(0, 1.5, 0);
+playBox.scaling = new Vector3(3, 3, 3);
 
 // Grounds for the Player Start Positions
 const player1Ground = MeshBuilder.CreateBox('player1GroundBox', { size: 1 }, scene);
@@ -387,7 +387,7 @@ window.addEventListener('resize', function () {
             if (event.key === 'Escape') {
                 // console.log('Escape Key pressed');
                 if (playerUsingVR) {
-                    xr.baseExperience.exitXRAsync()
+                    xr.baseExperience.exitXRAsync();
                 }
             }
         });
@@ -429,7 +429,7 @@ socket.on('timeForPreviousPlayers', () => {
 
         console.log('Time Difference to Previous Player: ', timeDiffPreviousPlayer);
 
-        if (timeDiffPreviousPlayer < 20000) {
+        if (timeDiffPreviousPlayer < 30000) {
             console.log(`Previous Player ${previousPlayer.playerNumber} found.`);
 
             if (continueAsPreviousPlayer) {
@@ -521,8 +521,8 @@ socket.on('startClientGame', (newSocketPlayer) => {
                     let triggerComponent = motionController.getComponent(xrIDs[0]); //xr-standard-trigger
                     triggerComponent.onButtonStateChangedObservable.add(() => {
                         if (triggerComponent.pressed) {
-                            socket.emit('clicked');
-
+                            // socket.emit('clicked');
+                            xr.baseExperience.exitXRAsync();
                         } else {
                         }
                     });
@@ -592,8 +592,8 @@ socket.on('startClientGame', (newSocketPlayer) => {
                     let triggerComponent = motionController.getComponent(xrIDs[0]);//xr-standard-trigger
                     triggerComponent.onButtonStateChangedObservable.add(() => {
                         if (triggerComponent.pressed) {
-                            socket.emit('clicked');
-
+                            // socket.emit('clicked');
+                            xr.baseExperience.exitXRAsync();
                         } else {
 
                         }
