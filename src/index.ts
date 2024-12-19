@@ -80,32 +80,34 @@ dirLight.shadowMinZ = 10;
 // Meshes --------------------------------------------------------------------------------------
 // Built-in 'sphere' shape.
 const testSphere = MeshBuilder.CreateSphere('testSphere', { diameter: 2, segments: 32 }, scene);
-testSphere.position.y = 4;
-testSphere.scaling = new Vector3(0.5, 0.5, 0.5);
+testSphere.position.y = 1.5;
+testSphere.scaling = new Vector3(0.2, 0.2, 0.2);
 
 // Built-in 'ground' shape.
 const ground = MeshBuilder.CreateGround('ground', { width: 60, height: 60 }, scene);
 
 const playBox = MeshBuilder.CreateBox('playBox', { size: 1 }, scene);
 playBox.position = new Vector3(0, 1.5, 0);
-playBox.scaling = new Vector3(3, 3, 3);
+playBox.scaling = new Vector3(2, 3, 2);
+
+playBox.isVisible = false;
 
 // Grounds for the Player Start Positions
 const player1Ground = MeshBuilder.CreateBox('player1GroundBox', { size: 1 }, scene);
-player1Ground.position = new Vector3(2.26, -25.001, 0);
-player1Ground.scaling = new Vector3(1.5, 50, 3);
+player1Ground.position = new Vector3(1.76, -25.001, 0);
+player1Ground.scaling = new Vector3(1.5, 50, 2);
 
 const player2Ground = MeshBuilder.CreateBox('player2GroundBox', { size: 1 }, scene);
-player2Ground.position = new Vector3(-2.26, -25.001, 0);
-player2Ground.scaling = new Vector3(1.5, 50, 3);
+player2Ground.position = new Vector3(-1.76, -25.001, 0);
+player2Ground.scaling = new Vector3(1.5, 50, 2);
 
 const player3Ground = MeshBuilder.CreateBox('player3GroundBox', { size: 1 }, scene);
-player3Ground.position = new Vector3(0, -25.001, 2.26);
-player3Ground.scaling = new Vector3(3, 50, 1.5);
+player3Ground.position = new Vector3(0, -25.001, 1.76);
+player3Ground.scaling = new Vector3(2, 50, 1.5);
 
 const player4Ground = MeshBuilder.CreateBox('player4GroundBox', { size: 1 }, scene);
-player4Ground.position = new Vector3(0, -25.001, -2.26);
-player4Ground.scaling = new Vector3(3, 50, 1.5);
+player4Ground.position = new Vector3(0, -25.001, -1.76);
+player4Ground.scaling = new Vector3(2, 50, 1.5);
 
 // Shadows --------------------------------------------------------------------------------------
 // var shadowGenerator = new ShadowGenerator(1024, dirLight);
@@ -420,6 +422,7 @@ socket.on('connect', () => {
 
 socket.on('reload', () => {
     console.log('Server requested reload');
+    xr.baseExperience.exitXRAsync();
     window.location.reload();
 });
 
@@ -716,7 +719,7 @@ function setStartButtonAvailability(startPositions: { [key: number]: PlayerStart
 function addPlayer(player: Player, isPlayer: boolean) {
     console.log(`Spawning Player: ${player.id} as Player ${player.playerNumber}`);
 
-    player.headObj = MeshBuilder.CreateBox('player_' + player.id, { size: 0.5 }, scene);
+    player.headObj = MeshBuilder.CreateBox('player_' + player.id, { size: 0.3 }, scene);
     player.headObj.position = new Vector3(player.position.x, player.position.y, player.position.z);
     player.headObj.rotation = new Vector3(player.rotation.x, player.rotation.y, player.rotation.z);
     player.headObj.material = new StandardMaterial('mat_' + player.id, scene);
@@ -726,18 +729,23 @@ function addPlayer(player: Player, isPlayer: boolean) {
         player.headObj.isVisible = false;
     }
 
-    player.controllerR = MeshBuilder.CreateBox('conR_' + player.id, { size: 0.2 });
+    player.controllerR = MeshBuilder.CreateBox('conR_' + player.id, { size: 1 });
+    //player.controllerR = MeshBuilder.CreateSphere('conR_' + player.id, { diameter: 2, segments: 32 }, scene);
+    player.controllerR.scaling = new Vector3(0.01, 0.1, 0.1);
     player.controllerR.position = new Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
     player.controllerR.rotation = new Vector3(player.contrRotR.x, player.contrRotR.y, player.contrRotR.z);
     player.controllerR.material = new StandardMaterial('matConR_' + player.id, scene);
     (player.controllerR.material as StandardMaterial).emissiveColor = Color3.FromHexString(player.color);
 
-    player.controllerL = MeshBuilder.CreateBox('conL_' + player.id, { size: 0.2 });
+    player.controllerL = MeshBuilder.CreateBox('conL_' + player.id, { size: 1 });
+    //player.controllerL = MeshBuilder.CreateSphere('conL_' + player.id, { diameter: 2, segments: 32 }, scene);
+    player.controllerL.scaling = new Vector3(0.01, 0.1, 0.1);
     player.controllerL.position = new Vector3(player.contrPosL.x, player.contrPosL.y, player.contrPosL.z);
     player.controllerL.rotation = new Vector3(player.contrRotL.x, player.contrRotL.y, player.contrRotL.z);
     player.controllerL.material = new StandardMaterial('matConL' + player.id, scene);
     (player.controllerL.material as StandardMaterial).emissiveColor = Color3.FromHexString(player.color);
 
+    player.controllerL.isVisible = false;
 
     playerList[player.id].headObj = player.headObj;
     playerList[player.id].controllerR = player.controllerR;
