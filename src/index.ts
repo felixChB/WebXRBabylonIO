@@ -40,25 +40,31 @@ const startScreen = document.getElementById('startScreen');
 const continueAsPreviousPlayer = document.getElementById('continueAsPreviousPlayer');
 const loadingScreen = document.getElementById('loadingScreen');
 
-////////////////////////////// CREATE BABYLON SCENE ETC. //////////////////////////////
-
-// Basic Setup ---------------------------------------------------------------------------------
-// Create a canvas element for rendering
-const canvas = document.createElement('canvas');
+// Create HTML Elements
+const canvas = document.createElement('canvas'); // Create a canvas element for rendering
 canvas.id = 'renderCanvas';
 document.body.appendChild(canvas);
 
+//global Babylon Variables
+
+// Basic Setup ---------------------------------------------------------------------------------
 const engine = new Engine(canvas, true);
 const scene = new Scene(engine);
 
+////////////////////////////// CREATE BABYLON SCENE ETC. //////////////////////////////
+
+function createBasicScene(playCubeSize: { x: number, y: number, z: number }, playerAreaDepth: number) {
+    console.log('PlayCubeSize: ', playCubeSize);
+    console.log('PlayerAreaDepth: ', playerAreaDepth);
+}
 // Camera --------------------------------------------------------------------------------------
 // Add a camera for the non-VR view in browser
-const camera = new ArcRotateCamera('Camera', -(Math.PI / 4) * 3, Math.PI / 4, 15, new Vector3(0, 0, 0), scene);
-camera.attachControl(true);
+var camera = new ArcRotateCamera('Camera', -(Math.PI / 4) * 3, Math.PI / 4, 15, new Vector3(0, 0, 0), scene);
+camera.attachControl(true); //debug
 
 // Lights --------------------------------------------------------------------------------------
 // Creates a light, aiming 0,1,0 - to the sky
-const hemiLight = new HemisphericLight('hemiLight', new Vector3(0, 1, 0), scene);
+var hemiLight = new HemisphericLight('hemiLight', new Vector3(0, 1, 0), scene);
 hemiLight.intensity = 0.1;
 
 var dirLight = new DirectionalLight("DirectionalLight", new Vector3(-0.7, -0.5, 0.4), scene);
@@ -79,18 +85,18 @@ dirLight.shadowMinZ = 10;
 
 // Meshes --------------------------------------------------------------------------------------
 // Built-in 'sphere' shape.
-const testSphere = MeshBuilder.CreateSphere('testSphere', { diameter: 2, segments: 32 }, scene);
+var testSphere = MeshBuilder.CreateSphere('testSphere', { diameter: 2, segments: 32 }, scene);
 testSphere.position.y = 1.5;
 testSphere.scaling = new Vector3(0.2, 0.2, 0.2);
 
 // Built-in 'ground' shape.
-const ground = MeshBuilder.CreateGround('ground', { width: 60, height: 60 }, scene);
+var ground = MeshBuilder.CreateGround('ground', { width: 60, height: 60 }, scene);
 
-const playBox = MeshBuilder.CreateBox('playBox', { size: 1 }, scene);
+var playBox = MeshBuilder.CreateBox('playBox', { size: 1 }, scene);
 playBox.position = new Vector3(0, 1.5, 0);
 playBox.scaling = new Vector3(2, 3, 2);
 
-playBox.isVisible = false;
+// playBox.isVisible = false;
 
 // Grounds for the Player Start Positions
 const player1Ground = MeshBuilder.CreateBox('player1GroundBox', { size: 1 }, scene);
@@ -108,25 +114,6 @@ player3Ground.scaling = new Vector3(2, 50, 1.5);
 const player4Ground = MeshBuilder.CreateBox('player4GroundBox', { size: 1 }, scene);
 player4Ground.position = new Vector3(0, -25.001, -1.76);
 player4Ground.scaling = new Vector3(2, 50, 1.5);
-
-// Shadows --------------------------------------------------------------------------------------
-// var shadowGenerator = new ShadowGenerator(1024, dirLight);
-// shadowGenerator.addShadowCaster(testSphere);
-// shadowGenerator.addShadowCaster(staticBlock1);
-// shadowGenerator.addShadowCaster(staticBlock2);
-// //shadowGenerator.bias = 0.0001;
-
-// shadowGenerator.useContactHardeningShadow = true;
-// shadowGenerator.setDarkness(0.5);
-// shadowGenerator.usePoissonSampling = true;
-
-// var shadowGenerator2 = new ShadowGenerator(1024, pointLight);
-
-// ground.receiveShadows = true;
-player1Ground.receiveShadows = true;
-player2Ground.receiveShadows = true;
-player3Ground.receiveShadows = true;
-player4Ground.receiveShadows = true;
 
 // add a Glowlayer to let emissive materials glow
 const gl = new GlowLayer("glow", scene, {
@@ -177,15 +164,7 @@ player4Ground.material = playerStartMat;
 
 ground.isVisible = false;
 
-
-// let lineMesh = MeshBuilder.CreateLines("line", {
-//     points: [testSphere.position, new Vector3(0, 1, 1)],
-// }, scene);
-// lineMesh.color = new Color3(1, 0, 0);
-
-
 let allLineMesh: LinesMesh;
-
 
 ////////////////////////////// END CREATE BABYLON SCENE ETC. //////////////////////////////
 
@@ -207,10 +186,6 @@ interface PlayerData {
     contrPosL: { x: number, y: number, z: number };
     contrRotR: { x: number, y: number, z: number };
     contrRotL: { x: number, y: number, z: number };
-
-    // setData(player: PlayerData): void;
-    // updateObj(): void;
-    // sendData(): void;
 }
 
 interface PreviousPlayerData {
@@ -409,7 +384,6 @@ window.addEventListener('resize', function () {
             //     console.log('LeftController Grip Position: ', leftController.grip?.position);
             //     console.log('leftController Pointer Rotation: ', leftController.pointer.rotationQuaternion?.toEulerAngles());
             // }
-            // console.log('XrCamera Position: ', xrCamera?.position);
         }, 20);
     }
 })();
@@ -466,7 +440,10 @@ socket.on('startPosDenied', () => {
 
 // get all current Player Information from the Server at the start
 // and spawning all current players except yourself
-socket.on('currentState', (players: { [key: string]: Player }, testColor: string, playerStartInfos: { [key: number]: PlayerStartInfo }) => {
+socket.on('currentState', (players: { [key: string]: Player }, testColor: string,
+    playerStartInfos: { [key: number]: PlayerStartInfo }, playCubeSize: { x: number, y: number, z: number }, playerAreaDepth: number) => {
+
+    createBasicScene(playCubeSize, playerAreaDepth);
 
     console.log('Get the Current State');
 
@@ -498,7 +475,7 @@ socket.on('startClientGame', (newSocketPlayer) => {
 
     // Start VR Session for the client
     xr.baseExperience.enterXRAsync('immersive-vr', 'local-floor').then(() => {
-        console.log('Starting VR from startClientGame');
+        console.log('Starting VR');
 
         // Create a box for each controller
         xr.input.onControllerAddedObservable.add((controller) => {
@@ -652,7 +629,7 @@ socket.on('startClientGame', (newSocketPlayer) => {
 
         clientPlayer = new Player(newSocketPlayer);
 
-        localStorage.setItem('playerID', `${playerID}`);
+        localStorage.removeItem('playerID');
 
         playerList[playerID] = clientPlayer;
 
@@ -828,11 +805,6 @@ engine.runRenderLoop(function () {
         }
     });
 
-    // lineMesh?.dispose();
-    // lineMesh = MeshBuilder.CreateLines("line", {
-    //     points: [testSphere.position, rightController?.grip?.position || new Vector3(0, 1, 1)],
-    // }, scene);
-
     renderPlayerLines();
 
     scene.render();
@@ -870,15 +842,15 @@ function setLocalStorage() {
             color: playerList[playerID].color,
             playerNumber: playerList[playerID].playerNumber,
             // position: playerList[playerID].position,
-            position: {x: playerList[playerID].position.x, y: 0, z: playerList[playerID].position.z}, // dont save the y position (xr adds the head hight automatically)
-            rotation: {x: 0, y: playerList[playerID].rotation.y , z: 0},    //only save the y rotation
+            position: { x: playerList[playerID].position.x, y: 0, z: playerList[playerID].position.z }, // dont save the y position (xr adds the head hight automatically)
+            rotation: { x: 0, y: playerList[playerID].rotation.y, z: 0 },    //only save the y rotation
             // rotation: playerList[playerID].rotation,
             contrPosR: playerList[playerID].contrPosR,
             contrPosL: playerList[playerID].contrPosL,
             // contrRotR: playerList[playerID].contrRotR,
-            contrRotR: {x: 0, y: 0 , z: 0},                                 //reset the controller rotation
+            contrRotR: { x: 0, y: 0, z: 0 },                                 //reset the controller rotation
             // contrRotL: playerList[playerID].contrRotL,
-            contrRotL: {x: 0, y: 0 , z: 0},                                 //reset the controller rotation
+            contrRotL: { x: 0, y: 0, z: 0 },                                 //reset the controller rotation
             playerTime: Date.now()
         };
         let jsonPreviousPlayer = JSON.stringify(safedPreviousPlayer);

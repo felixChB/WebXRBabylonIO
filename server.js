@@ -11,8 +11,8 @@ import { start } from "repl";
 const port = process.env.PORT || 3000;
 
 ////////////// CHANGE THIS TO YOUR LOCAL IP ADDRESS ///////////////////
-//const ipAdress = '192.168.178.156'; // for local network // Desktop
-const ipAdress = '192.168.1.11'; // for local network // Router
+const ipAdress = '192.168.178.156'; // for local network // Desktop
+//const ipAdress = '192.168.1.11'; // for local network // Router
 ///////////////////////////////////////////////////////////////////////
 
 const app = express();
@@ -78,6 +78,9 @@ let serverStartTime;
 
 const maxPlayers = 4;
 
+const playCubeSize = { x: 3, y: 3, z: 2 }; // the size of the player cube in meters
+const playerAreaDepth = 1.5; // the depth of the player area in the z direction in meters
+
 let playerStartInfos = {
     1: {
         playerNumber: 1,
@@ -141,7 +144,7 @@ io.on('connection', (socket) => {
     socket.emit('timeForPreviousPlayers');
 
     // Send the current state to the new player
-    socket.emit('currentState', playerList, activeColor, playerStartInfos);
+    socket.emit('currentState', playerList, activeColor, playerStartInfos, playCubeSize, playerAreaDepth);
 
     socket.on('continueAsPreviousPlayer', (previousPlayerData) => {
         if (playerStartInfos[previousPlayerData.playerNumber].used == false) {
