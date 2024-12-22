@@ -759,14 +759,17 @@ function addPlayer(player: Player, isPlayer: boolean) {
     //(player.controllerL.material as StandardMaterial).emissiveColor = Color3.FromHexString(player.color);
 
     player.paddle = MeshBuilder.CreateBox('paddle_' + player.id, { size: 1 });
-    player.paddle.scaling = new Vector3(sceneStartInfos.playerPaddleSize.w, sceneStartInfos.playerPaddleSize.h, paddleThickness);
     if (player.playerNumber == 1) {
+        player.paddle.scaling = new Vector3(paddleThickness, sceneStartInfos.playerPaddleSize.h, sceneStartInfos.playerPaddleSize.w);
         player.paddle.position = new Vector3(sceneStartInfos.playCubeSize.x / 2, player.contrPosR.y, player.contrPosR.z);
     } else if (player.playerNumber == 2) {
+        player.paddle.scaling = new Vector3(paddleThickness, sceneStartInfos.playerPaddleSize.h, sceneStartInfos.playerPaddleSize.w);
         player.paddle.position = new Vector3(-sceneStartInfos.playCubeSize.x / 2, player.contrPosR.y, player.contrPosR.z);
     } else if (player.playerNumber == 3) {
+        player.paddle.scaling = new Vector3(sceneStartInfos.playerPaddleSize.w, sceneStartInfos.playerPaddleSize.h, paddleThickness);
         player.paddle.position = new Vector3(player.contrPosR.x, player.contrPosR.y, sceneStartInfos.playCubeSize.z / 2);
     } else if (player.playerNumber == 4) {
+        player.paddle.scaling = new Vector3(sceneStartInfos.playerPaddleSize.w, sceneStartInfos.playerPaddleSize.h, paddleThickness);
         player.paddle.position = new Vector3(player.contrPosR.x, player.contrPosR.y, -sceneStartInfos.playCubeSize.z / 2);
     }
     player.paddle.position = new Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
@@ -793,6 +796,7 @@ socket.on('playerDisconnected', (id) => {
         disconnectedPlayer.headObj?.dispose();
         disconnectedPlayer.controllerR?.dispose();
         disconnectedPlayer.controllerL?.dispose();
+        disconnectedPlayer.paddle?.dispose();
 
         // set the availability of the start buttons according to the used startpositions on the server
         if (startPosButtons[playerList[id].playerNumber - 1].classList.contains('unavailable')) {

@@ -240,18 +240,65 @@ setInterval(function () {
         ball.position.z += ball.direction.z * ball.speed;
 
         // Bounce the ball off the walls
-        if (Math.abs(ball.position.x) > playCubeSize.x / 2) {
-            ball.direction.x *= -1;  // Reverse X direction
-            changeTestColor();
-        }
+        // if (Math.abs(ball.position.x) > playCubeSize.x / 2) {
+        //     ball.direction.x *= -1;  // Reverse X direction
+        //     changeTestColor();
+        // }
         if ((ball.position.y) > playCubeSize.y / 2 || (ball.position.y) < 0) {
             ball.direction.y *= -1;  // Reverse Y direction
             changeTestColor();
         }
-        if (Math.abs(ball.position.z) > playCubeSize.z / 2) {
-            ball.direction.z *= -1;  // Reverse Z direction
-            changeTestColor();
-        }
+        // if (Math.abs(ball.position.z) > playCubeSize.z / 2) {
+        //     ball.direction.z *= -1;  // Reverse Z direction
+        //     changeTestColor();
+        // }
+
+        Object.keys(playerList).forEach((key) => {
+            if (playerList[key].playerNumber == 1) {
+                if (ball.position.x > playCubeSize.x / 2 &&
+                    ball.position.z > playerList[key].contrPosR.z + playerPaddleSize.w / 2 &&
+                    ball.position.z < playerList[key].contrPosR.z - playerPaddleSize.w / 2 &&
+                    ball.position.y > playerList[key].contrPosR.y + playerPaddleSize.h / 2 &&
+                    ball.position.y < playerList[key].contrPosR.y - playerPaddleSize.h / 2) {
+                    ball.direction.x *= -1;  // Reverse X direction
+                    changeTestColor();
+                }
+            } else if (playerList[key].playerNumber == 2) {
+                if (ball.position.x < -playCubeSize.x / 2 &&
+                    ball.position.z > playerList[key].contrPosR.z + playerPaddleSize.w / 2 &&
+                    ball.position.z < playerList[key].contrPosR.z - playerPaddleSize.w / 2 &&
+                    ball.position.y > playerList[key].contrPosR.y + playerPaddleSize.h / 2 &&
+                    ball.position.y < playerList[key].contrPosR.y - playerPaddleSize.h / 2) {
+                    ball.direction.x *= -1;  // Reverse X direction
+                    changeTestColor();
+                }
+            } else if (playerList[key].playerNumber == 3) {
+                if (ball.position.z > playCubeSize.x / 2 &&
+                    ball.position.x > playerList[key].contrPosR.z + playerPaddleSize.w / 2 &&
+                    ball.position.x < playerList[key].contrPosR.z - playerPaddleSize.w / 2 &&
+                    ball.position.y > playerList[key].contrPosR.y + playerPaddleSize.h / 2 &&
+                    ball.position.y < playerList[key].contrPosR.y - playerPaddleSize.h / 2) {
+                    ball.direction.x *= -1;  // Reverse X direction
+                    changeTestColor();
+                }
+            } else if (playerList[key].playerNumber == 4) {
+                if (ball.position.z < -playCubeSize.x / 2 &&
+                    ball.position.x > playerList[key].contrPosR.z + playerPaddleSize.w / 2 &&
+                    ball.position.x < playerList[key].contrPosR.z - playerPaddleSize.w / 2 &&
+                    ball.position.y > playerList[key].contrPosR.y + playerPaddleSize.h / 2 &&
+                    ball.position.y < playerList[key].contrPosR.y - playerPaddleSize.h / 2) {
+                    ball.direction.x *= -1;  // Reverse X direction
+                    changeTestColor();
+                }
+            }
+
+            // reset the ball if out of bounds
+            if (ball.position.x > playCubeSize.x / 2 + 1 || ball.position.x < -playCubeSize.x / 2 - 1 ||
+                ball.position.z > playCubeSize.z / 2 + 1 || ball.position.z < -playCubeSize.z / 2 - 1) {
+                ball.position = { x: 0, y: playCubeSize.y / 2, z: 0 };
+                ball.direction = { x: 1, y: 0.2, z: 2 };
+            }
+        });
     }
 
     // Send the updated player list to all clients
