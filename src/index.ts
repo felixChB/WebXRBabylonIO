@@ -27,6 +27,8 @@ let playerList: { [key: string]: Player } = {};
 let previousPlayer: PreviousPlayerData | null = null;
 getLocalStorage();
 
+let sceneStartInfos: SceneStartInfos;
+
 let xr: WebXRDefaultExperience;
 let xrCamera: FreeCamera | null = null;
 let leftController: WebXRInputSource | null = null;
@@ -226,8 +228,9 @@ class Player implements PlayerData {
     headObj?: Mesh | null;
     controllerR?: Mesh | null;
     controllerL?: Mesh | null;
+    paddle?: Mesh | null;
 
-    constructor(player: PlayerData, headObj?: Mesh, controllerR?: Mesh, controllerL?: Mesh) {
+    constructor(player: PlayerData, headObj?: Mesh, controllerR?: Mesh, controllerL?: Mesh, paddle?: Mesh) {
         this.id = player.id;
         this.color = player.color;
         this.playerNumber = player.playerNumber;
@@ -240,6 +243,7 @@ class Player implements PlayerData {
         this.headObj = headObj || null;
         this.controllerR = controllerR || null;
         this.controllerL = controllerL || null;
+        this.paddle = paddle || null;
     }
 
     setData(player: Player) {
@@ -263,6 +267,17 @@ class Player implements PlayerData {
         if (this.controllerL) {
             this.controllerL.position = new Vector3(this.contrPosL.x, this.contrPosL.y, this.contrPosL.z);
             this.controllerL.rotation = new Vector3(this.contrRotL.x, this.contrRotL.y, this.contrRotL.z);
+        }
+        if (this.paddle) {
+            if (this.playerNumber == 1) {
+                this.paddle.position = new Vector3(sceneStartInfos.playCubeSize.x / 2, this.contrPosR.y, this.contrPosR.z);
+            } else if (this.playerNumber == 2) {
+                this.paddle.position = new Vector3(-sceneStartInfos.playCubeSize.x / 2, this.contrPosR.y, this.contrPosR.z);
+            } else if (this.playerNumber == 3) {
+                this.paddle.position = new Vector3(this.contrPosR.x, this.contrPosR.y, sceneStartInfos.playCubeSize.z / 2);
+            } else if (this.playerNumber == 4) {
+                this.paddle.position = new Vector3(this.contrPosR.x, this.contrPosR.y, -sceneStartInfos.playCubeSize.z / 2);
+            }
         }
     }
 
@@ -453,7 +468,9 @@ socket.on('startPosDenied', () => {
 // get all current Player Information from the Server at the start
 // and spawning all current players except yourself
 socket.on('currentState', (players: { [key: string]: Player }, testColor: string,
-    playerStartInfos: { [key: number]: PlayerStartInfo }, sceneStartInfos: SceneStartInfos) => {
+    playerStartInfos: { [key: number]: PlayerStartInfo }, sceneStartInfosServer: SceneStartInfos) => {
+
+    sceneStartInfos = sceneStartInfosServer;
 
     createBasicScene(sceneStartInfos);
 
@@ -714,6 +731,7 @@ function addPlayer(player: Player, isPlayer: boolean) {
 
     let headScaling = 0.3;
     let controllerScaling = 0.1;
+    let paddleThickness = 0.01;
 
     player.headObj = MeshBuilder.CreateBox('player_' + player.id, { size: 1 }, scene);
     player.headObj.scaling = new Vector3(headScaling, headScaling, headScaling);
@@ -730,21 +748,38 @@ function addPlayer(player: Player, isPlayer: boolean) {
     player.controllerR.scaling = new Vector3(controllerScaling, controllerScaling, controllerScaling);
     player.controllerR.position = new Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
     player.controllerR.rotation = new Vector3(player.contrRotR.x, player.contrRotR.y, player.contrRotR.z);
-    player.controllerR.material = new StandardMaterial('matConR_' + player.id, scene);
-    (player.controllerR.material as StandardMaterial).emissiveColor = Color3.FromHexString(player.color);
+    player.controllerR.material = player.headObj.material;
+    //(player.controllerR.material as StandardMaterial).emissiveColor = Color3.FromHexString(player.color);
 
     player.controllerL = MeshBuilder.CreateBox('conL_' + player.id, { size: 1 });
     player.controllerL.scaling = new Vector3(controllerScaling, controllerScaling, controllerScaling);
     player.controllerL.position = new Vector3(player.contrPosL.x, player.contrPosL.y, player.contrPosL.z);
     player.controllerL.rotation = new Vector3(player.contrRotL.x, player.contrRotL.y, player.contrRotL.z);
-    player.controllerL.material = new StandardMaterial('matConL' + player.id, scene);
-    (player.controllerL.material as StandardMaterial).emissiveColor = Color3.FromHexString(player.color);
+    player.controllerL.material = player.headObj.material;
+    //(player.controllerL.material as StandardMaterial).emissiveColor = Color3.FromHexString(player.color);
+
+    player.paddle = MeshBuilder.CreateBox('paddle_' + player.id, { size: 1 });
+    player.paddle.scaling = new Vector3(sceneStartInfos.playerPaddleSize.w, sceneStartInfos.playerPaddleSize.h, paddleThickness);
+    if (player.playerNumber == 1) {
+        player.paddle.position = new Vector3(sceneStartInfos.playCubeSize.x / 2, player.contrPosR.y, player.contrPosR.z);
+    } else if (player.playerNumber == 2) {
+        player.paddle.position = new Vector3(-sceneStartInfos.playCubeSize.x / 2, player.contrPosR.y, player.contrPosR.z);
+    } else if (player.playerNumber == 3) {
+        player.paddle.position = new Vector3(player.contrPosR.x, player.contrPosR.y, sceneStartInfos.playCubeSize.z / 2);
+    } else if (player.playerNumber == 4) {
+        player.paddle.position = new Vector3(player.contrPosR.x, player.contrPosR.y, -sceneStartInfos.playCubeSize.z / 2);
+    }
+    player.paddle.position = new Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
+    player.paddle.material = player.controllerR.material;
+
+
 
     // player.controllerL.isVisible = false;
 
     playerList[player.id].headObj = player.headObj;
     playerList[player.id].controllerR = player.controllerR;
     playerList[player.id].controllerL = player.controllerL;
+    playerList[player.id].paddle = player.paddle;
 
     // shadowGenerator.addShadowCaster(playerList[player.id].headObj as Mesh);
     // shadowGenerator.addShadowCaster(playerList[player.id].controllerR as Mesh);
