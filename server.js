@@ -74,17 +74,35 @@ const color1 = '#d60040';
 const color2 = '#91ff42';
 var activeColor = '#ffffff';
 
+// Server Variables
 let serverStartTime;
 
+// Game Variables
 const maxPlayers = 4;
-
-const playCubeSize = { x: 3, y: 3, z: 2 }; // the size of the player cube in meters
+const playCubeSize = { x: 3, y: 2.5, z: 3 }; // the size of the player cube in meters
 const playerAreaDepth = 1.5; // the depth of the player area in the z direction in meters
+
+let ball = {
+    position: { x: 0, y: playCubeSize.y / 2, z: 0 },
+    direction: { x: 1, y: 0.2, z: 2 },
+    speed: 0.01,
+    size: 0.1
+}
+
+const playerPaddleSize = { h: 0.2, w: 0.4 }; // the size of the player plane in meters
+
+let sceneStartinfos = {
+    playCubeSize: playCubeSize,
+    playerAreaDepth: playerAreaDepth,
+    ballSize: ball.size,
+    ballStartPos: ball.position,
+    playerPaddleSize: playerPaddleSize
+}
 
 let playerStartInfos = {
     1: {
         playerNumber: 1,
-        position: { x: 1.75, y: 0, z: 0 },
+        position: { x: (playCubeSize.x / 2 + playerAreaDepth / 2), y: 0, z: 0 },
         rotation: { x: 0, y: -Math.PI / 2, z: 0 },
         color: '#00ffff', //CMY //Cyan
         // color: '#ff0000', //RGB
@@ -92,7 +110,7 @@ let playerStartInfos = {
     },
     2: {
         playerNumber: 2,
-        position: { x: -1.75, y: 0, z: 0 },
+        position: { x: -(playCubeSize.x / 2 + playerAreaDepth / 2), y: 0, z: 0 },
         rotation: { x: 0, y: Math.PI / 2, z: 0 },
         color: '#ff00ff', //CMY //Magenta
         // color: '#00ff00', //RGB
@@ -100,7 +118,7 @@ let playerStartInfos = {
     },
     3: {
         playerNumber: 3,
-        position: { x: 0, y: 0, z: 1.75 },
+        position: { x: 0, y: 0, z: (playCubeSize.z / 2 + playerAreaDepth / 2) },
         rotation: { x: 0, y: Math.PI, z: 0 },
         color: '#ffff00', //CMY //Yellow
         // color: '#0000ff', //RGB
@@ -108,7 +126,7 @@ let playerStartInfos = {
     },
     4: {
         playerNumber: 4,
-        position: { x: 0, y: 0, z: -1.75 },
+        position: { x: 0, y: 0, z: -(playCubeSize.z / 2 + playerAreaDepth / 2) },
         rotation: { x: 0, y: 0, z: 0 },
         color: '#1aa543', //CMY //Green
         // color: '#ffff00', //RGB
@@ -144,7 +162,7 @@ io.on('connection', (socket) => {
     socket.emit('timeForPreviousPlayers');
 
     // Send the current state to the new player
-    socket.emit('currentState', playerList, activeColor, playerStartInfos, playCubeSize, playerAreaDepth);
+    socket.emit('currentState', playerList, activeColor, playerStartInfos, sceneStartinfos);
 
     socket.on('continueAsPreviousPlayer', (previousPlayerData) => {
         if (playerStartInfos[previousPlayerData.playerNumber].used == false) {
@@ -205,7 +223,7 @@ io.on('connection', (socket) => {
     });
 });
 
-httpsServer.listen(port, ipAdress,() => {
+httpsServer.listen(port, ipAdress, () => {
     // console.log('Server is listening on port https://localhost:' + port);        // for localhost network
     console.log('Server is listening on port https://' + ipAdress + ':' + port);    // for local ip network
     serverStartTime = Date.now();
@@ -214,7 +232,30 @@ httpsServer.listen(port, ipAdress,() => {
 
 // Game loop
 setInterval(function () {
-    io.emit('serverUpdate', playerList);
+
+    if (Object.keys(playerList).length > 0) {
+        // Update the ball position
+        ball.position.x += ball.direction.x * ball.speed;
+        ball.position.y += ball.direction.y * ball.speed;
+        ball.position.z += ball.direction.z * ball.speed;
+
+        // Bounce the ball off the walls
+        if (Math.abs(ball.position.x) > playCubeSize.x / 2) {
+            ball.direction.x *= -1;  // Reverse X direction
+            changeTestColor();
+        }
+        if ((ball.position.y) > playCubeSize.y / 2 || (ball.position.y) < 0) {
+            ball.direction.y *= -1;  // Reverse Y direction
+            changeTestColor();
+        }
+        if (Math.abs(ball.position.z) > playCubeSize.z / 2) {
+            ball.direction.z *= -1;  // Reverse Z direction
+            changeTestColor();
+        }
+    }
+
+    // Send the updated player list to all clients
+    io.emit('serverUpdate', playerList, ball);
 }, 20);
 
 // Start the game for the new player
@@ -249,15 +290,7 @@ function startClientGame(newPlayer, socket) {
 
     // Test color change for connection
     socket.on('clicked', () => {
-        // console.log('Clicked');
-
-        if (activeColor == color1) {
-            activeColor = color2;
-        } else {
-            activeColor = color1;
-        }
-        // console.log(activeColor);
-        io.emit('colorChanged', activeColor);
+        changeTestColor();
     });
 
     socket.on('testClick', (id) => {
@@ -265,3 +298,13 @@ function startClientGame(newPlayer, socket) {
         console.log(`Player Rotation: x: ${playerList[id].rotation.x}, y: ${playerList[id].rotation.y}, z: ${playerList[id].rotation.z}`);
     });
 };
+
+function changeTestColor() {
+    if (activeColor == color1) {
+        activeColor = color2;
+    } else {
+        activeColor = color1;
+    }
+
+    io.emit('colorChanged', activeColor);
+}

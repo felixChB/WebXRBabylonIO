@@ -45,126 +45,130 @@ const canvas = document.createElement('canvas'); // Create a canvas element for 
 canvas.id = 'renderCanvas';
 document.body.appendChild(canvas);
 
-//global Babylon Variables
+
+////////////////////////////// CREATE BABYLON SCENE ETC. //////////////////////////////
 
 // Basic Setup ---------------------------------------------------------------------------------
 const engine = new Engine(canvas, true);
 const scene = new Scene(engine);
 
-////////////////////////////// CREATE BABYLON SCENE ETC. //////////////////////////////
-
-function createBasicScene(playCubeSize: { x: number, y: number, z: number }, playerAreaDepth: number) {
-    console.log('PlayCubeSize: ', playCubeSize);
-    console.log('PlayerAreaDepth: ', playerAreaDepth);
-}
 // Camera --------------------------------------------------------------------------------------
 // Add a camera for the non-VR view in browser
-var camera = new ArcRotateCamera('Camera', -(Math.PI / 4) * 3, Math.PI / 4, 15, new Vector3(0, 0, 0), scene);
+var camera = new ArcRotateCamera('Camera', -(Math.PI / 4) * 3, Math.PI / 4, 10, new Vector3(0, 0, 0), scene);
 camera.attachControl(true); //debug
 
-// Lights --------------------------------------------------------------------------------------
-// Creates a light, aiming 0,1,0 - to the sky
-var hemiLight = new HemisphericLight('hemiLight', new Vector3(0, 1, 0), scene);
-hemiLight.intensity = 0.1;
+function createBasicScene(sceneStartInfos: SceneStartInfos) {
 
-var dirLight = new DirectionalLight("DirectionalLight", new Vector3(-0.7, -0.5, 0.4), scene);
-dirLight.position = new Vector3(9, 11, -17);
-dirLight.intensity = 0.2;
-dirLight.shadowMaxZ = 130;
-dirLight.shadowMinZ = 10;
+    let playCubeSize = sceneStartInfos.playCubeSize;
+    let playerAreaDepth = sceneStartInfos.playerAreaDepth;
+    let ballSize = sceneStartInfos.ballSize;
+    let ballStartPos = sceneStartInfos.ballStartPos;
+    // let playerPaddleSize = sceneStartInfos.playerPaddleSize;
 
-// const pointLight = new PointLight('pointLight', new Vector3(0, 10, 0), scene);
-// pointLight.intensity = 0.3;
-// pointLight.position = new Vector3(12, 3, -6);
-// pointLight.diffuse = new Color3(1, 0.09, 0.043);
+    // Lights --------------------------------------------------------------------------------------
+    // Creates a light, aiming 0,1,0 - to the sky
+    var hemiLight = new HemisphericLight('hemiLight', new Vector3(0, 1, 0), scene);
+    hemiLight.intensity = 0.1;
 
-// const pointLight2 = new PointLight('pointLight2', new Vector3(0, 10, 0), scene);
-// pointLight2.intensity = 0.3;
-// pointLight2.position = new Vector3(-12, 3, -6);
-// pointLight2.diffuse = new Color3(0.459, 0.047, 1);
+    var dirLight = new DirectionalLight("DirectionalLight", new Vector3(-0.7, -0.5, 0.4), scene);
+    dirLight.position = new Vector3(9, 11, -17);
+    dirLight.intensity = 0.2;
+    dirLight.shadowMaxZ = 130;
+    dirLight.shadowMinZ = 10;
 
-// Meshes --------------------------------------------------------------------------------------
-// Built-in 'sphere' shape.
-var testSphere = MeshBuilder.CreateSphere('testSphere', { diameter: 2, segments: 32 }, scene);
-testSphere.position.y = 1.5;
-testSphere.scaling = new Vector3(0.2, 0.2, 0.2);
+    // const pointLight = new PointLight('pointLight', new Vector3(0, 10, 0), scene);
+    // pointLight.intensity = 0.3;
+    // pointLight.position = new Vector3(12, 3, -6);
+    // pointLight.diffuse = new Color3(1, 0.09, 0.043);
 
-// Built-in 'ground' shape.
-var ground = MeshBuilder.CreateGround('ground', { width: 60, height: 60 }, scene);
+    // const pointLight2 = new PointLight('pointLight2', new Vector3(0, 10, 0), scene);
+    // pointLight2.intensity = 0.3;
+    // pointLight2.position = new Vector3(-12, 3, -6);
+    // pointLight2.diffuse = new Color3(0.459, 0.047, 1);
 
-var playBox = MeshBuilder.CreateBox('playBox', { size: 1 }, scene);
-playBox.position = new Vector3(0, 1.5, 0);
-playBox.scaling = new Vector3(2, 3, 2);
+    // Meshes --------------------------------------------------------------------------------------
+    // Built-in 'sphere' shape.
+    var testSphere = MeshBuilder.CreateSphere('testSphere', { diameter: 2, segments: 32 }, scene);
+    testSphere.position = new Vector3(ballStartPos.x, ballStartPos.y, ballStartPos.z);
+    testSphere.scaling = new Vector3(ballSize, ballSize, ballSize);
 
-// playBox.isVisible = false;
+    // Built-in 'ground' shape.
+    var ground = MeshBuilder.CreateGround('ground', { width: 60, height: 60 }, scene);
 
-// Grounds for the Player Start Positions
-const player1Ground = MeshBuilder.CreateBox('player1GroundBox', { size: 1 }, scene);
-player1Ground.position = new Vector3(1.76, -25.001, 0);
-player1Ground.scaling = new Vector3(1.5, 50, 2);
+    var playBox = MeshBuilder.CreateBox('playBox', { size: 1 }, scene);
+    playBox.position = new Vector3(0, playCubeSize.y / 2, 0);
+    playBox.scaling = new Vector3(playCubeSize.x, playCubeSize.y, playCubeSize.z);
 
-const player2Ground = MeshBuilder.CreateBox('player2GroundBox', { size: 1 }, scene);
-player2Ground.position = new Vector3(-1.76, -25.001, 0);
-player2Ground.scaling = new Vector3(1.5, 50, 2);
+    // playBox.isVisible = false;
 
-const player3Ground = MeshBuilder.CreateBox('player3GroundBox', { size: 1 }, scene);
-player3Ground.position = new Vector3(0, -25.001, 1.76);
-player3Ground.scaling = new Vector3(2, 50, 1.5);
+    // Grounds for the Player Start Positions
+    var player1Ground = MeshBuilder.CreateBox('player1GroundBox', { size: 1 }, scene);
+    player1Ground.position = new Vector3((playCubeSize.x / 2 + playerAreaDepth / 2) + 0.01, -25.001, 0);
+    player1Ground.scaling = new Vector3(playerAreaDepth, 50, playCubeSize.z);
 
-const player4Ground = MeshBuilder.CreateBox('player4GroundBox', { size: 1 }, scene);
-player4Ground.position = new Vector3(0, -25.001, -1.76);
-player4Ground.scaling = new Vector3(2, 50, 1.5);
+    var player2Ground = MeshBuilder.CreateBox('player2GroundBox', { size: 1 }, scene);
+    player2Ground.position = new Vector3(-(playCubeSize.x / 2 + playerAreaDepth / 2) - 0.01, -25.001, 0);
+    player2Ground.scaling = new Vector3(playerAreaDepth, 50, playCubeSize.z);
 
-// add a Glowlayer to let emissive materials glow
-const gl = new GlowLayer("glow", scene, {
-    mainTextureFixedSize: 1024,
-    blurKernelSize: 64,
-});
-gl.intensity = 0.5;
+    var player3Ground = MeshBuilder.CreateBox('player3GroundBox', { size: 1 }, scene);
+    player3Ground.position = new Vector3(0, -25.001, (playCubeSize.z / 2 + playerAreaDepth / 2) + 0.01);
+    player3Ground.scaling = new Vector3(playCubeSize.x, 50, playerAreaDepth);
 
-// Materials --------------------------------------------------------------------------------------
+    var player4Ground = MeshBuilder.CreateBox('player4GroundBox', { size: 1 }, scene);
+    player4Ground.position = new Vector3(0, -25.001, -(playCubeSize.z / 2 + playerAreaDepth / 2) - 0.01);
+    player4Ground.scaling = new Vector3(playCubeSize.x, 50, playerAreaDepth);
 
-const wireframeTexture = new Texture('./assets/figma_grid_thin_white.png', scene);
-wireframeTexture.uScale = 1;
-wireframeTexture.vScale = 1;
-// const simpleGridTexture = new Texture('./assets/figma_grid_wireframe_blue.png', scene);
+    // add a Glowlayer to let emissive materials glow
+    var gl = new GlowLayer("glow", scene, {
+        mainTextureFixedSize: 1024,
+        blurKernelSize: 64,
+    });
+    gl.intensity = 0.5;
 
-const wireframeMat = new StandardMaterial('wireframeMat', scene);
-wireframeMat.roughness = 1;
-wireframeMat.diffuseTexture = wireframeTexture;
-wireframeMat.emissiveTexture = wireframeTexture;
-wireframeMat.diffuseTexture.hasAlpha = true;
-wireframeMat.useAlphaFromDiffuseTexture = true;
-wireframeMat.backFaceCulling = false;
+    // Materials --------------------------------------------------------------------------------------
 
-const testMaterial = new StandardMaterial('testMaterial', scene);
-testMaterial.emissiveColor = Color3.White();
+    var wireframeTexture = new Texture('./assets/figma_grid_thin_white.png', scene);
+    wireframeTexture.uScale = 1;
+    wireframeTexture.vScale = 1;
+    // const simpleGridTexture = new Texture('./assets/figma_grid_wireframe_blue.png', scene);
 
-const staticBlocksMat = new StandardMaterial('staticBlocksMat', scene);
-staticBlocksMat.diffuseColor = Color3.FromHexString('#f7b705'); // orange
+    var wireframeMat = new StandardMaterial('wireframeMat', scene);
+    wireframeMat.roughness = 1;
+    wireframeMat.diffuseTexture = wireframeTexture;
+    wireframeMat.emissiveTexture = wireframeTexture;
+    wireframeMat.diffuseTexture.hasAlpha = true;
+    wireframeMat.useAlphaFromDiffuseTexture = true;
+    wireframeMat.backFaceCulling = false;
 
-const playerStartMat = new StandardMaterial('playerStartMat', scene);
-// playerStartMat.diffuseTexture = simpleGridTexture;
-playerStartMat.diffuseColor = Color3.FromHexString('#2b2b2b');
-// playerStartMat.emissiveTexture = simpleGridTexture;
-// playerStartMat.diffuseTexture.hasAlpha = true;
-// playerStartMat.useAlphaFromDiffuseTexture = true;
-// playerStartMat.backFaceCulling = false;
+    var testMaterial = new StandardMaterial('testMaterial', scene);
+    testMaterial.emissiveColor = Color3.White();
 
-// Setting Materials
-ground.material = wireframeMat;
-testSphere.material = testMaterial;
+    var staticBlocksMat = new StandardMaterial('staticBlocksMat', scene);
+    staticBlocksMat.diffuseColor = Color3.FromHexString('#f7b705'); // orange
 
-playBox.material = wireframeMat;
+    var playerStartMat = new StandardMaterial('playerStartMat', scene);
+    // playerStartMat.diffuseTexture = simpleGridTexture;
+    playerStartMat.diffuseColor = Color3.FromHexString('#2b2b2b');
+    // playerStartMat.emissiveTexture = simpleGridTexture;
+    // playerStartMat.diffuseTexture.hasAlpha = true;
+    // playerStartMat.useAlphaFromDiffuseTexture = true;
+    // playerStartMat.backFaceCulling = false;
 
-player1Ground.material = playerStartMat;
-player2Ground.material = playerStartMat;
-player3Ground.material = playerStartMat;
-player4Ground.material = playerStartMat;
+    // Setting Materials
+    ground.material = wireframeMat;
+    testSphere.material = testMaterial;
 
-ground.isVisible = false;
+    playBox.material = wireframeMat;
 
-let allLineMesh: LinesMesh;
+    player1Ground.material = playerStartMat;
+    player2Ground.material = playerStartMat;
+    player3Ground.material = playerStartMat;
+    player4Ground.material = playerStartMat;
+
+    ground.isVisible = false;
+}
+
+var allLineMesh: LinesMesh;
 
 ////////////////////////////// END CREATE BABYLON SCENE ETC. //////////////////////////////
 
@@ -174,6 +178,14 @@ interface PlayerStartInfo {
     rotation: { x: number, y: number, z: number };
     color: string;
     used: boolean;
+}
+
+interface SceneStartInfos {
+    playCubeSize: { x: number, y: number, z: number },
+    playerAreaDepth: number,
+    ballSize: number,
+    ballStartPos: { x: number, y: number, z: number },
+    playerPaddleSize: { w: number, h: number }
 }
 
 interface PlayerData {
@@ -441,12 +453,13 @@ socket.on('startPosDenied', () => {
 // get all current Player Information from the Server at the start
 // and spawning all current players except yourself
 socket.on('currentState', (players: { [key: string]: Player }, testColor: string,
-    playerStartInfos: { [key: number]: PlayerStartInfo }, playCubeSize: { x: number, y: number, z: number }, playerAreaDepth: number) => {
+    playerStartInfos: { [key: number]: PlayerStartInfo }, sceneStartInfos: SceneStartInfos) => {
 
-    createBasicScene(playCubeSize, playerAreaDepth);
+    createBasicScene(sceneStartInfos);
 
     console.log('Get the Current State');
 
+    let testMaterial = scene.getMaterialByName('testMaterial') as StandardMaterial;
     testMaterial.emissiveColor = Color3.FromHexString(testColor);
 
     console.log('Playercount: ', Object.keys(players).length);
@@ -669,12 +682,15 @@ socket.on('newPlayer', (newPlayer) => {
 });
 
 // update the players position and rotation from the server
-socket.on('serverUpdate', (players) => {
+socket.on('serverUpdate', (players, ball) => {
     Object.keys(players).forEach((id) => {
         if (playerList[id]) {
             playerList[id].setData(players[id]);
         }
     });
+
+    let testSphere = scene.getMeshByName('testSphere') as Mesh;
+    testSphere.position = new Vector3(ball.position.x, ball.position.y, ball.position.z);
 });
 
 // set the availability of the start buttons according to the used startpositions on the server
@@ -696,7 +712,11 @@ function setStartButtonAvailability(startPositions: { [key: number]: PlayerStart
 function addPlayer(player: Player, isPlayer: boolean) {
     console.log(`Spawning Player: ${player.id} as Player ${player.playerNumber}`);
 
-    player.headObj = MeshBuilder.CreateBox('player_' + player.id, { size: 0.3 }, scene);
+    let headScaling = 0.3;
+    let controllerScaling = 0.1;
+
+    player.headObj = MeshBuilder.CreateBox('player_' + player.id, { size: 1 }, scene);
+    player.headObj.scaling = new Vector3(headScaling, headScaling, headScaling);
     player.headObj.position = new Vector3(player.position.x, player.position.y, player.position.z);
     player.headObj.rotation = new Vector3(player.rotation.x, player.rotation.y, player.rotation.z);
     player.headObj.material = new StandardMaterial('mat_' + player.id, scene);
@@ -707,22 +727,20 @@ function addPlayer(player: Player, isPlayer: boolean) {
     }
 
     player.controllerR = MeshBuilder.CreateBox('conR_' + player.id, { size: 1 });
-    //player.controllerR = MeshBuilder.CreateSphere('conR_' + player.id, { diameter: 2, segments: 32 }, scene);
-    player.controllerR.scaling = new Vector3(0.01, 0.1, 0.1);
+    player.controllerR.scaling = new Vector3(controllerScaling, controllerScaling, controllerScaling);
     player.controllerR.position = new Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
     player.controllerR.rotation = new Vector3(player.contrRotR.x, player.contrRotR.y, player.contrRotR.z);
     player.controllerR.material = new StandardMaterial('matConR_' + player.id, scene);
     (player.controllerR.material as StandardMaterial).emissiveColor = Color3.FromHexString(player.color);
 
     player.controllerL = MeshBuilder.CreateBox('conL_' + player.id, { size: 1 });
-    //player.controllerL = MeshBuilder.CreateSphere('conL_' + player.id, { diameter: 2, segments: 32 }, scene);
-    player.controllerL.scaling = new Vector3(0.01, 0.1, 0.1);
+    player.controllerL.scaling = new Vector3(controllerScaling, controllerScaling, controllerScaling);
     player.controllerL.position = new Vector3(player.contrPosL.x, player.contrPosL.y, player.contrPosL.z);
     player.controllerL.rotation = new Vector3(player.contrRotL.x, player.contrRotL.y, player.contrRotL.z);
     player.controllerL.material = new StandardMaterial('matConL' + player.id, scene);
     (player.controllerL.material as StandardMaterial).emissiveColor = Color3.FromHexString(player.color);
 
-    player.controllerL.isVisible = false;
+    // player.controllerL.isVisible = false;
 
     playerList[player.id].headObj = player.headObj;
     playerList[player.id].controllerR = player.controllerR;
@@ -773,6 +791,7 @@ document.addEventListener('click', () => {
 
 socket.on('colorChanged', (color) => {
     // change color of the sphere
+    let testMaterial = scene.getMaterialByName('testMaterial') as StandardMaterial;
     testMaterial.emissiveColor = Color3.FromHexString(color);
 });
 
