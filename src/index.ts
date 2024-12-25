@@ -88,6 +88,13 @@ function createBasicScene(sceneStartInfos: SceneStartInfos) {
     // pointLight2.position = new Vector3(-12, 3, -6);
     // pointLight2.diffuse = new Color3(0.459, 0.047, 1);
 
+    // add a Glowlayer to let emissive materials glow
+    var gl = new GlowLayer("glow", scene, {
+        mainTextureFixedSize: 1024,
+        blurKernelSize: 64,
+    });
+    gl.intensity = 0.5;
+
     // Meshes --------------------------------------------------------------------------------------
     // Built-in 'sphere' shape.
     var testSphere = MeshBuilder.CreateSphere('testSphere', { diameter: 2, segments: 32 }, scene);
@@ -104,28 +111,37 @@ function createBasicScene(sceneStartInfos: SceneStartInfos) {
     // playBox.isVisible = false;
 
     // Grounds for the Player Start Positions
-    var player1Ground = MeshBuilder.CreateBox('player1GroundBox', { size: 1 }, scene);
+    var player1Ground = MeshBuilder.CreateBox('player1Ground', { size: 1 }, scene);
     player1Ground.position = new Vector3((playCubeSize.x / 2 + playerAreaDepth / 2) + 0.01, -25.001, 0);
     player1Ground.scaling = new Vector3(playerAreaDepth, 50, playCubeSize.z);
 
-    var player2Ground = MeshBuilder.CreateBox('player2GroundBox', { size: 1 }, scene);
+    var player2Ground = MeshBuilder.CreateBox('player2Ground', { size: 1 }, scene);
     player2Ground.position = new Vector3(-(playCubeSize.x / 2 + playerAreaDepth / 2) - 0.01, -25.001, 0);
     player2Ground.scaling = new Vector3(playerAreaDepth, 50, playCubeSize.z);
 
-    var player3Ground = MeshBuilder.CreateBox('player3GroundBox', { size: 1 }, scene);
+    var player3Ground = MeshBuilder.CreateBox('player3Ground', { size: 1 }, scene);
     player3Ground.position = new Vector3(0, -25.001, (playCubeSize.z / 2 + playerAreaDepth / 2) + 0.01);
     player3Ground.scaling = new Vector3(playCubeSize.x, 50, playerAreaDepth);
 
-    var player4Ground = MeshBuilder.CreateBox('player4GroundBox', { size: 1 }, scene);
+    var player4Ground = MeshBuilder.CreateBox('player4Ground', { size: 1 }, scene);
     player4Ground.position = new Vector3(0, -25.001, -(playCubeSize.z / 2 + playerAreaDepth / 2) - 0.01);
     player4Ground.scaling = new Vector3(playCubeSize.x, 50, playerAreaDepth);
 
-    // add a Glowlayer to let emissive materials glow
-    var gl = new GlowLayer("glow", scene, {
-        mainTextureFixedSize: 1024,
-        blurKernelSize: 64,
-    });
-    gl.intensity = 0.5;
+    var player1Wall = MeshBuilder.CreateBox('player1Wall', { size: 1 }, scene);
+    player1Wall.position = new Vector3(playCubeSize.x / 2 + 0.01, playCubeSize.y / 2, 0);
+    player1Wall.scaling = new Vector3(0.01, playCubeSize.y, playCubeSize.z);
+
+    var player2Wall = MeshBuilder.CreateBox('player2Wall', { size: 1 }, scene);
+    player2Wall.position = new Vector3(-playCubeSize.x / 2 - 0.01, playCubeSize.y / 2, 0);
+    player2Wall.scaling = new Vector3(0.01, playCubeSize.y, playCubeSize.z);
+
+    var player3Wall = MeshBuilder.CreateBox('player3Wall', { size: 1 }, scene);
+    player3Wall.position = new Vector3(0, playCubeSize.y / 2, playCubeSize.z / 2 + 0.01);
+    player3Wall.scaling = new Vector3(playCubeSize.x, playCubeSize.y, 0.01);
+
+    var player4Wall = MeshBuilder.CreateBox('player4Wall', { size: 1 }, scene);
+    player4Wall.position = new Vector3(0, playCubeSize.y / 2, -playCubeSize.z / 2 - 0.01);
+    player4Wall.scaling = new Vector3(playCubeSize.x, playCubeSize.y, 0.01);
 
     // Materials --------------------------------------------------------------------------------------
 
@@ -162,10 +178,16 @@ function createBasicScene(sceneStartInfos: SceneStartInfos) {
 
     playBox.material = wireframeMat;
 
-    player1Ground.material = playerStartMat;
-    player2Ground.material = playerStartMat;
-    player3Ground.material = playerStartMat;
-    player4Ground.material = playerStartMat;
+    for (let i = 1; i <= 4; i++) {
+        let playerGround = scene.getMeshByName(`player${i}Ground`) as Mesh;
+        let playerWall = scene.getMeshByName(`player${i}Wall`) as Mesh;
+        if (playerGround) {
+            playerGround.material = playerStartMat;
+        }
+        if (playerWall) {
+            playerWall.material = playerStartMat;
+        }
+    }
 
     ground.isVisible = false;
 }
@@ -667,6 +689,11 @@ socket.on('startClientGame', (newSocketPlayer) => {
         // camera.rotation = new Vector3(0, 0, 0);
         // camera.setTarget(Vector3.Zero());
 
+        let playerWall = scene.getMeshByName(`player${playerList[playerID].playerNumber}Wall`) as Mesh;
+        if (playerWall) {
+            playerWall.isVisible = false;
+        }
+
         // Spawn yourself Entity
         addPlayer(playerList[playerID], true);
 
@@ -692,6 +719,11 @@ socket.on('newPlayer', (newPlayer) => {
     // Spawn new player Entity
     addPlayer(playerList[newPlayer.id], false);
 
+    let playerWall = scene.getMeshByName(`player${playerList[newPlayer.id].playerNumber}Wall`) as Mesh;
+    if (playerWall) {
+        playerWall.isVisible = false;
+    }
+
     // set the availability of the start buttons according to the used startpositions on the server
     if (!startPosButtons[newPlayer.playerNumber - 1].classList.contains('unavailable')) {
         startPosButtons[newPlayer.playerNumber - 1].classList.add('unavailable');
@@ -713,11 +745,18 @@ socket.on('serverUpdate', (players, ball) => {
 // set the availability of the start buttons according to the used startpositions on the server
 function setStartButtonAvailability(startPositions: { [key: number]: PlayerStartInfo }) {
     for (let i = 0; i < startPosButtons.length; i++) {
+        let playerWall = scene.getMeshByName(`player${i + 1}Wall`) as Mesh;
         if (startPositions[i + 1].used == true) {
+            if (playerWall) {
+                playerWall.isVisible = false;
+            }
             if (!startPosButtons[i].classList.contains('unavailable')) {
                 startPosButtons[i].classList.add('unavailable');
             }
         } else {
+            if (playerWall) {
+                playerWall.isVisible = true;
+            }
             if (startPosButtons[i].classList.contains('unavailable')) {
                 startPosButtons[i].classList.remove('unavailable');
             }
@@ -797,6 +836,11 @@ socket.on('playerDisconnected', (id) => {
         disconnectedPlayer.controllerR?.dispose();
         disconnectedPlayer.controllerL?.dispose();
         disconnectedPlayer.paddle?.dispose();
+
+        let playerWall = scene.getMeshByName(`player${disconnectedPlayer.playerNumber}Wall`) as Mesh;
+        if (playerWall) {
+            playerWall.isVisible = true;
+        }
 
         // set the availability of the start buttons according to the used startpositions on the server
         if (startPosButtons[playerList[id].playerNumber - 1].classList.contains('unavailable')) {
