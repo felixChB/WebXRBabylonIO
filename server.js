@@ -85,8 +85,8 @@ const playerAreaDepth = 1.5; // the depth of the player area in the z direction 
 
 let ball = {
     position: { x: 0, y: playCubeSize.y / 2, z: 0 },
-    direction: { x: 1, y: 0.2, z: 2 },
-    speed: 0.01,
+    direction: { x: 1, y: 0.5, z: 1.5 },
+    speed: 0.02,
     size: 0.1
 }
 
@@ -245,14 +245,38 @@ setInterval(function () {
         //     ball.direction.x *= -1;  // Reverse X direction
         //     changeTestColor();
         // }
+
+        // Always bounce the ball off the top and bottom
         if ((ball.position.y) > playCubeSize.y / 2 || (ball.position.y) < 0) {
             ball.direction.y *= -1;  // Reverse Y direction
             changeTestColor();
         }
-        // if (Math.abs(ball.position.z) > playCubeSize.z / 2) {
-        //     ball.direction.z *= -1;  // Reverse Z direction
-        //     changeTestColor();
-        // }
+
+        // Bounce the ball of the wall if there is no player
+        if (playerStartInfos[1].used == false) {
+            if (ball.position.x > playCubeSize.x / 2) {
+                ball.direction.x *= -1;  // Reverse X direction
+                changeTestColor();
+            }
+        }
+        if (playerStartInfos[2].used == false) {
+            if (ball.position.x < -playCubeSize.x / 2) {
+                ball.direction.x *= -1;  // Reverse X direction
+                changeTestColor();
+            }
+        }
+        if (playerStartInfos[3].used == false) {
+            if (ball.position.z > playCubeSize.z / 2) {
+                ball.direction.z *= -1;  // Reverse X direction
+                changeTestColor();
+            }
+        }
+        if (playerStartInfos[4].used == false) {
+            if (ball.position.z < -playCubeSize.z / 2) {
+                ball.direction.z *= -1;  // Reverse X direction
+                changeTestColor();
+            }
+        }
 
         Object.keys(playerList).forEach((key) => {
             if (playerList[key].playerNumber == 1) {
