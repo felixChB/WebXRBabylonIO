@@ -255,25 +255,25 @@ setInterval(function () {
 
         // Bounce the ball of the wall if there is no player
         if (playerStartInfos[1].used == false) {
-            if (ball.position.x > playCubeSize.x / 2) {
+            if (ball.position.x + ball.size > playCubeSize.x / 2) {
                 ball.direction.x *= -1;  // Reverse X direction
                 changeTestColor();
             }
         }
         if (playerStartInfos[2].used == false) {
-            if (ball.position.x < -playCubeSize.x / 2) {
+            if (ball.position.x - ball.size < -playCubeSize.x / 2) {
                 ball.direction.x *= -1;  // Reverse X direction
                 changeTestColor();
             }
         }
         if (playerStartInfos[3].used == false) {
-            if (ball.position.z > playCubeSize.z / 2) {
+            if (ball.position.z + ball.size > playCubeSize.z / 2) {
                 ball.direction.z *= -1;  // Reverse X direction
                 changeTestColor();
             }
         }
         if (playerStartInfos[4].used == false) {
-            if (ball.position.z < -playCubeSize.z / 2) {
+            if (ball.position.z - ball.size < -playCubeSize.z / 2) {
                 ball.direction.z *= -1;  // Reverse X direction
                 changeTestColor();
             }
@@ -281,7 +281,7 @@ setInterval(function () {
 
         Object.keys(playerList).forEach((key) => {
             if (playerList[key].playerNumber == 1) {
-                if (ball.position.x > playCubeSize.x / 2 &&
+                if (ball.position.x + ball.size > playCubeSize.x / 2 && ball.position.x < playCubeSize.x / 2 &&
                     playerList[key].contrPosR.z - playerPaddleSize.w / 2 < ball.position.z && ball.position.z < playerList[key].contrPosR.z + playerPaddleSize.w / 2 &&
                     playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y && ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
                     if (ball.direction.x > 0) {
@@ -291,7 +291,7 @@ setInterval(function () {
                 }
 
             } else if (playerList[key].playerNumber == 2) {
-                if (ball.position.x < -playCubeSize.x / 2 &&
+                if (ball.position.x - ball.size < -playCubeSize.x / 2 && ball.position.x > -playCubeSize.x / 2 &&
                     playerList[key].contrPosR.z - playerPaddleSize.w / 2 < ball.position.z && ball.position.z < playerList[key].contrPosR.z + playerPaddleSize.w / 2 &&
                     playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y && ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
                     if (ball.direction.x < 0) {
@@ -300,7 +300,7 @@ setInterval(function () {
                     }
                 }
             } else if (playerList[key].playerNumber == 3) {
-                if (ball.position.z > playCubeSize.z / 2 &&
+                if (ball.position.z + ball.size > playCubeSize.z / 2 && ball.position.z < playCubeSize.x / 2 &&
                     playerList[key].contrPosR.x - playerPaddleSize.w / 2 < ball.position.x && ball.position.x < playerList[key].contrPosR.x + playerPaddleSize.w / 2 &&
                     playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y && ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
                     if (ball.direction.z > 0) {
@@ -309,7 +309,7 @@ setInterval(function () {
                     }
                 }
             } else if (playerList[key].playerNumber == 4) {
-                if (ball.position.z < -playCubeSize.z / 2 &&
+                if (ball.position.z - ball.size < -playCubeSize.z / 2 && ball.position.z > -playCubeSize.x / 2 &&
                     playerList[key].contrPosR.x - playerPaddleSize.w / 2 < ball.position.x && ball.position.x < playerList[key].contrPosR.x + playerPaddleSize.w / 2 &&
                     playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y && ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
                     if (ball.direction.z < 0) {
