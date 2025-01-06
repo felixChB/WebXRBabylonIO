@@ -13,7 +13,8 @@ const port = process.env.PORT || 3000;
 ////////////// CHANGE THIS TO YOUR LOCAL IP ADDRESS ///////////////////
 //const ipAdress = '192.168.178.156'; // for local network // Desktop
 //const ipAdress = '192.168.1.11'; // for local network // Router
-const ipAdress = '192.168.178.35'; // for local network // Wernau
+//const ipAdress = '192.168.178.35'; // for local network // Wernau
+const ipAdress = '192.168.1.188'; // Router
 ///////////////////////////////////////////////////////////////////////
 
 const app = express();
@@ -85,7 +86,7 @@ const playerAreaDepth = 1.5; // the depth of the player area in the z direction 
 
 let ball = {
     position: { x: 0, y: playCubeSize.y / 2, z: 0 },
-    direction: { x: 1, y: 0.5, z: 1.5 },
+    direction: { x: 1, y: 0.2, z: 2 },
     speed: 0.02,
     size: 0.1
 }
@@ -247,7 +248,7 @@ setInterval(function () {
         // }
 
         // Always bounce the ball off the top and bottom
-        if ((ball.position.y) > playCubeSize.y / 2 || (ball.position.y) < 0) {
+        if ((ball.position.y) > playCubeSize.y || (ball.position.y) < 0) {
             ball.direction.y *= -1;  // Reverse Y direction
             changeTestColor();
         }
@@ -281,38 +282,40 @@ setInterval(function () {
         Object.keys(playerList).forEach((key) => {
             if (playerList[key].playerNumber == 1) {
                 if (ball.position.x > playCubeSize.x / 2 &&
-                    playerList[key].contrPosR.z - playerPaddleSize.w / 2 < ball.position.z < playerList[key].contrPosR.z + playerPaddleSize.w / 2 &&
-                    playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2
-                ) {
-                    ball.direction.x *= -1;  // Reverse X direction
-                    changeTestColor();
+                    playerList[key].contrPosR.z - playerPaddleSize.w / 2 < ball.position.z && ball.position.z < playerList[key].contrPosR.z + playerPaddleSize.w / 2 &&
+                    playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y && ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
+                    if (ball.direction.x > 0) {
+                        ball.direction.x *= -1;  // Reverse X direction
+                        changeTestColor();
+                    }
                 }
+
             } else if (playerList[key].playerNumber == 2) {
                 if (ball.position.x < -playCubeSize.x / 2 &&
-                    playerList[key].contrPosR.z - playerPaddleSize.w / 2 < ball.position.z < playerList[key].contrPosR.z + playerPaddleSize.w / 2 &&
-                    playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2
-                ) {
-                    ball.direction.x *= -1;  // Reverse X direction
-                    changeTestColor();
+                    playerList[key].contrPosR.z - playerPaddleSize.w / 2 < ball.position.z && ball.position.z < playerList[key].contrPosR.z + playerPaddleSize.w / 2 &&
+                    playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y && ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
+                    if (ball.direction.x < 0) {
+                        ball.direction.x *= -1;  // Reverse X direction
+                        changeTestColor();
+                    }
                 }
             } else if (playerList[key].playerNumber == 3) {
-                if (ball.position.z > playCubeSize.z / 2) {
-                    if (playerList[key].contrPosR.x - playerPaddleSize.w / 2 < ball.position.x < playerList[key].contrPosR.x + playerPaddleSize.w / 2 &&
-                        playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
+                if (ball.position.z > playCubeSize.z / 2 &&
+                    playerList[key].contrPosR.x - playerPaddleSize.w / 2 < ball.position.x && ball.position.x < playerList[key].contrPosR.x + playerPaddleSize.w / 2 &&
+                    playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y && ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
+                    if (ball.direction.z > 0) {
                         ball.direction.z *= -1;  // Reverse X direction
                         changeTestColor();
-
-                        console.log(`Player Position: x: ${playerList[key].contrPosR.x}, y: ${playerList[key].contrPosR.y}, z: ${playerList[key].contrPosR.z}`);
-                        console.log(`Ball Position: x: ${ball.position.x}, y: ${ball.position.y}, z: ${ball.position.z}`);
                     }
                 }
             } else if (playerList[key].playerNumber == 4) {
                 if (ball.position.z < -playCubeSize.z / 2 &&
-                    playerList[key].contrPosR.x - playerPaddleSize.w / 2 < ball.position.x < playerList[key].contrPosR.x + playerPaddleSize.w / 2 &&
-                    playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2
-                ) {
-                    ball.direction.z *= -1;  // Reverse X direction
-                    changeTestColor();
+                    playerList[key].contrPosR.x - playerPaddleSize.w / 2 < ball.position.x && ball.position.x < playerList[key].contrPosR.x + playerPaddleSize.w / 2 &&
+                    playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y && ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
+                    if (ball.direction.z < 0) {
+                        ball.direction.z *= -1;  // Reverse X direction
+                        changeTestColor();
+                    }
                 }
             }
 
