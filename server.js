@@ -13,8 +13,8 @@ const port = process.env.PORT || 3000;
 ////////////// CHANGE THIS TO YOUR LOCAL IP ADDRESS ///////////////////
 //const ipAdress = '192.168.178.156'; // for local network // Desktop
 //const ipAdress = '192.168.1.11'; // for local network // Router
-//const ipAdress = '192.168.178.35'; // for local network // Wernau
-const ipAdress = '192.168.1.188'; // Router
+const ipAdress = '192.168.178.156'; //wlan fuwa
+//const ipAdress = '192.168.1.188'; // Router
 ///////////////////////////////////////////////////////////////////////
 
 const app = express();
@@ -88,7 +88,7 @@ const ballStartSpeed = 0.02;
 
 let ball = {
     position: { x: 0, y: playCubeSize.y / 2, z: 0 },
-    direction: { x: 1, y: 0.2, z: 2 },
+    direction: { x: getRandomNumber(0.5, 2), y: getRandomNumber(0.5, 1), z: getRandomNumber(0.5, 2) },
     speed: ballStartSpeed,
     size: 0.1
 }
@@ -250,7 +250,7 @@ setInterval(function () {
         // }
 
         // Always bounce the ball off the top and bottom
-        if ((ball.position.y) > playCubeSize.y || (ball.position.y) < 0) {
+        if (ball.position.y + ball.size > playCubeSize.y || ball.position.y - ball.size < 0) {
             ball.direction.y *= -1;  // Reverse Y direction
             changeTestColor();
         }
@@ -325,7 +325,7 @@ setInterval(function () {
             if (ball.position.x > playCubeSize.x / 2 + 0.5 || ball.position.x < -playCubeSize.x / 2 - 0.5 ||
                 ball.position.z > playCubeSize.z / 2 + 0.5 || ball.position.z < -playCubeSize.z / 2 - 0.5) {
                 ball.position = { x: 0, y: playCubeSize.y / 2, z: 0 };
-                ball.direction = { x: 1, y: 0.2, z: 2 };
+                ball.direction = { x: getRandomNumber(0.5, 2), y: getRandomNumber(0.1, 1), z: getRandomNumber(0.5, 2) };
                 ball.speed = ballStartSpeed;
             } else {
                 // make the Ball faster, if nobody missed
@@ -387,4 +387,9 @@ function changeTestColor() {
     }
 
     io.emit('colorChanged', activeColor);
+}
+
+function getRandomNumber(min, max) {
+    const num = Math.random() * (max - min) + min;
+    return Math.random() < 0.5 ? num : -num;
 }

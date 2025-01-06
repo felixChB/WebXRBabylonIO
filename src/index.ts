@@ -292,13 +292,73 @@ class Player implements PlayerData {
         }
         if (this.paddle) {
             if (this.playerNumber == 1) {
-                this.paddle.position = new Vector3(sceneStartInfos.playCubeSize.x / 2, this.contrPosR.y, this.contrPosR.z);
+                let paddleY, paddleZ;
+                if (this.contrPosR.y + sceneStartInfos.playerPaddleSize.h / 2 > sceneStartInfos.playCubeSize.y) {
+                    paddleY = sceneStartInfos.playCubeSize.y - sceneStartInfos.playerPaddleSize.h / 2;
+                } else if (this.contrPosR.y - sceneStartInfos.playerPaddleSize.h / 2 < 0) {
+                    paddleY = 0 + sceneStartInfos.playerPaddleSize.h / 2;
+                } else {
+                    paddleY = this.contrPosR.y;
+                }
+                if (this.contrPosR.z + sceneStartInfos.playerPaddleSize.w / 2 > sceneStartInfos.playCubeSize.z / 2) {
+                    paddleZ = sceneStartInfos.playCubeSize.z / 2 - sceneStartInfos.playerPaddleSize.w / 2;
+                } else if (this.contrPosR.z - sceneStartInfos.playerPaddleSize.w / 2 < -sceneStartInfos.playCubeSize.z / 2) {
+                    paddleZ = -sceneStartInfos.playCubeSize.z / 2 + sceneStartInfos.playerPaddleSize.w / 2;
+                } else {
+                    paddleZ = this.contrPosR.z;
+                }
+                this.paddle.position = new Vector3(sceneStartInfos.playCubeSize.x / 2, paddleY, paddleZ);
             } else if (this.playerNumber == 2) {
-                this.paddle.position = new Vector3(-sceneStartInfos.playCubeSize.x / 2, this.contrPosR.y, this.contrPosR.z);
+                let paddleY, paddleZ;
+                if (this.contrPosR.y + sceneStartInfos.playerPaddleSize.h / 2 > sceneStartInfos.playCubeSize.y) {
+                    paddleY = sceneStartInfos.playCubeSize.y - sceneStartInfos.playerPaddleSize.h / 2;
+                } else if (this.contrPosR.y - sceneStartInfos.playerPaddleSize.h / 2 < 0) {
+                    paddleY = 0 + sceneStartInfos.playerPaddleSize.h / 2;
+                } else {
+                    paddleY = this.contrPosR.y;
+                }
+                if (this.contrPosR.z + sceneStartInfos.playerPaddleSize.w / 2 > sceneStartInfos.playCubeSize.z / 2) {
+                    paddleZ = sceneStartInfos.playCubeSize.z / 2 - sceneStartInfos.playerPaddleSize.w / 2;
+                } else if (this.contrPosR.z - sceneStartInfos.playerPaddleSize.w / 2 < -sceneStartInfos.playCubeSize.z / 2) {
+                    paddleZ = -sceneStartInfos.playCubeSize.z / 2 + sceneStartInfos.playerPaddleSize.w / 2;
+                } else {
+                    paddleZ = this.contrPosR.z;
+                }
+                this.paddle.position = new Vector3(-sceneStartInfos.playCubeSize.x / 2, paddleY, paddleZ);
             } else if (this.playerNumber == 3) {
-                this.paddle.position = new Vector3(this.contrPosR.x, this.contrPosR.y, sceneStartInfos.playCubeSize.z / 2);
+                let paddleY, paddleX;
+                if (this.contrPosR.y + sceneStartInfos.playerPaddleSize.h / 2 > sceneStartInfos.playCubeSize.y) {
+                    paddleY = sceneStartInfos.playCubeSize.y - sceneStartInfos.playerPaddleSize.h / 2;
+                } else if (this.contrPosR.y - sceneStartInfos.playerPaddleSize.h / 2 < 0) {
+                    paddleY = 0 + sceneStartInfos.playerPaddleSize.h / 2;
+                } else {
+                    paddleY = this.contrPosR.y;
+                }
+                if (this.contrPosR.x + sceneStartInfos.playerPaddleSize.w / 2 > sceneStartInfos.playCubeSize.x / 2) {
+                    paddleX = sceneStartInfos.playCubeSize.x / 2 - sceneStartInfos.playerPaddleSize.w / 2;
+                } else if (this.contrPosR.x - sceneStartInfos.playerPaddleSize.w / 2 < -sceneStartInfos.playCubeSize.x / 2) {
+                    paddleX = -sceneStartInfos.playCubeSize.x / 2 + sceneStartInfos.playerPaddleSize.w / 2;
+                } else {
+                    paddleX = this.contrPosR.x;
+                }
+                this.paddle.position = new Vector3(paddleX, paddleY, sceneStartInfos.playCubeSize.z / 2);
             } else if (this.playerNumber == 4) {
-                this.paddle.position = new Vector3(this.contrPosR.x, this.contrPosR.y, -sceneStartInfos.playCubeSize.z / 2);
+                let paddleY, paddleX;
+                if (this.contrPosR.y + sceneStartInfos.playerPaddleSize.h / 2 > sceneStartInfos.playCubeSize.y) {
+                    paddleY = sceneStartInfos.playCubeSize.y - sceneStartInfos.playerPaddleSize.h / 2;
+                } else if (this.contrPosR.y - sceneStartInfos.playerPaddleSize.h / 2 < 0) {
+                    paddleY = 0 + sceneStartInfos.playerPaddleSize.h / 2;
+                } else {
+                    paddleY = this.contrPosR.y;
+                }
+                if (this.contrPosR.x + sceneStartInfos.playerPaddleSize.w / 2 > sceneStartInfos.playCubeSize.x / 2) {
+                    paddleX = sceneStartInfos.playCubeSize.x / 2 - sceneStartInfos.playerPaddleSize.w / 2;
+                } else if (this.contrPosR.x - sceneStartInfos.playerPaddleSize.w / 2 < -sceneStartInfos.playCubeSize.x / 2) {
+                    paddleX = -sceneStartInfos.playCubeSize.x / 2 + sceneStartInfos.playerPaddleSize.w / 2;
+                } else {
+                    paddleX = this.contrPosR.x;
+                }
+                this.paddle.position = new Vector3(paddleX, paddleY, -sceneStartInfos.playCubeSize.z / 2);
             }
         }
     }
