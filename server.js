@@ -84,10 +84,12 @@ const maxPlayers = 4;
 const playCubeSize = { x: 3, y: 2.5, z: 3 }; // the size of the player cube in meters
 const playerAreaDepth = 1.5; // the depth of the player area in the z direction in meters
 
+const ballStartSpeed = 0.02;
+
 let ball = {
     position: { x: 0, y: playCubeSize.y / 2, z: 0 },
     direction: { x: 1, y: 0.2, z: 2 },
-    speed: 0.02,
+    speed: ballStartSpeed,
     size: 0.1
 }
 
@@ -282,8 +284,8 @@ setInterval(function () {
         Object.keys(playerList).forEach((key) => {
             if (playerList[key].playerNumber == 1) {
                 if (ball.position.x + ball.size > playCubeSize.x / 2 && ball.position.x < playCubeSize.x / 2 &&
-                    playerList[key].contrPosR.z - playerPaddleSize.w / 2 < ball.position.z && ball.position.z < playerList[key].contrPosR.z + playerPaddleSize.w / 2 &&
-                    playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y && ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
+                    playerList[key].contrPosR.z - playerPaddleSize.w / 2 < ball.position.z + ball.size && ball.position.z - ball.size < playerList[key].contrPosR.z + playerPaddleSize.w / 2 &&
+                    playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y + ball.size && ball.position.y - ball.size < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
                     if (ball.direction.x > 0) {
                         ball.direction.x *= -1;  // Reverse X direction
                         changeTestColor();
@@ -304,7 +306,7 @@ setInterval(function () {
                     playerList[key].contrPosR.x - playerPaddleSize.w / 2 < ball.position.x && ball.position.x < playerList[key].contrPosR.x + playerPaddleSize.w / 2 &&
                     playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y && ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
                     if (ball.direction.z > 0) {
-                        ball.direction.z *= -1;  // Reverse X direction
+                        ball.direction.z *= -1;  // Reverse Z direction
                         changeTestColor();
                     }
                 }
@@ -313,7 +315,7 @@ setInterval(function () {
                     playerList[key].contrPosR.x - playerPaddleSize.w / 2 < ball.position.x && ball.position.x < playerList[key].contrPosR.x + playerPaddleSize.w / 2 &&
                     playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y && ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
                     if (ball.direction.z < 0) {
-                        ball.direction.z *= -1;  // Reverse X direction
+                        ball.direction.z *= -1;  // Reverse Z direction
                         changeTestColor();
                     }
                 }
@@ -324,6 +326,10 @@ setInterval(function () {
                 ball.position.z > playCubeSize.z / 2 + 0.5 || ball.position.z < -playCubeSize.z / 2 - 0.5) {
                 ball.position = { x: 0, y: playCubeSize.y / 2, z: 0 };
                 ball.direction = { x: 1, y: 0.2, z: 2 };
+                ball.speed = ballStartSpeed;
+            } else {
+                // make the Ball faster, if nobody missed
+                ball.speed += 0.00001;
             }
         });
     }
