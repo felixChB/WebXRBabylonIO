@@ -243,12 +243,6 @@ setInterval(function () {
         ball.position.y += ball.direction.y * ball.speed;
         ball.position.z += ball.direction.z * ball.speed;
 
-        // Bounce the ball off the walls
-        // if (Math.abs(ball.position.x) > playCubeSize.x / 2) {
-        //     ball.direction.x *= -1;  // Reverse X direction
-        //     changeTestColor();
-        // }
-
         // Always bounce the ball off the top and bottom
         if (ball.position.y + ball.size > playCubeSize.y || ball.position.y - ball.size < 0) {
             ball.direction.y *= -1;  // Reverse Y direction
@@ -270,13 +264,13 @@ setInterval(function () {
         }
         if (playerStartInfos[3].used == false) {
             if (ball.position.z + ball.size > playCubeSize.z / 2) {
-                ball.direction.z *= -1;  // Reverse X direction
+                ball.direction.z *= -1;  // Reverse Z direction
                 changeTestColor();
             }
         }
         if (playerStartInfos[4].used == false) {
             if (ball.position.z - ball.size < -playCubeSize.z / 2) {
-                ball.direction.z *= -1;  // Reverse X direction
+                ball.direction.z *= -1;  // Reverse Z direction
                 changeTestColor();
             }
         }
