@@ -5,7 +5,7 @@ import { HemisphericLight, DirectionalLight } from '@babylonjs/core';
 import { Mesh, StandardMaterial, Texture, Color3, Vector3, Quaternion, LinesMesh } from '@babylonjs/core';
 import { WebXRDefaultExperience, WebXRInputSource } from '@babylonjs/core/XR';
 import { Inspector } from '@babylonjs/inspector';
-// import * as GUI from '@babylonjs/gui'
+import * as GUI from '@babylonjs/gui'
 
 import '@babylonjs/core/Materials/Textures/Loaders'; // Required for EnvironmentHelper
 import '@babylonjs/loaders/glTF'; // Enable GLTF/GLB loader for loading controller models from WebXR Input registry
@@ -142,6 +142,29 @@ function createBasicScene(sceneStartInfos: SceneStartInfos) {
     var player4Wall = MeshBuilder.CreateBox('player4Wall', { size: 1 }, scene);
     player4Wall.position = new Vector3(0, playCubeSize.y / 2, -playCubeSize.z / 2 - 0.01);
     player4Wall.scaling = new Vector3(playCubeSize.x, playCubeSize.y, 0.01);
+
+
+    var player1ScoreMesh = MeshBuilder.CreateBox('player1ScoreMesh', { size: 1 }, scene);
+    player1ScoreMesh.position = new Vector3((playCubeSize.x / 2 + playerAreaDepth / 2) + 0.01, 3, 0);
+    player1ScoreMesh.isVisible = false;
+
+    // GUI --------------------------------------------------------------------------------------
+    var advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+    var rect1 = new GUI.Rectangle();
+    rect1.width = 0.2;
+    rect1.height = "80px";
+    //rect1.cornerRadius = 10;
+    rect1.color = "red";
+    rect1.thickness = 0;
+    //rect1.background = "black";
+    advancedTexture.addControl(rect1);
+    rect1.linkWithMesh(player1ScoreMesh);
+
+    var label = new GUI.TextBlock();
+    label.text = "Sphere";
+    rect1.addControl(label);
+    label.linkWithMesh(player1ScoreMesh);
 
     // Materials --------------------------------------------------------------------------------------
 
