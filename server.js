@@ -48,6 +48,7 @@ export class Player {
         this.id = id;
         this.color = startData.color;
         this.playerNumber = startData.playerNumber;
+        this.score = 0;
         this.startPosition = { x: startData.position.x, y: startData.position.y, z: startData.position.z };
         this.position = { x: startData.position.x, y: startData.position.y, z: startData.position.z };
         this.rotation = { x: startData.rotation.x, y: startData.rotation.y, z: startData.rotation.z };
@@ -314,18 +315,61 @@ setInterval(function () {
                     }
                 }
             }
-
-            // reset the ball if out of bounds
-            if (ball.position.x > playCubeSize.x / 2 + 0.5 || ball.position.x < -playCubeSize.x / 2 - 0.5 ||
-                ball.position.z > playCubeSize.z / 2 + 0.5 || ball.position.z < -playCubeSize.z / 2 - 0.5) {
-                ball.position = { x: 0, y: playCubeSize.y / 2, z: 0 };
-                ball.direction = { x: getRandomNumber(0.5, 2), y: getRandomNumber(0.1, 1), z: getRandomNumber(0.5, 2) };
-                ball.speed = ballStartSpeed;
-            } else {
-                // make the Ball faster, if nobody missed
-                ball.speed += 0.00001;
-            }
         });
+        // value for the out of bounds check
+        let outOfBoundsValue = 0.3;
+
+        // reset the ball if out of bounds
+        if (ball.position.x > playCubeSize.x / 2 + outOfBoundsValue || ball.position.x < -playCubeSize.x / 2 - outOfBoundsValue ||
+            ball.position.z > playCubeSize.z / 2 + outOfBoundsValue || ball.position.z < -playCubeSize.z / 2 - outOfBoundsValue) {
+            ball.position = { x: 0, y: playCubeSize.y / 2, z: 0 };
+            ball.direction = { x: getRandomNumber(0.5, 2), y: getRandomNumber(0.1, 1), z: getRandomNumber(0.5, 2) };
+            ball.speed = ballStartSpeed;
+
+            if (ball.position.x > playCubeSize.x / 2 + outOfBoundsValue) {
+                // player 1 missed
+                console.log('Player 1 missed');
+                Object.keys(playerList).forEach((key) => {
+                    if (playerList[key].playerNumber != 1) {
+                        playerList[key].score += 1;
+                    }
+                });
+            } else if (ball.position.x < -playCubeSize.x / 2 - outOfBoundsValue) {
+                // player 2 missed
+                console.log('Player 2 missed');
+                Object.keys(playerList).forEach((key) => {
+                    if (playerList[key].playerNumber != 2) {
+                        playerList[key].score += 1;
+                    }
+                });
+            } else if (ball.position.z > playCubeSize.z / 2 + outOfBoundsValue) {
+                // player 3 missed
+                console.log('Player 3 missed');
+                Object.keys(playerList).forEach((key) => {
+                    if (playerList[key].playerNumber != 3) {
+                        playerList[key].score += 1;
+                    }
+                });
+            } else if (ball.position.z < -playCubeSize.z / 2 - outOfBoundsValue) {
+                // player 4 missed
+                console.log('Player 4 missed');
+                Object.keys(playerList).forEach((key) => {
+                    if (playerList[key].playerNumber != 4) {
+                        playerList[key].score += 1;
+                    }
+                });
+            }
+        } else {
+            // make the Ball faster, if nobody missed
+            ball.speed += 0.00001;
+        }
+    } else {
+        // reset the ball if no player is in the game
+        if (ball.position != { x: 0, y: playCubeSize.y / 2, z: 0 }) {
+            ball.position = { x: 0, y: playCubeSize.y / 2, z: 0 };
+            ball.direction = { x: getRandomNumber(0.5, 2), y: getRandomNumber(0.1, 1), z: getRandomNumber(0.5, 2) };
+            ball.speed = ballStartSpeed;
+        }
     }
 
     // Send the updated player list to all clients
@@ -336,8 +380,6 @@ setInterval(function () {
 // can be called from a new player or an previous player
 function startClientGame(newPlayer, socket) {
 
-    // console.log('Playercount before join: ', Object.keys(playerList).length);
-
     socket.leave('waitingRoom');
     socket.join('gameRoom');
 
@@ -346,8 +388,6 @@ function startClientGame(newPlayer, socket) {
     // Add new player to the game
     playerList[newPlayer.id] = newPlayer;
 
-    // console.log('Playercount after join: ', Object.keys(playerList).length);
-
     // Start the Game on client side and send the player's information to the new player
     socket.emit('startClientGame', playerList[newPlayer.id]);
 
@@ -355,11 +395,7 @@ function startClientGame(newPlayer, socket) {
     socket.to('waitingRoom').to('gameRoom').emit('newPlayer', playerList[newPlayer.id]);
 
     socket.on('clientUpdate', (data) => {
-        // console.log('Player data received:');
-        // console.log(data.contrRotR);
         playerList[socket.id].setData(data);
-        // console.log('Player data updated:');
-        // console.log(playerList[socket.id].contrRotR);
     });
 
     // Test color change for connection

@@ -216,6 +216,7 @@ interface PlayerData {
     id: string;
     color: string;
     playerNumber: number;
+    score: number;
     position: { x: number, y: number, z: number };
     rotation: { x: number, y: number, z: number };
     contrPosR: { x: number, y: number, z: number };
@@ -228,6 +229,7 @@ interface PreviousPlayerData {
     id: string;
     color: string;
     playerNumber: number;
+    score: number;
     position: { x: number, y: number, z: number };
     rotation: { x: number, y: number, z: number };
     contrPosR: { x: number, y: number, z: number };
@@ -241,6 +243,7 @@ class Player implements PlayerData {
     id: string;
     color: string;
     playerNumber: number;
+    score: number;
     position: { x: number, y: number, z: number };
     rotation: { x: number, y: number, z: number };
     contrPosR: { x: number, y: number, z: number };
@@ -256,6 +259,7 @@ class Player implements PlayerData {
         this.id = player.id;
         this.color = player.color;
         this.playerNumber = player.playerNumber;
+        this.score = player.score;
         this.position = { x: player.position.x, y: player.position.y, z: player.position.z };
         this.rotation = { x: player.rotation.x, y: player.rotation.y, z: player.rotation.z };
         this.contrPosR = { x: player.contrPosR.x, y: player.contrPosR.y, z: player.contrPosR.z };
@@ -882,10 +886,6 @@ function addPlayer(player: Player, isPlayer: boolean) {
     playerList[player.id].controllerR = player.controllerR;
     playerList[player.id].controllerL = player.controllerL;
     playerList[player.id].paddle = player.paddle;
-
-    // shadowGenerator.addShadowCaster(playerList[player.id].headObj as Mesh);
-    // shadowGenerator.addShadowCaster(playerList[player.id].controllerR as Mesh);
-    // shadowGenerator.addShadowCaster(playerList[player.id].controllerL as Mesh);
 }
 
 socket.on('playerDisconnected', (id) => {
@@ -1003,6 +1003,7 @@ function setLocalStorage() {
             id: playerID,
             color: playerList[playerID].color,
             playerNumber: playerList[playerID].playerNumber,
+            score: playerList[playerID].score,
             // position: playerList[playerID].position,
             position: { x: playerList[playerID].position.x, y: 0, z: playerList[playerID].position.z }, // dont save the y position (xr adds the head hight automatically)
             rotation: { x: 0, y: playerList[playerID].rotation.y, z: 0 },    //only save the y rotation
@@ -1036,6 +1037,7 @@ function getLocalStorage() {
                 id: parsedJsonPreviousPlayer.id,
                 color: parsedJsonPreviousPlayer.color,
                 playerNumber: Number(parsedJsonPreviousPlayer.playerNumber),
+                score: Number(parsedJsonPreviousPlayer.score),
                 position:
                 {
                     x: Number(parsedJsonPreviousPlayer.position.x),
