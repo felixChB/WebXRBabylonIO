@@ -59,7 +59,7 @@ const scene = new Scene(engine);
 var camera = new ArcRotateCamera('Camera', -(Math.PI / 4) * 3, Math.PI / 4, 10, new Vector3(0, 0, 0), scene);
 camera.attachControl(true); //debug
 
-function createBasicScene(sceneStartInfos: SceneStartInfos) {
+function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { [key: number]: PlayerStartInfo }) {
 
     let playCubeSize = sceneStartInfos.playCubeSize;
     let playerAreaDepth = sceneStartInfos.playerAreaDepth;
@@ -143,28 +143,72 @@ function createBasicScene(sceneStartInfos: SceneStartInfos) {
     player4Wall.position = new Vector3(0, playCubeSize.y / 2, -playCubeSize.z / 2 - 0.01);
     player4Wall.scaling = new Vector3(playCubeSize.x, playCubeSize.y, 0.01);
 
-
-    var player1ScoreMesh = MeshBuilder.CreateBox('player1ScoreMesh', { size: 1 }, scene);
+    // plane meshes for the player scores
+    var player1ScoreMesh = MeshBuilder.CreatePlane("player1ScoreMesh", { size: 1 }, scene);
     player1ScoreMesh.position = new Vector3((playCubeSize.x / 2 + playerAreaDepth / 2) + 0.01, 3, 0);
-    player1ScoreMesh.isVisible = false;
+    player1ScoreMesh.scaling = new Vector3(1, 0.5, 1);
+    player1ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+
+    var player2ScoreMesh = MeshBuilder.CreatePlane('player2ScoreMesh', { size: 1 }, scene);
+    player2ScoreMesh.position = new Vector3(-(playCubeSize.x / 2 + playerAreaDepth / 2) - 0.01, 3, 0);
+    player2ScoreMesh.scaling = new Vector3(1, 0.5, 1);
+    player2ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+    
+    var player3ScoreMesh = MeshBuilder.CreatePlane('player3ScoreMesh', { size: 1 }, scene);
+    player3ScoreMesh.position = new Vector3(0, 3, (playCubeSize.z / 2 + playerAreaDepth / 2) + 0.01);
+    player3ScoreMesh.scaling = new Vector3(1, 0.5, 1);
+    player3ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+
+    var player4ScoreMesh = MeshBuilder.CreatePlane('player4ScoreMesh', { size: 1 }, scene);
+    player4ScoreMesh.position = new Vector3(0, 3, -(playCubeSize.z / 2 + playerAreaDepth / 2) - 0.01);
+    player4ScoreMesh.scaling = new Vector3(1, 0.5, 1);
+    player4ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
 
     // GUI --------------------------------------------------------------------------------------
+    
+    //var player1ScoreTex = GUI.AdvancedDynamicTexture.CreateForMesh(player1ScoreMesh, 1024, 1024, false);
+
+    // Fullscreen UI (maybe for own score)
     var advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
-    var rect1 = new GUI.Rectangle();
-    rect1.width = 0.2;
-    rect1.height = "80px";
-    //rect1.cornerRadius = 10;
-    rect1.color = "red";
-    rect1.thickness = 0;
-    //rect1.background = "black";
-    advancedTexture.addControl(rect1);
-    rect1.linkWithMesh(player1ScoreMesh);
+    // var rect1 = new GUI.Rectangle();
+    // rect1.width = 0.2;
+    // rect1.height = "80px";
+    // //rect1.cornerRadius = 10;
+    // rect1.color = "red";
+    // rect1.thickness = 0;
+    // //rect1.background = "black";
+    // advancedTexture.addControl(rect1);
+    // rect1.linkWithMesh(player1ScoreMesh);
 
-    var label = new GUI.TextBlock();
-    label.text = "Sphere";
-    rect1.addControl(label);
-    label.linkWithMesh(player1ScoreMesh);
+    var player1Score = new GUI.TextBlock();
+    player1Score.width = 1;
+    player1Score.height = 1;
+    player1Score.text = "Player 1 Score:";
+    player1Score.color = playerStartInfos[1].color;   
+    advancedTexture.addControl(player1Score);
+    player1Score.linkWithMesh(player1ScoreMesh);
+
+    var player2Score = new GUI.TextBlock();
+    player2Score.text = "Player 2 Score:";
+    player2Score.color = playerStartInfos[2].color;
+    advancedTexture.addControl(player2Score);
+    player2Score.linkWithMesh(player2ScoreMesh);
+
+    var player3Score = new GUI.TextBlock();
+    player3Score.text = "Player 3 Score:";
+    player3Score.color = playerStartInfos[3].color;
+    advancedTexture.addControl(player3Score);
+    player3Score.linkWithMesh(player3ScoreMesh);
+
+    var player3Score = new GUI.TextBlock();
+    player3Score.text = "Player 3 Score:";
+
+    var player4Score = new GUI.TextBlock();
+    player4Score.text = "Player 4 Score:";
+    player4Score.color = playerStartInfos[4].color;
+    advancedTexture.addControl(player4Score);
+    player4Score.linkWithMesh(player4ScoreMesh);
 
     // Materials --------------------------------------------------------------------------------------
 
@@ -581,7 +625,7 @@ socket.on('currentState', (players: { [key: string]: Player }, testColor: string
 
     sceneStartInfos = sceneStartInfosServer;
 
-    createBasicScene(sceneStartInfos);
+    createBasicScene(sceneStartInfos, playerStartInfos);
 
     console.log('Get the Current State');
 

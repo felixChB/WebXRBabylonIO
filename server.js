@@ -82,19 +82,17 @@ let serverStartTime;
 
 // Game Variables
 const maxPlayers = 4;
-const playCubeSize = { x: 3, y: 2.5, z: 3 }; // the size of the player cube in meters
-const playerAreaDepth = 1.5; // the depth of the player area in the z direction in meters
-
+const playCubeSize = { x: 1.5, y: 2, z: 1.5 }; // the size of the player cube in meters
+const playerAreaDepth = 1; // the depth of the player area in the z direction in meters
 const ballStartSpeed = 0.02;
+const playerPaddleSize = { h: 0.2, w: 0.4 }; // the size of the player plane in meters
 
 let ball = {
     position: { x: 0, y: playCubeSize.y / 2, z: 0 },
     direction: { x: getRandomNumber(0.5, 2), y: getRandomNumber(0.5, 1), z: getRandomNumber(0.5, 2) },
     speed: ballStartSpeed,
-    size: 0.1
+    size: 0.07
 }
-
-const playerPaddleSize = { h: 0.2, w: 0.4 }; // the size of the player plane in meters
 
 let sceneStartinfos = {
     playCubeSize: playCubeSize,
