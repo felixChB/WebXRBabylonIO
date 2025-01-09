@@ -909,6 +909,7 @@ function addPlayer(player: Player, isPlayer: boolean) {
     player.headObj.rotation = new Vector3(player.rotation.x, player.rotation.y, player.rotation.z);
     player.headObj.material = new StandardMaterial('mat_' + player.id, scene);
     (player.headObj.material as StandardMaterial).emissiveColor = Color3.FromHexString(player.color);
+    player.headObj.material.alpha = 0.5;
 
     if (isPlayer) {
         player.headObj.isVisible = false;

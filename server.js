@@ -89,7 +89,7 @@ const playerPaddleSize = { h: 0.2, w: 0.4 }; // the size of the player plane in 
 
 let ball = {
     position: { x: 0, y: playCubeSize.y / 2, z: 0 },
-    direction: { x: getRandomNumber(0.5, 2), y: getRandomNumber(0.5, 1), z: getRandomNumber(0.5, 2) },
+    direction: getNormalizedVector({ x: getRandomNumber(0.5, 2), y: getRandomNumber(0.5, 1), z: getRandomNumber(0.5, 2) }),
     speed: ballStartSpeed,
     size: 0.07
 }
@@ -321,7 +321,7 @@ setInterval(function () {
         if (ball.position.x > playCubeSize.x / 2 + outOfBoundsValue || ball.position.x < -playCubeSize.x / 2 - outOfBoundsValue ||
             ball.position.z > playCubeSize.z / 2 + outOfBoundsValue || ball.position.z < -playCubeSize.z / 2 - outOfBoundsValue) {
             ball.position = { x: 0, y: playCubeSize.y / 2, z: 0 };
-            ball.direction = { x: getRandomNumber(0.5, 2), y: getRandomNumber(0.1, 1), z: getRandomNumber(0.5, 2) };
+            ball.direction = getNormalizedVector({ x: getRandomNumber(0.5, 2), y: getRandomNumber(0.5, 1), z: getRandomNumber(0.5, 2) });
             ball.speed = ballStartSpeed;
 
             if (ball.position.x > playCubeSize.x / 2 + outOfBoundsValue) {
@@ -365,7 +365,7 @@ setInterval(function () {
         // reset the ball if no player is in the game
         if (ball.position != { x: 0, y: playCubeSize.y / 2, z: 0 }) {
             ball.position = { x: 0, y: playCubeSize.y / 2, z: 0 };
-            ball.direction = { x: getRandomNumber(0.5, 2), y: getRandomNumber(0.1, 1), z: getRandomNumber(0.5, 2) };
+            ball.direction = getNormalizedVector({ x: getRandomNumber(0.5, 2), y: getRandomNumber(0.5, 1), z: getRandomNumber(0.5, 2) });
             ball.speed = ballStartSpeed;
         }
     }
@@ -420,4 +420,9 @@ function changeTestColor() {
 function getRandomNumber(min, max) {
     const num = Math.random() * (max - min) + min;
     return Math.random() < 0.5 ? num : -num;
+}
+
+function getNormalizedVector(vector) {
+    const length = Math.sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z);
+    return { x: vector.x / length, y: vector.y / length, z: vector.z / length };
 }
