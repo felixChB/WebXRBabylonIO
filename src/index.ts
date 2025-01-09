@@ -2,7 +2,7 @@ import { io } from 'socket.io-client';
 import { /*Camera,*/ Engine, FreeCamera, Scene } from '@babylonjs/core';
 import { ArcRotateCamera, MeshBuilder, /*ShadowGenerator,*/ GlowLayer } from '@babylonjs/core';
 import { HemisphericLight, DirectionalLight } from '@babylonjs/core';
-import { Mesh, StandardMaterial, Texture, Color3, Vector3, Quaternion, LinesMesh } from '@babylonjs/core';
+import { Mesh, StandardMaterial, Texture, Color3, Color4, Vector3, Quaternion, LinesMesh } from '@babylonjs/core';
 import { WebXRDefaultExperience, WebXRInputSource } from '@babylonjs/core/XR';
 import { Inspector } from '@babylonjs/inspector';
 import * as GUI from '@babylonjs/gui'
@@ -96,7 +96,9 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     gl.intensity = 0.5;
 
     // Meshes --------------------------------------------------------------------------------------
-    // Built-in 'sphere' shape.
+    
+    let edgeWidth = 0.2;
+
     var testSphere = MeshBuilder.CreateSphere('testSphere', { diameter: 2, segments: 32 }, scene);
     testSphere.position = new Vector3(ballStartPos.x, ballStartPos.y, ballStartPos.z);
     testSphere.scaling = new Vector3(ballSize, ballSize, ballSize);
@@ -107,25 +109,41 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     var playBox = MeshBuilder.CreateBox('playBox', { size: 1 }, scene);
     playBox.position = new Vector3(0, playCubeSize.y / 2, 0);
     playBox.scaling = new Vector3(playCubeSize.x, playCubeSize.y, playCubeSize.z);
+    playBox.enableEdgesRendering();
+    playBox.edgesWidth = edgeWidth;
+    playBox.edgesColor = new Color4(1, 1, 1, 1);
 
     // playBox.isVisible = false;
 
     // Grounds for the Player Start Positions
+
     var player1Ground = MeshBuilder.CreateBox('player1Ground', { size: 1 }, scene);
     player1Ground.position = new Vector3((playCubeSize.x / 2 + playerAreaDepth / 2) + 0.01, -25.001, 0);
     player1Ground.scaling = new Vector3(playerAreaDepth, 50, playCubeSize.z);
+    player1Ground.enableEdgesRendering();
+    player1Ground.edgesWidth = edgeWidth;
+    player1Ground.edgesColor = Color4.FromHexString(playerStartInfos[1].color);
 
     var player2Ground = MeshBuilder.CreateBox('player2Ground', { size: 1 }, scene);
     player2Ground.position = new Vector3(-(playCubeSize.x / 2 + playerAreaDepth / 2) - 0.01, -25.001, 0);
     player2Ground.scaling = new Vector3(playerAreaDepth, 50, playCubeSize.z);
+    player2Ground.enableEdgesRendering();
+    player2Ground.edgesWidth = edgeWidth;
+    player2Ground.edgesColor = Color4.FromHexString(playerStartInfos[2].color);
 
     var player3Ground = MeshBuilder.CreateBox('player3Ground', { size: 1 }, scene);
     player3Ground.position = new Vector3(0, -25.001, (playCubeSize.z / 2 + playerAreaDepth / 2) + 0.01);
     player3Ground.scaling = new Vector3(playCubeSize.x, 50, playerAreaDepth);
+    player3Ground.enableEdgesRendering();
+    player3Ground.edgesWidth = edgeWidth;
+    player3Ground.edgesColor = Color4.FromHexString(playerStartInfos[3].color);
 
     var player4Ground = MeshBuilder.CreateBox('player4Ground', { size: 1 }, scene);
     player4Ground.position = new Vector3(0, -25.001, -(playCubeSize.z / 2 + playerAreaDepth / 2) - 0.01);
     player4Ground.scaling = new Vector3(playCubeSize.x, 50, playerAreaDepth);
+    player4Ground.enableEdgesRendering();
+    player4Ground.edgesWidth = edgeWidth;
+    player4Ground.edgesColor = Color4.FromHexString(playerStartInfos[4].color);
 
     var player1Wall = MeshBuilder.CreateBox('player1Wall', { size: 1 }, scene);
     player1Wall.position = new Vector3(playCubeSize.x / 2 + 0.01, playCubeSize.y / 2, 0);
@@ -201,9 +219,6 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     advancedTexture.addControl(player3Score);
     player3Score.linkWithMesh(player3ScoreMesh);
 
-    var player3Score = new GUI.TextBlock();
-    player3Score.text = "Player 3 Score:";
-
     var player4Score = new GUI.TextBlock();
     player4Score.text = "Player 4 Score:";
     player4Score.color = playerStartInfos[4].color;
@@ -225,6 +240,10 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     wireframeMat.useAlphaFromDiffuseTexture = true;
     wireframeMat.backFaceCulling = false;
 
+    var playBoxMat = new StandardMaterial('playBoxMat', scene);
+    playBoxMat.diffuseColor = Color3.FromHexString('#ffffff');
+    playBoxMat.alpha = 0.1;
+
     var testMaterial = new StandardMaterial('testMaterial', scene);
     testMaterial.emissiveColor = Color3.White();
 
@@ -232,18 +251,17 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     staticBlocksMat.diffuseColor = Color3.FromHexString('#f7b705'); // orange
 
     var playerStartMat = new StandardMaterial('playerStartMat', scene);
-    // playerStartMat.diffuseTexture = simpleGridTexture;
     playerStartMat.diffuseColor = Color3.FromHexString('#2b2b2b');
-    // playerStartMat.emissiveTexture = simpleGridTexture;
-    // playerStartMat.diffuseTexture.hasAlpha = true;
-    // playerStartMat.useAlphaFromDiffuseTexture = true;
-    // playerStartMat.backFaceCulling = false;
+
+    var playerWallMat = new StandardMaterial('playerWallMat', scene);
+    playerWallMat.diffuseColor = Color3.FromHexString('#2b2b2b');
+    playerWallMat.alpha = 0.8;
 
     // Setting Materials
     ground.material = wireframeMat;
     testSphere.material = testMaterial;
 
-    playBox.material = wireframeMat;
+    playBox.material = playBoxMat;
 
     for (let i = 1; i <= 4; i++) {
         let playerGround = scene.getMeshByName(`player${i}Ground`) as Mesh;
@@ -252,7 +270,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
             playerGround.material = playerStartMat;
         }
         if (playerWall) {
-            playerWall.material = playerStartMat;
+            playerWall.material = playerWallMat;
         }
     }
 
@@ -909,7 +927,7 @@ function addPlayer(player: Player, isPlayer: boolean) {
     player.headObj.rotation = new Vector3(player.rotation.x, player.rotation.y, player.rotation.z);
     player.headObj.material = new StandardMaterial('mat_' + player.id, scene);
     (player.headObj.material as StandardMaterial).emissiveColor = Color3.FromHexString(player.color);
-    player.headObj.material.alpha = 0.5;
+    player.headObj.material.alpha = 0.3;
 
     if (isPlayer) {
         player.headObj.isVisible = false;
