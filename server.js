@@ -75,7 +75,6 @@ export class Player {
 /////////////////////////////  VARIABLES  //////////////////////////////////
 const color1 = '#d60040';
 const color2 = '#91ff42';
-var activeColor = '#ffffff';
 
 // Server Variables
 let serverStartTime;
@@ -86,12 +85,16 @@ const playCubeSize = { x: 1.5, y: 2, z: 1.5 }; // the size of the player cube in
 const playerAreaDepth = 1; // the depth of the player area in the z direction in meters
 const ballStartSpeed = 0.02;
 const playerPaddleSize = { h: 0.2, w: 0.4 }; // the size of the player plane in meters
+const ballStartColor = '#ffffff';
+
+let activeColor = ballStartColor;
 
 let ball = {
     position: { x: 0, y: playCubeSize.y / 2, z: 0 },
     direction: getNormalizedVector({ x: getRandomNumber(0.5, 2), y: getRandomNumber(0.5, 1), z: getRandomNumber(0.5, 2) }),
     speed: ballStartSpeed,
-    size: 0.07
+    size: 0.07,
+    color: ballStartColor
 }
 
 let sceneStartinfos = {
@@ -99,6 +102,7 @@ let sceneStartinfos = {
     playerAreaDepth: playerAreaDepth,
     ballSize: ball.size,
     ballStartPos: ball.position,
+    ballColor: ball.color,
     playerPaddleSize: playerPaddleSize
 }
 
@@ -245,32 +249,32 @@ setInterval(function () {
         // Always bounce the ball off the top and bottom
         if (ball.position.y + ball.size > playCubeSize.y || ball.position.y - ball.size < 0) {
             ball.direction.y *= -1;  // Reverse Y direction
-            changeTestColor();
+            //changeTestColor();
         }
 
         // Bounce the ball of the wall if there is no player
         if (playerStartInfos[1].used == false) {
             if (ball.position.x + ball.size > playCubeSize.x / 2) {
                 ball.direction.x *= -1;  // Reverse X direction
-                changeTestColor();
+                //changeTestColor();
             }
         }
         if (playerStartInfos[2].used == false) {
             if (ball.position.x - ball.size < -playCubeSize.x / 2) {
                 ball.direction.x *= -1;  // Reverse X direction
-                changeTestColor();
+                //changeTestColor();
             }
         }
         if (playerStartInfos[3].used == false) {
             if (ball.position.z + ball.size > playCubeSize.z / 2) {
                 ball.direction.z *= -1;  // Reverse Z direction
-                changeTestColor();
+                //changeTestColor();
             }
         }
         if (playerStartInfos[4].used == false) {
             if (ball.position.z - ball.size < -playCubeSize.z / 2) {
                 ball.direction.z *= -1;  // Reverse Z direction
-                changeTestColor();
+                //changeTestColor();
             }
         }
 
@@ -281,7 +285,7 @@ setInterval(function () {
                     playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y + ball.size && ball.position.y - ball.size < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
                     if (ball.direction.x > 0) {
                         ball.direction.x *= -1;  // Reverse X direction
-                        changeTestColor();
+                        changeTestColor(playerList[key].color);
                     }
                 }
 
@@ -291,7 +295,7 @@ setInterval(function () {
                     playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y && ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
                     if (ball.direction.x < 0) {
                         ball.direction.x *= -1;  // Reverse X direction
-                        changeTestColor();
+                        changeTestColor(playerList[key].color);
                     }
                 }
             } else if (playerList[key].playerNumber == 3) {
@@ -300,7 +304,7 @@ setInterval(function () {
                     playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y && ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
                     if (ball.direction.z > 0) {
                         ball.direction.z *= -1;  // Reverse Z direction
-                        changeTestColor();
+                        changeTestColor(playerList[key].color);
                     }
                 }
             } else if (playerList[key].playerNumber == 4) {
@@ -309,7 +313,7 @@ setInterval(function () {
                     playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y && ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
                     if (ball.direction.z < 0) {
                         ball.direction.z *= -1;  // Reverse Z direction
-                        changeTestColor();
+                        changeTestColor(playerList[key].color);
                     }
                 }
             }
@@ -320,9 +324,7 @@ setInterval(function () {
         // reset the ball if out of bounds
         if (ball.position.x > playCubeSize.x / 2 + outOfBoundsValue || ball.position.x < -playCubeSize.x / 2 - outOfBoundsValue ||
             ball.position.z > playCubeSize.z / 2 + outOfBoundsValue || ball.position.z < -playCubeSize.z / 2 - outOfBoundsValue) {
-            ball.position = { x: 0, y: playCubeSize.y / 2, z: 0 };
-            ball.direction = getNormalizedVector({ x: getRandomNumber(0.5, 2), y: getRandomNumber(0.5, 1), z: getRandomNumber(0.5, 2) });
-            ball.speed = ballStartSpeed;
+            resetGame();
 
             if (ball.position.x > playCubeSize.x / 2 + outOfBoundsValue) {
                 // player 1 missed
@@ -365,8 +367,7 @@ setInterval(function () {
         // reset the ball if no player is in the game
         if (ball.position != { x: 0, y: playCubeSize.y / 2, z: 0 }) {
             ball.position = { x: 0, y: playCubeSize.y / 2, z: 0 };
-            ball.direction = getNormalizedVector({ x: getRandomNumber(0.5, 2), y: getRandomNumber(0.5, 1), z: getRandomNumber(0.5, 2) });
-            ball.speed = ballStartSpeed;
+            resetGame();
         }
     }
 
@@ -397,8 +398,8 @@ function startClientGame(newPlayer, socket) {
     });
 
     // Test color change for connection
-    socket.on('clicked', () => {
-        changeTestColor();
+    socket.on('clicked', (playerColor) => {
+        changeTestColor(playerColor);
     });
 
     socket.on('testClick', (id) => {
@@ -407,12 +408,13 @@ function startClientGame(newPlayer, socket) {
     });
 };
 
-function changeTestColor() {
-    if (activeColor == color1) {
-        activeColor = color2;
-    } else {
-        activeColor = color1;
-    }
+function changeTestColor(playerColor) {
+    // if (activeColor == color1) {
+    //     activeColor = color2;
+    // } else {
+    //     activeColor = color1;
+    // }
+    activeColor = playerColor;
 
     io.emit('colorChanged', activeColor);
 }
@@ -425,4 +427,12 @@ function getRandomNumber(min, max) {
 function getNormalizedVector(vector) {
     const length = Math.sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z);
     return { x: vector.x / length, y: vector.y / length, z: vector.z / length };
+}
+
+function resetGame() {
+    ball.position = { x: 0, y: playCubeSize.y / 2, z: 0 };
+    ball.direction = getNormalizedVector({ x: getRandomNumber(0.5, 2), y: getRandomNumber(0.5, 1), z: getRandomNumber(0.5, 2) });
+    ball.speed = ballStartSpeed;
+    ball.color = ballStartColor;
+    changeTestColor(ballStartColor);
 }

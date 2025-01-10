@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
 import { /*Camera,*/ Engine, FreeCamera, Scene } from '@babylonjs/core';
-import { ArcRotateCamera, MeshBuilder, /*ShadowGenerator,*/ GlowLayer } from '@babylonjs/core';
+import { ArcRotateCamera, MeshBuilder, /*ShadowGenerator,*/ GlowLayer, ParticleSystem } from '@babylonjs/core';
 import { HemisphericLight, DirectionalLight } from '@babylonjs/core';
 import { Mesh, StandardMaterial, Texture, Color3, Color4, Vector3, Quaternion, LinesMesh } from '@babylonjs/core';
 import { WebXRDefaultExperience, WebXRInputSource } from '@babylonjs/core/XR';
@@ -65,6 +65,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     let playerAreaDepth = sceneStartInfos.playerAreaDepth;
     let ballSize = sceneStartInfos.ballSize;
     let ballStartPos = sceneStartInfos.ballStartPos;
+    let ballColor = sceneStartInfos.ballColor;
     // let playerPaddleSize = sceneStartInfos.playerPaddleSize;
 
     // Lights --------------------------------------------------------------------------------------
@@ -96,7 +97,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     gl.intensity = 0.5;
 
     // Meshes --------------------------------------------------------------------------------------
-    
+
     let edgeWidth = 0.2;
 
     var testSphere = MeshBuilder.CreateSphere('testSphere', { diameter: 2, segments: 32 }, scene);
@@ -118,73 +119,73 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     // Grounds for the Player Start Positions
 
     var player1Ground = MeshBuilder.CreateBox('player1Ground', { size: 1 }, scene);
-    player1Ground.position = new Vector3((playCubeSize.x / 2 + playerAreaDepth / 2) + 0.01, -25.001, 0);
+    player1Ground.position = new Vector3((playCubeSize.x / 2 + playerAreaDepth / 2) + 0, -25, 0);
     player1Ground.scaling = new Vector3(playerAreaDepth, 50, playCubeSize.z);
     player1Ground.enableEdgesRendering();
     player1Ground.edgesWidth = edgeWidth;
     player1Ground.edgesColor = Color4.FromHexString(playerStartInfos[1].color);
 
     var player2Ground = MeshBuilder.CreateBox('player2Ground', { size: 1 }, scene);
-    player2Ground.position = new Vector3(-(playCubeSize.x / 2 + playerAreaDepth / 2) - 0.01, -25.001, 0);
+    player2Ground.position = new Vector3(-(playCubeSize.x / 2 + playerAreaDepth / 2) - 0, -25, 0);
     player2Ground.scaling = new Vector3(playerAreaDepth, 50, playCubeSize.z);
     player2Ground.enableEdgesRendering();
     player2Ground.edgesWidth = edgeWidth;
     player2Ground.edgesColor = Color4.FromHexString(playerStartInfos[2].color);
 
     var player3Ground = MeshBuilder.CreateBox('player3Ground', { size: 1 }, scene);
-    player3Ground.position = new Vector3(0, -25.001, (playCubeSize.z / 2 + playerAreaDepth / 2) + 0.01);
+    player3Ground.position = new Vector3(0, -25, (playCubeSize.z / 2 + playerAreaDepth / 2) + 0);
     player3Ground.scaling = new Vector3(playCubeSize.x, 50, playerAreaDepth);
     player3Ground.enableEdgesRendering();
     player3Ground.edgesWidth = edgeWidth;
     player3Ground.edgesColor = Color4.FromHexString(playerStartInfos[3].color);
 
     var player4Ground = MeshBuilder.CreateBox('player4Ground', { size: 1 }, scene);
-    player4Ground.position = new Vector3(0, -25.001, -(playCubeSize.z / 2 + playerAreaDepth / 2) - 0.01);
+    player4Ground.position = new Vector3(0, -25, -(playCubeSize.z / 2 + playerAreaDepth / 2) - 0);
     player4Ground.scaling = new Vector3(playCubeSize.x, 50, playerAreaDepth);
     player4Ground.enableEdgesRendering();
     player4Ground.edgesWidth = edgeWidth;
     player4Ground.edgesColor = Color4.FromHexString(playerStartInfos[4].color);
 
     var player1Wall = MeshBuilder.CreateBox('player1Wall', { size: 1 }, scene);
-    player1Wall.position = new Vector3(playCubeSize.x / 2 + 0.01, playCubeSize.y / 2, 0);
+    player1Wall.position = new Vector3(playCubeSize.x / 2 + 0, playCubeSize.y / 2, 0);
     player1Wall.scaling = new Vector3(0.01, playCubeSize.y, playCubeSize.z);
 
     var player2Wall = MeshBuilder.CreateBox('player2Wall', { size: 1 }, scene);
-    player2Wall.position = new Vector3(-playCubeSize.x / 2 - 0.01, playCubeSize.y / 2, 0);
+    player2Wall.position = new Vector3(-playCubeSize.x / 2 - 0, playCubeSize.y / 2, 0);
     player2Wall.scaling = new Vector3(0.01, playCubeSize.y, playCubeSize.z);
 
     var player3Wall = MeshBuilder.CreateBox('player3Wall', { size: 1 }, scene);
-    player3Wall.position = new Vector3(0, playCubeSize.y / 2, playCubeSize.z / 2 + 0.01);
+    player3Wall.position = new Vector3(0, playCubeSize.y / 2, playCubeSize.z / 2 + 0);
     player3Wall.scaling = new Vector3(playCubeSize.x, playCubeSize.y, 0.01);
 
     var player4Wall = MeshBuilder.CreateBox('player4Wall', { size: 1 }, scene);
-    player4Wall.position = new Vector3(0, playCubeSize.y / 2, -playCubeSize.z / 2 - 0.01);
+    player4Wall.position = new Vector3(0, playCubeSize.y / 2, -playCubeSize.z / 2 - 0);
     player4Wall.scaling = new Vector3(playCubeSize.x, playCubeSize.y, 0.01);
 
     // plane meshes for the player scores
     var player1ScoreMesh = MeshBuilder.CreatePlane("player1ScoreMesh", { size: 1 }, scene);
-    player1ScoreMesh.position = new Vector3((playCubeSize.x / 2 + playerAreaDepth / 2) + 0.01, 3, 0);
+    player1ScoreMesh.position = new Vector3((playCubeSize.x / 2 + playerAreaDepth / 2), 3, 0);
     player1ScoreMesh.scaling = new Vector3(1, 0.5, 1);
-    player1ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+    // player1ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
 
     var player2ScoreMesh = MeshBuilder.CreatePlane('player2ScoreMesh', { size: 1 }, scene);
-    player2ScoreMesh.position = new Vector3(-(playCubeSize.x / 2 + playerAreaDepth / 2) - 0.01, 3, 0);
+    player2ScoreMesh.position = new Vector3(-(playCubeSize.x / 2 + playerAreaDepth / 2), 3, 0);
     player2ScoreMesh.scaling = new Vector3(1, 0.5, 1);
-    player2ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
-    
+    // player2ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+
     var player3ScoreMesh = MeshBuilder.CreatePlane('player3ScoreMesh', { size: 1 }, scene);
-    player3ScoreMesh.position = new Vector3(0, 3, (playCubeSize.z / 2 + playerAreaDepth / 2) + 0.01);
+    player3ScoreMesh.position = new Vector3(0, 3, (playCubeSize.z / 2 + playerAreaDepth / 2));
     player3ScoreMesh.scaling = new Vector3(1, 0.5, 1);
-    player3ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+    // player3ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
 
     var player4ScoreMesh = MeshBuilder.CreatePlane('player4ScoreMesh', { size: 1 }, scene);
-    player4ScoreMesh.position = new Vector3(0, 3, -(playCubeSize.z / 2 + playerAreaDepth / 2) - 0.01);
+    player4ScoreMesh.position = new Vector3(0, 3, -(playCubeSize.z / 2 + playerAreaDepth / 2));
     player4ScoreMesh.scaling = new Vector3(1, 0.5, 1);
-    player4ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+    // player4ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
 
     // GUI --------------------------------------------------------------------------------------
-    
-    //var player1ScoreTex = GUI.AdvancedDynamicTexture.CreateForMesh(player1ScoreMesh, 1024, 1024, false);
+
+    var player1ScoreTex = GUI.AdvancedDynamicTexture.CreateForMesh(player1ScoreMesh);
 
     // Fullscreen UI (maybe for own score)
     var advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
@@ -203,9 +204,10 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     player1Score.width = 1;
     player1Score.height = 1;
     player1Score.text = "Player 1 Score:";
-    player1Score.color = playerStartInfos[1].color;   
-    advancedTexture.addControl(player1Score);
-    player1Score.linkWithMesh(player1ScoreMesh);
+    player1Score.color = playerStartInfos[1].color;
+    player1Score.fontSize = 24;
+    player1ScoreTex.addControl(player1Score);
+    // player1Score.linkWithMesh(player1ScoreMesh);
 
     var player2Score = new GUI.TextBlock();
     player2Score.text = "Player 2 Score:";
@@ -224,6 +226,37 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     player4Score.color = playerStartInfos[4].color;
     advancedTexture.addControl(player4Score);
     player4Score.linkWithMesh(player4ScoreMesh);
+
+    // Particle System --------------------------------------------------------------------------------------
+
+    var ballParticles = new ParticleSystem('ballParticles', 500, scene);
+    ballParticles.particleTexture = new Texture('./assets/particleTexture.png', scene);
+    ballParticles.emitter = testSphere;
+    ballParticles.id = 'ballParticles';
+    var ballSphereEmitter = ballParticles.createSphereEmitter(ballSize);
+    ballSphereEmitter.radiusRange = 0;
+    //ballParticles.minEmitBox = new Vector3(0, 0, 0);
+    //ballParticles.maxEmitBox = new Vector3(0, 0, 0);
+    ballParticles.color1 = Color4.FromHexString(ballColor);
+    ballParticles.color2 = Color4.FromHexString('#c2c2c2');
+    ballParticles.colorDead = new Color4(0, 0, 0, 0.0);
+    ballParticles.minSize = 0.005;
+    ballParticles.maxSize = 0.05;
+    ballParticles.minLifeTime = 0.2;
+    ballParticles.maxLifeTime = 0.5;
+    ballParticles.emitRate = 500;
+    ballParticles.blendMode = ParticleSystem.BLENDMODE_ONEONE;
+    //ballParticles.gravity = new Vector3(0, -9.81, 0);
+    //ballParticles.direction1 = new Vector3(0, 8, 0);
+    //ballParticles.direction2 = new Vector3(0, 8, 0);
+    //ballParticles.minAngularSpeed = 0;
+    //ballParticles.maxAngularSpeed = Math.PI;
+    ballParticles.minEmitPower = 1;
+    ballParticles.maxEmitPower = 3;
+    ballParticles.updateSpeed = 0.005;
+
+    ballParticles.start();
+
 
     // Materials --------------------------------------------------------------------------------------
 
@@ -245,7 +278,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     playBoxMat.alpha = 0.1;
 
     var testMaterial = new StandardMaterial('testMaterial', scene);
-    testMaterial.emissiveColor = Color3.White();
+    testMaterial.emissiveColor = Color3.FromHexString(ballColor);
 
     var staticBlocksMat = new StandardMaterial('staticBlocksMat', scene);
     staticBlocksMat.diffuseColor = Color3.FromHexString('#f7b705'); // orange
@@ -294,6 +327,7 @@ interface SceneStartInfos {
     playerAreaDepth: number,
     ballSize: number,
     ballStartPos: { x: number, y: number, z: number },
+    ballColor: string,
     playerPaddleSize: { w: number, h: number }
 }
 
@@ -711,7 +745,7 @@ socket.on('startClientGame', (newSocketPlayer) => {
                     let squeezeComponent = motionController.getComponent(xrIDs[1]);//xr-standard-squeeze
                     squeezeComponent.onButtonStateChangedObservable.add(() => {
                         if (squeezeComponent.pressed) {
-                            socket.emit('clicked');
+                            socket.emit('clicked', playerList[playerID].color);
 
                         } else {
 
@@ -721,7 +755,7 @@ socket.on('startClientGame', (newSocketPlayer) => {
                     let thumbstickComponent = motionController.getComponent(xrIDs[2]);//xr-standard-thumbstick
                     thumbstickComponent.onButtonStateChangedObservable.add(() => {
                         if (thumbstickComponent.pressed) {
-                            socket.emit('clicked');
+                            socket.emit('clicked', playerList[playerID].color);
                             debugTestclick();
                         } else {
 
@@ -731,7 +765,7 @@ socket.on('startClientGame', (newSocketPlayer) => {
                     let xbuttonComponent = motionController.getComponent(xrIDs[3]);//x-button
                     xbuttonComponent.onButtonStateChangedObservable.add(() => {
                         if (xbuttonComponent.pressed) {
-                            socket.emit('clicked');
+                            socket.emit('clicked', playerList[playerID].color);
 
                         } else {
 
@@ -741,7 +775,7 @@ socket.on('startClientGame', (newSocketPlayer) => {
                     let ybuttonComponent = motionController.getComponent(xrIDs[4]);//y-button
                     ybuttonComponent.onButtonStateChangedObservable.add(() => {
                         if (ybuttonComponent.pressed) {
-                            socket.emit('clicked');
+                            socket.emit('clicked', playerList[playerID].color);
 
                         } else {
 
@@ -783,7 +817,7 @@ socket.on('startClientGame', (newSocketPlayer) => {
                     let squeezeComponent = motionController.getComponent(xrIDs[1]);//xr-standard-squeeze
                     squeezeComponent.onButtonStateChangedObservable.add(() => {
                         if (squeezeComponent.pressed) {
-                            socket.emit('clicked');
+                            socket.emit('clicked', playerList[playerID].color);
 
                         } else {
 
@@ -793,7 +827,7 @@ socket.on('startClientGame', (newSocketPlayer) => {
                     let thumbstickComponent = motionController.getComponent(xrIDs[2]);//xr-standard-thumbstick
                     thumbstickComponent.onButtonStateChangedObservable.add(() => {
                         if (thumbstickComponent.pressed) {
-                            socket.emit('clicked');
+                            socket.emit('clicked', playerList[playerID].color);
                             debugTestclick();
                         } else {
 
@@ -804,7 +838,7 @@ socket.on('startClientGame', (newSocketPlayer) => {
                     let abuttonComponent = motionController.getComponent(xrIDs[3]);//a-button
                     abuttonComponent.onButtonStateChangedObservable.add(() => {
                         if (abuttonComponent.pressed) {
-                            socket.emit('clicked');
+                            socket.emit('clicked', playerList[playerID].color);
 
                         } else {
 
@@ -814,7 +848,7 @@ socket.on('startClientGame', (newSocketPlayer) => {
                     let bbuttonComponent = motionController.getComponent(xrIDs[4]);//b-button
                     bbuttonComponent.onButtonStateChangedObservable.add(() => {
                         if (bbuttonComponent.pressed) {
-                            socket.emit('clicked');
+                            socket.emit('clicked', playerList[playerID].color);
 
                         } else {
 
@@ -1014,14 +1048,20 @@ window.addEventListener('keydown', function (event) {
 
 document.addEventListener('click', () => {
     if (playerUsingVR) {
-        socket.emit('clicked');
+        socket.emit('clicked', playerList[playerID].color);
     }
 });
 
 socket.on('colorChanged', (color) => {
     // change color of the sphere
     let testMaterial = scene.getMaterialByName('testMaterial') as StandardMaterial;
+    let ballParticleSystem = scene.getParticleSystemById('ballParticles');
+
     testMaterial.emissiveColor = Color3.FromHexString(color);
+    if (ballParticleSystem) {
+        ballParticleSystem.color1 = Color4.FromHexString(color);
+    }
+
 });
 
 function debugTestclick() {
