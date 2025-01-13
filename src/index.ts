@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
 import { /*Camera,*/ Engine, FreeCamera, Scene } from '@babylonjs/core';
-import { ArcRotateCamera, MeshBuilder, /*ShadowGenerator,*/ GlowLayer, ParticleSystem } from '@babylonjs/core';
+import { /*ArcRotateCamera,*/ MeshBuilder, /*ShadowGenerator,*/ GlowLayer, ParticleSystem, Animation } from '@babylonjs/core';
 import { HemisphericLight, DirectionalLight, /*SSRRenderingPipeline, Constants*/ } from '@babylonjs/core';
 import { Mesh, StandardMaterial, Texture, Color3, Color4, Vector3, Quaternion, /*LinesMesh*/ } from '@babylonjs/core';
 import { WebXRDefaultExperience, WebXRInputSource } from '@babylonjs/core/XR';
@@ -590,46 +590,13 @@ window.addEventListener('resize', function () {
     // Add an event listener to each button
     for (let i = 0; i < startPosButtons.length; i++) {
 
+        // mouse hover effect and camera position change
         startPosButtons[i].addEventListener('mouseover', () => {
-            const playerStartInfo = playerStartInfos[i + 1];
-            const button = document.getElementById(`startPos-${i + 1}`);
-            if (button && !button.classList.contains('unavailable')) {
-                button.style.backgroundColor = playerStartInfo.color;
-                button.style.color = 'black';
-                if (playerStartInfo) {
-                    if (scene.activeCamera) {
-                        let camera = scene.getCameraByName('Camera') as FreeCamera;
-                        let cameraHight = sceneStartInfos.playCubeSize.y / 1.5;
-                        camera.position = new Vector3(playerStartInfo.position.x, cameraHight, playerStartInfo.position.z);
-                        camera.rotation = new Vector3(playerStartInfo.rotation.x, playerStartInfo.rotation.y, playerStartInfo.rotation.z);
-                        if (i == 0) {
-                            camera.position = new Vector3(playerStartInfo.position.x + 2, cameraHight, playerStartInfo.position.z);
-                        } else if (i == 1) {
-                            camera.position = new Vector3(playerStartInfo.position.x - 2, cameraHight, playerStartInfo.position.z);
-                        } else if (i == 2) {
-                            camera.position = new Vector3(playerStartInfo.position.x, cameraHight, playerStartInfo.position.z + 2);
-                        } else if (i == 3) {
-                            camera.position = new Vector3(playerStartInfo.position.x, cameraHight, playerStartInfo.position.z - 2);
-                        }
-                    }
-                }
-            }
+            handleMouseOver(i + 1);
         });
-
+        // end mouse hover effect and camera position change to default
         startPosButtons[i].addEventListener('mouseout', () => {
-            const playerStartInfo = playerStartInfos[i + 1];
-            const button = document.getElementById(`startPos-${i + 1}`);
-            if (button && !button.classList.contains('unavailable')) {
-                button.style.backgroundColor = '#00000000'; // Change to desired color
-                button.style.color = playerStartInfo.color;
-                if (playerStartInfo) {
-                    if (scene.activeCamera) {
-                        let camera = scene.getCameraByName('Camera') as FreeCamera;
-                        camera.position = new Vector3(0, 5, 0);
-                        camera.rotation = new Vector3(Math.PI / 2, Math.PI, Math.PI / 4);
-                    }
-                }
-            }
+            handleMouseOut(i + 1);
         });
 
         startPosButtons[i].addEventListener('click', (event) => {
@@ -1011,6 +978,8 @@ function setStartButtonColor(startPositions: { [key: number]: PlayerStartInfo })
         if (startButton) {
             startButton.style.setProperty('border-color', startPositions[i + 1].color);
             startButton.style.setProperty('color', startPositions[i + 1].color);
+            startButton.style.setProperty('box-shadow', `0 0 15px ${startPositions[i + 1].color}, inset 0 0 10px ${startPositions[i + 1].color}`);
+            startButton.style.setProperty('text-shadow', `0 0 10px ${startPositions[i + 1].color}`);
         }
     }
 }
@@ -1118,6 +1087,11 @@ socket.on('playerDisconnected', (id) => {
         }
 
         delete playerList[id];
+
+        let defaultCamera = scene.getCameraByName('Camera') as FreeCamera;
+        scene.activeCamera = defaultCamera;
+        defaultCamera.position = new Vector3(0, 5, 0);
+        defaultCamera.rotation = new Vector3(Math.PI / 2, Math.PI, Math.PI / 4);
     }
 });
 
@@ -1252,6 +1226,115 @@ function darkenColor4(color: Color4, factor: number): Color4 {
 
     return new Color4(darkR, darkG, darkB, color.a);
 }
+
+function handleMouseOver(playerNumber: number) {
+    const playerStartInfo = playerStartInfos[playerNumber];
+    const button = document.getElementById(`startPos-${playerNumber}`);
+    if (button && !button.classList.contains('unavailable')) {
+        // hover effect for the start button
+        button.style.backgroundColor = playerStartInfo.color;
+        button.style.color = 'black';
+
+        if (playerStartInfo) {
+            // change camera position to the player start position while hovering over the button
+            let defaultCamera = scene.getCameraByName('Camera') as FreeCamera;
+
+            let cameraHight = sceneStartInfos.playCubeSize.y / 1.5;
+
+            let newRotation = new Vector3(playerStartInfo.rotation.x, playerStartInfo.rotation.y, playerStartInfo.rotation.z);
+            let newPosition = new Vector3(playerStartInfo.position.x, cameraHight, playerStartInfo.position.z);
+
+            if (playerNumber == 1) {
+                newPosition = new Vector3(playerStartInfo.position.x + 2, cameraHight, playerStartInfo.position.z);
+            } else if (playerNumber == 2) {
+                newPosition = new Vector3(playerStartInfo.position.x - 2, cameraHight, playerStartInfo.position.z);
+            } else if (playerNumber == 3) {
+                newPosition = new Vector3(playerStartInfo.position.x, cameraHight, playerStartInfo.position.z + 2);
+            } else if (playerNumber == 4) {
+                newPosition = new Vector3(playerStartInfo.position.x, cameraHight, playerStartInfo.position.z - 2);
+            }
+            let oldPosition = defaultCamera.position.clone();
+            let oldRotation = defaultCamera.rotation.clone();
+
+            // defaultCamera.position = newPosition;
+            // defaultCamera.rotation = newRotation;
+
+            const positionAnimation = createCameraAnimation("position", oldPosition, newPosition, 30);
+            const rotationAnimation = createCameraAnimation("rotation", oldRotation, newRotation, 30);
+
+            defaultCamera.animations = [];
+            defaultCamera.animations.push(positionAnimation);
+            defaultCamera.animations.push(rotationAnimation);
+
+            scene.beginAnimation(defaultCamera, 0, 60, false);
+
+            // hide the specific player wall while hovering over the button
+            let playerWall = scene.getMeshByName(`player${playerNumber}Wall`) as Mesh;
+            if (playerWall) {
+                playerWall.isVisible = false;
+            }
+
+        }
+    }
+}
+
+function handleMouseOut(playerNumber: number) {
+    const playerStartInfo = playerStartInfos[playerNumber];
+    const button = document.getElementById(`startPos-${playerNumber}`);
+    if (button && !button.classList.contains('unavailable')) {
+        // change colors back to default
+        button.style.backgroundColor = '#00000000';
+        button.style.color = playerStartInfo.color;
+
+        if (playerStartInfo) {
+            // change camera position back to default
+            let defaultCamera = scene.getCameraByName('Camera') as FreeCamera;
+
+            let newPosition = new Vector3(0, 5, 0);
+            let newRotation = new Vector3(Math.PI / 2, Math.PI, Math.PI / 4);
+            let oldPosition = defaultCamera.position.clone();
+            let oldRotation = defaultCamera.rotation.clone();
+
+            // defaultCamera.position = newPosition;
+            // defaultCamera.rotation = newRotation;
+
+            const positionAnimation = createCameraAnimation("position", oldPosition, newPosition, 30);
+            const rotationAnimation = createCameraAnimation("rotation", oldRotation, newRotation, 30);
+
+            defaultCamera.animations = [];
+            defaultCamera.animations.push(positionAnimation);
+            defaultCamera.animations.push(rotationAnimation);
+
+            scene.beginAnimation(defaultCamera, 0, 30, false);
+
+            // show the specific player wall again
+            let playerWall = scene.getMeshByName(`player${playerNumber}Wall`) as Mesh;
+            if (playerWall) {
+                playerWall.isVisible = true;
+            }
+        }
+    }
+}
+
+function createCameraAnimation(property: string, startValue: Vector3, endValue: Vector3, duration: number) {
+    const animation = new Animation(
+        `cameraAnimation_${property}`,
+        property,
+        60,
+        Animation.ANIMATIONTYPE_VECTOR3,
+        Animation.ANIMATIONLOOPMODE_CONSTANT
+    );
+
+    const keys = [
+        { frame: 0, value: startValue },
+        { frame: duration, value: endValue }
+    ];
+
+    animation.setKeys(keys);
+    return animation;
+}
+
+
 
 /////////////////////////// LOCAL STORAGE //////////////////////////////
 // set up Interval function for the local storage of the player data
