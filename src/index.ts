@@ -1,8 +1,8 @@
 import { io } from 'socket.io-client';
 import { /*Camera,*/ Engine, FreeCamera, Scene } from '@babylonjs/core';
-import { ArcRotateCamera, MeshBuilder, /*ShadowGenerator,*/ GlowLayer, ParticleSystem } from '@babylonjs/core';
-import { HemisphericLight, DirectionalLight } from '@babylonjs/core';
-import { Mesh, StandardMaterial, Texture, Color3, Color4, Vector3, Quaternion, LinesMesh } from '@babylonjs/core';
+import { /*ArcRotateCamera,*/ MeshBuilder, /*ShadowGenerator,*/ GlowLayer, ParticleSystem } from '@babylonjs/core';
+import { HemisphericLight, DirectionalLight, /*SSRRenderingPipeline, Constants*/ } from '@babylonjs/core';
+import { Mesh, StandardMaterial, Texture, Color3, Color4, Vector3, Quaternion, /*LinesMesh*/ } from '@babylonjs/core';
 import { WebXRDefaultExperience, WebXRInputSource } from '@babylonjs/core/XR';
 import { Inspector } from '@babylonjs/inspector';
 import * as GUI from '@babylonjs/gui'
@@ -28,6 +28,7 @@ let previousPlayer: PreviousPlayerData | null = null;
 getLocalStorage();
 
 let sceneStartInfos: SceneStartInfos;
+let playerStartInfos: { [key: number]: PlayerStartInfo };
 
 let xr: WebXRDefaultExperience;
 let xrCamera: FreeCamera | null = null;
@@ -54,11 +55,6 @@ document.body.appendChild(canvas);
 const engine = new Engine(canvas, true);
 const scene = new Scene(engine);
 
-// Camera --------------------------------------------------------------------------------------
-// Add a camera for the non-VR view in browser
-var camera = new ArcRotateCamera('Camera', -(Math.PI / 4) * 3, Math.PI / 4, 10, new Vector3(0, 0, 0), scene);
-camera.attachControl(true); //debug
-
 function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { [key: number]: PlayerStartInfo }) {
 
     let playCubeSize = sceneStartInfos.playCubeSize;
@@ -67,6 +63,17 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     let ballStartPos = sceneStartInfos.ballStartPos;
     let ballColor = sceneStartInfos.ballColor;
     // let playerPaddleSize = sceneStartInfos.playerPaddleSize;
+
+    // Camera --------------------------------------------------------------------------------------
+    // Add a camera for the non-VR view in browser
+    // var camera = new ArcRotateCamera('Camera', -(Math.PI / 4) * 3, Math.PI / 4, 6, new Vector3(0, 0, 0), scene);
+    // camera.attachControl(true); //debug
+
+    const camera = new FreeCamera('Camera', new Vector3(0, 5, 0), scene);
+    camera.rotation = new Vector3(Math.PI / 2, Math.PI, Math.PI / 4);
+    camera.detachControl();
+
+    scene.activeCamera = camera;
 
     // Lights --------------------------------------------------------------------------------------
     // Creates a light, aiming 0,1,0 - to the sky
@@ -185,7 +192,8 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
 
     // GUI --------------------------------------------------------------------------------------
 
-    var player1ScoreTex = GUI.AdvancedDynamicTexture.CreateForMesh(player1ScoreMesh);
+    var player1ScoreTex = GUI.AdvancedDynamicTexture.CreateForMesh(player1ScoreMesh, 512, 512);
+    // player1ScoreTex.hasAlpha = true;
 
     // Fullscreen UI (maybe for own score)
     var advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
@@ -200,14 +208,25 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     // advancedTexture.addControl(rect1);
     // rect1.linkWithMesh(player1ScoreMesh);
 
-    var player1Score = new GUI.TextBlock();
-    player1Score.width = 1;
-    player1Score.height = 1;
-    player1Score.text = "Player 1 Score:";
-    player1Score.color = playerStartInfos[1].color;
-    player1Score.fontSize = 24;
-    player1ScoreTex.addControl(player1Score);
-    // player1Score.linkWithMesh(player1ScoreMesh);
+    player1ScoreTex.drawText("Player 1 Score:", 5, 5, "24px Arial", playerStartInfos[1].color, "transparent");
+
+    var player1ScoreMat = new StandardMaterial('player1ScoreMat', scene);
+    player1ScoreMat.diffuseTexture = player1ScoreTex;
+    player1ScoreMat.emissiveColor = Color3.FromHexString(playerStartInfos[1].color);
+    player1ScoreMat.diffuseTexture.hasAlpha = true;
+    //player1ScoreMat.useAlphaFromDiffuseTexture = true;
+    player1ScoreMat.backFaceCulling = false;
+
+    player1ScoreMesh.material = player1ScoreMat;
+
+    // var player1Score = new GUI.TextBlock();
+    // player1Score.width = 1;
+    // player1Score.height = 1;
+    // player1Score.text = "Player 1 Score:";
+    // player1Score.color = playerStartInfos[1].color;
+    // player1Score.fontSize = 24;
+    // player1ScoreTex.addControl(player1Score);
+    // // player1Score.linkWithMesh(player1ScoreMesh);
 
     var player2Score = new GUI.TextBlock();
     player2Score.text = "Player 2 Score:";
@@ -238,7 +257,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     //ballParticles.minEmitBox = new Vector3(0, 0, 0);
     //ballParticles.maxEmitBox = new Vector3(0, 0, 0);
     ballParticles.color1 = Color4.FromHexString(ballColor);
-    ballParticles.color2 = Color4.FromHexString('#c2c2c2');
+    ballParticles.color2 = Color4.FromHexString('#ff0000');
     ballParticles.colorDead = new Color4(0, 0, 0, 0.0);
     ballParticles.minSize = 0.005;
     ballParticles.maxSize = 0.05;
@@ -290,6 +309,11 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     playerWallMat.diffuseColor = Color3.FromHexString('#2b2b2b');
     playerWallMat.alpha = 0.8;
 
+    var wallBounceMat = new StandardMaterial('wallBounceMat', scene);
+    wallBounceMat.diffuseColor = Color3.FromHexString('#383838');
+    //wallBounceMat.emissiveColor = Color3.FromHexString('#ffffff');
+    wallBounceMat.alpha = 0.8;
+
     // Setting Materials
     ground.material = wireframeMat;
     testSphere.material = testMaterial;
@@ -308,9 +332,17 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     }
 
     ground.isVisible = false;
+
+    // const ssr = new SSRRenderingPipeline(
+    //     "ssr", // The name of the pipeline
+    //     scene, // The scene to which the pipeline belongs
+    //     [scene.activeCamera], // The list of cameras to attach the pipeline to
+    //     false, // Whether or not to use the geometry buffer renderer (default: false, use the pre-pass renderer)
+    //     Constants.TEXTURETYPE_UNSIGNED_BYTE, // The texture type used by the SSR effect (default: TEXTURETYPE_UNSIGNED_BYTE)
+    // );
 }
 
-var allLineMesh: LinesMesh;
+// var allLineMesh: LinesMesh;
 
 ////////////////////////////// END CREATE BABYLON SCENE ETC. //////////////////////////////
 
@@ -557,6 +589,50 @@ window.addEventListener('resize', function () {
 
     // Add an event listener to each button
     for (let i = 0; i < startPosButtons.length; i++) {
+
+        startPosButtons[i].addEventListener('mouseover', () => {
+            const playerStartInfo = playerStartInfos[i + 1];
+            const button = document.getElementById(`startPos-${i + 1}`);
+            if (button) {
+                button.style.backgroundColor = playerStartInfo.color; // Change to desired color
+                button.style.color = 'black';
+            }
+            if (playerStartInfo) {
+                if (scene.activeCamera) {
+                    let camera = scene.activeCamera as FreeCamera;
+                    let cameraHight = sceneStartInfos.playCubeSize.y / 1.5;
+                    camera.position = new Vector3(playerStartInfo.position.x, cameraHight, playerStartInfo.position.z);
+                    camera.rotation = new Vector3(playerStartInfo.rotation.x, playerStartInfo.rotation.y, playerStartInfo.rotation.z);
+
+                    if (i == 0) {
+                        camera.position = new Vector3(playerStartInfo.position.x + 2, cameraHight, playerStartInfo.position.z);
+                    } else if (i == 1) {
+                        camera.position = new Vector3(playerStartInfo.position.x - 2, cameraHight, playerStartInfo.position.z);
+                    } else if (i == 2) {
+                        camera.position = new Vector3(playerStartInfo.position.x, cameraHight, playerStartInfo.position.z + 2);
+                    } else if (i == 3) {
+                        camera.position = new Vector3(playerStartInfo.position.x, cameraHight, playerStartInfo.position.z - 2);
+                    }
+                }
+            }
+        });
+
+        startPosButtons[i].addEventListener('mouseout', () => {
+            const playerStartInfo = playerStartInfos[i + 1];
+            const button = document.getElementById(`startPos-${i + 1}`);
+            if (button) {
+                button.style.backgroundColor = '#00000000'; // Change to desired color
+                button.style.color = playerStartInfo.color;
+            }
+            if (playerStartInfo) {
+                if (scene.activeCamera) {
+                    let camera = scene.activeCamera as FreeCamera;
+                    camera.position = new Vector3(0, 5, 0);
+                    camera.rotation = new Vector3(Math.PI / 2, Math.PI, Math.PI / 4);
+                }
+            }
+        });
+
         startPosButtons[i].addEventListener('click', (event) => {
             const htmlBtnId = (event.target as HTMLElement).id;
             const btnPlayerNumber = Number(htmlBtnId.split('-')[1]);
@@ -576,6 +652,7 @@ window.addEventListener('resize', function () {
 
             xrCamera = xr.baseExperience.camera;
             playerUsingVR = true;
+            scene.activeCamera = xrCamera;
         });
 
         xr.baseExperience.sessionManager.onXRSessionEnded.add(() => {
@@ -584,11 +661,11 @@ window.addEventListener('resize', function () {
             socket.emit('playerEndVR');
             startScreen?.style.setProperty('display', 'flex');
 
-            // Reset Camera Position
-            camera.alpha = -(Math.PI / 4) * 3;
-            camera.beta = Math.PI / 4;
-            camera.radius = 15;
-            camera.target = new Vector3(0, 0, 0);
+            // Reset Camera Position for arc camera
+            // camera.alpha = -(Math.PI / 4) * 3;
+            // camera.beta = Math.PI / 4;
+            // camera.radius = 15;
+            // camera.target = new Vector3(0, 0, 0);
         });
 
         window.addEventListener('keydown', function (event) {
@@ -673,9 +750,10 @@ socket.on('startPosDenied', () => {
 // get all current Player Information from the Server at the start
 // and spawning all current players except yourself
 socket.on('currentState', (players: { [key: string]: Player }, testColor: string,
-    playerStartInfos: { [key: number]: PlayerStartInfo }, sceneStartInfosServer: SceneStartInfos) => {
+    playerStartInfosServer: { [key: number]: PlayerStartInfo }, sceneStartInfosServer: SceneStartInfos) => {
 
     sceneStartInfos = sceneStartInfosServer;
+    playerStartInfos = playerStartInfosServer;
 
     createBasicScene(sceneStartInfos, playerStartInfos);
 
@@ -696,6 +774,7 @@ socket.on('currentState', (players: { [key: string]: Player }, testColor: string
         addPlayer(playerList[id], false);
     });
 
+    setStartButtonColor(playerStartInfos);
     setStartButtonAvailability(playerStartInfos);
 });
 
@@ -925,6 +1004,16 @@ socket.on('serverUpdate', (players, ball) => {
     testSphere.position = new Vector3(ball.position.x, ball.position.y, ball.position.z);
 });
 
+function setStartButtonColor(startPositions: { [key: number]: PlayerStartInfo }) {
+    for (let i = 0; i < startPosButtons.length; i++) {
+        let startButton = document.getElementById(`startPos-${i + 1}`);
+        if (startButton) {
+            startButton.style.setProperty('border-color', startPositions[i + 1].color);
+            startButton.style.setProperty('color', startPositions[i + 1].color);
+        }
+    }
+}
+
 // set the availability of the start buttons according to the used startpositions on the server
 function setStartButtonAvailability(startPositions: { [key: number]: PlayerStartInfo }) {
     for (let i = 0; i < startPosButtons.length; i++) {
@@ -1060,8 +1149,36 @@ socket.on('colorChanged', (color) => {
     testMaterial.emissiveColor = Color3.FromHexString(color);
     if (ballParticleSystem) {
         ballParticleSystem.color1 = Color4.FromHexString(color);
+        ballParticleSystem.color2 = darkenColor4(Color4.FromHexString(color), 0.5);
+        // console.log(ballParticleSystem.color1);
+        // console.log(ballParticleSystem.color2);
     }
+});
 
+socket.on('wallBounce', (whichPlayer: number, isPaddle: boolean) => {
+
+    Object.keys(playerList).forEach((id) => {
+        if (playerList[id].playerNumber == whichPlayer) {
+            if (isPaddle) {
+
+                (playerList[id].paddle?.material as StandardMaterial).emissiveColor = Color3.White();
+                //(playerList[id].paddle?.material as StandardMaterial).emissiveColor = darkenColor3(Color3.FromHexString(playerList[id].color), 1.5);
+                setTimeout(function () {
+                    (playerList[id].paddle?.material as StandardMaterial).emissiveColor = Color3.FromHexString(playerList[id].color);
+                }, 150);
+            }
+        }
+    });
+
+    (scene.getMeshByName(`player${whichPlayer}Wall`) as Mesh).material;
+
+    if (!isPaddle) {
+
+        (scene.getMeshByName(`player${whichPlayer}Wall`) as Mesh).material = scene.getMaterialByName('wallBounceMat') as StandardMaterial;
+        setTimeout(function () {
+            (scene.getMeshByName(`player${whichPlayer}Wall`) as Mesh).material = scene.getMaterialByName('playerWallMat') as StandardMaterial;
+        }, 150);
+    }
 });
 
 function debugTestclick() {
@@ -1093,28 +1210,46 @@ engine.runRenderLoop(function () {
         }
     });
 
-    renderPlayerLines();
+    // renderPlayerLines();
 
     scene.render();
 });
 
-function renderPlayerLines() {
-    let linePoints: Vector3[] = [];
-    allLineMesh?.dispose();
-    if (Object.keys(playerList).length > 1) {
-        Object.keys(playerList).forEach((id) => {
-            if (playerList[id]) {
-                linePoints.push(new Vector3(playerList[id].contrPosR.x, playerList[id].contrPosR.y, playerList[id].contrPosR.z));
-            }
-        });
-        if (Object.keys(playerList).length > 2) {
-            linePoints.push(new Vector3(playerList[Object.keys(playerList)[0]].contrPosR.x, playerList[Object.keys(playerList)[0]].contrPosR.y, playerList[Object.keys(playerList)[0]].contrPosR.z));
-        }
-        allLineMesh = MeshBuilder.CreateLines("allLine", {
-            points: linePoints,
-        }, scene);
-        allLineMesh.color = new Color3(0, 1, 0);
-    }
+// function renderPlayerLines() {
+//     let linePoints: Vector3[] = [];
+//     allLineMesh?.dispose();
+//     if (Object.keys(playerList).length > 1) {
+//         Object.keys(playerList).forEach((id) => {
+//             if (playerList[id]) {
+//                 linePoints.push(new Vector3(playerList[id].contrPosR.x, playerList[id].contrPosR.y, playerList[id].contrPosR.z));
+//             }
+//         });
+//         if (Object.keys(playerList).length > 2) {
+//             linePoints.push(new Vector3(playerList[Object.keys(playerList)[0]].contrPosR.x, playerList[Object.keys(playerList)[0]].contrPosR.y, playerList[Object.keys(playerList)[0]].contrPosR.z));
+//         }
+//         allLineMesh = MeshBuilder.CreateLines("allLine", {
+//             points: linePoints,
+//         }, scene);
+//         allLineMesh.color = new Color3(0, 1, 0);
+//     }
+// }
+
+// function darkenColor3(color: Color3, factor: number): Color3 {
+//     // Darken the RGB components
+//     const darkR = Math.max(0, Math.min(1, color.r * factor));
+//     const darkG = Math.max(0, Math.min(1, color.g * factor));
+//     const darkB = Math.max(0, Math.min(1, color.b * factor));
+
+//     return new Color3(darkR, darkG, darkB);
+// }
+
+function darkenColor4(color: Color4, factor: number): Color4 {
+    // Darken the RGB components
+    const darkR = Math.max(0, Math.min(1, color.r * factor));
+    const darkG = Math.max(0, Math.min(1, color.g * factor));
+    const darkB = Math.max(0, Math.min(1, color.b * factor));
+
+    return new Color4(darkR, darkG, darkB, color.a);
 }
 
 /////////////////////////// LOCAL STORAGE //////////////////////////////

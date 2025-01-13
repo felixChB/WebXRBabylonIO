@@ -100,7 +100,7 @@ body {
     left: 0;
     height: 100vh;
     width: 100vw;
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: rgba(0, 0, 0, 0.05);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -108,39 +108,41 @@ body {
     z-index: 10;
 }
 
+h1 {
+    color: white;
+    font-size: 50px;
+    margin-bottom: 10px;
+}
+
+#btn-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(2px);
+    padding: 20px;
+    /* border-radius: 10px; */
+}
+
 .btn {
     border: none;
     padding: 15px 30px;
     margin-top: 20px;
     cursor: pointer;
-    border-radius: 10px;
+    /* border-radius: 10px; */
     font-size: 20px;
+    background-color: #00000000;
 }
 
 .posSelection {
-    background-color: #0030b6;
-    color: rgb(0, 0, 0);
-}
-
-#startPos-1 {
-    background-color: #00ffff;
-}
-
-#startPos-2 {
-    background-color: #ff00ff;
-}
-
-#startPos-3 {
-    background-color: #ffff00;
-}
-
-#startPos-4 {
-    background-color: #1aa543;
+    border: solid 2px;
 }
 
 .unavailable {
-    background-color: rgb(133, 133, 133) !important;
-    cursor: default;
+    /* background-color: rgb(133, 133, 133) !important; */
+    border-color: #8D8D8D !important;
+    color: #8D8D8D !important;
+    cursor: not-allowed;
 }
 
 .xr-button-overlay {

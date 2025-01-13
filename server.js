@@ -256,25 +256,25 @@ setInterval(function () {
         if (playerStartInfos[1].used == false) {
             if (ball.position.x + ball.size > playCubeSize.x / 2) {
                 ball.direction.x *= -1;  // Reverse X direction
-                //changeTestColor();
+                wallBounce(1, false);
             }
         }
         if (playerStartInfos[2].used == false) {
             if (ball.position.x - ball.size < -playCubeSize.x / 2) {
                 ball.direction.x *= -1;  // Reverse X direction
-                //changeTestColor();
+                wallBounce(2, false);
             }
         }
         if (playerStartInfos[3].used == false) {
             if (ball.position.z + ball.size > playCubeSize.z / 2) {
                 ball.direction.z *= -1;  // Reverse Z direction
-                //changeTestColor();
+                wallBounce(3, false);
             }
         }
         if (playerStartInfos[4].used == false) {
             if (ball.position.z - ball.size < -playCubeSize.z / 2) {
                 ball.direction.z *= -1;  // Reverse Z direction
-                //changeTestColor();
+                wallBounce(4, false);
             }
         }
 
@@ -286,6 +286,7 @@ setInterval(function () {
                     if (ball.direction.x > 0) {
                         ball.direction.x *= -1;  // Reverse X direction
                         changeTestColor(playerList[key].color);
+                        wallBounce(1, true);
                     }
                 }
 
@@ -296,6 +297,7 @@ setInterval(function () {
                     if (ball.direction.x < 0) {
                         ball.direction.x *= -1;  // Reverse X direction
                         changeTestColor(playerList[key].color);
+                        wallBounce(2, true);
                     }
                 }
             } else if (playerList[key].playerNumber == 3) {
@@ -305,6 +307,7 @@ setInterval(function () {
                     if (ball.direction.z > 0) {
                         ball.direction.z *= -1;  // Reverse Z direction
                         changeTestColor(playerList[key].color);
+                        wallBounce(3, true);
                     }
                 }
             } else if (playerList[key].playerNumber == 4) {
@@ -314,6 +317,7 @@ setInterval(function () {
                     if (ball.direction.z < 0) {
                         ball.direction.z *= -1;  // Reverse Z direction
                         changeTestColor(playerList[key].color);
+                        wallBounce(4, true);
                     }
                 }
             }
@@ -365,7 +369,7 @@ setInterval(function () {
         }
     } else {
         // reset the ball if no player is in the game
-        if (ball.position != { x: 0, y: playCubeSize.y / 2, z: 0 }) {
+        if (ball.position.x != 0 && ball.position.y != playCubeSize.y / 2 && ball.position.z != 0 ) {
             ball.position = { x: 0, y: playCubeSize.y / 2, z: 0 };
             resetGame();
         }
@@ -435,4 +439,8 @@ function resetGame() {
     ball.speed = ballStartSpeed;
     ball.color = ballStartColor;
     changeTestColor(ballStartColor);
+}
+
+function wallBounce(playerNumber, isPaddle) {
+    io.emit('wallBounce', playerNumber, isPaddle);
 }
