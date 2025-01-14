@@ -125,6 +125,7 @@ h1 {
 }
 
 .btn {
+    position: relative;
     border: none;
     padding: 15px 30px;
     margin-top: 20px;
@@ -132,6 +133,18 @@ h1 {
     /* border-radius: 10px; */
     font-size: 20px;
     background-color: #00000000;
+}
+
+.btn::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 5px;
+    height: 5px;
+    border: solid rgb(255, 255, 255);
+    border-width: 1px 1px 0 0;
+    /* transition: 0.5s; */
 }
 
 .posSelection {

@@ -978,8 +978,8 @@ function setStartButtonColor(startPositions: { [key: number]: PlayerStartInfo })
         if (startButton) {
             startButton.style.setProperty('border-color', startPositions[i + 1].color);
             startButton.style.setProperty('color', startPositions[i + 1].color);
-            startButton.style.setProperty('box-shadow', `0 0 15px ${startPositions[i + 1].color}, inset 0 0 10px ${startPositions[i + 1].color}`);
-            startButton.style.setProperty('text-shadow', `0 0 10px ${startPositions[i + 1].color}`);
+            startButton.style.setProperty('box-shadow', `0 0 15px ${startPositions[i + 1].color}50, 0 0 30px ${startPositions[i + 1].color}50, inset 0 0 10px ${startPositions[i + 1].color}50`);
+            startButton.style.setProperty('text-shadow', `0 0 10px ${startPositions[i + 1].color}, 0 0 20px ${startPositions[i + 1].color}`);
         }
     }
 }
