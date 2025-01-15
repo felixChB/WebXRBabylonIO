@@ -48,13 +48,12 @@ body {
 
 #loadingScreen {
     position: absolute;
-    /* display: block; */
     display: none;
     top: 0;
     left: 0;
     height: 100vh;
     width: 100vw;
-    background-color: rgb(60, 60, 107);
+    background-color: rgb(0, 0, 0);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -65,6 +64,27 @@ body {
 #loading-header {
     margin-top: 20px;
     font-size: 24px;
+    color: white;
+    content: "";
+    animation: 2s dotLoading infinite;
+}
+
+@keyframes dotLoading {
+    0% {
+        content: "loading VR-Application";
+    }
+    25% {
+        content: "loading VR-Application.";
+    }
+    50% {
+        content: "loading VR-Application..";
+    }
+    75% {
+        content: "loading VR-Application...";
+    }
+    100% {
+        content: "loading VR-Application";
+    }
 }
 
 #loader-bubble {
@@ -77,9 +97,10 @@ body {
             rgb(10, 10, 10) 100%);
     border-radius: 50%;
     position: relative;
+    animation: 2s colorChangeBg linear infinite;
 }
 
-#loader-bubble:before {
+#loader-bubble-blur {
     position: absolute;
     content: "";
     width: 100%;
@@ -91,7 +112,7 @@ body {
         0 -3px 2px #ffffffbb inset, 0 2px 0px #ffffff, 0 2px 3px #ffffff,
         0 5px 5px #ffffff90, 0 10px 15px #ffffff60, 0 10px 20px 20px #ffffff40;
     filter: blur(3px);
-    animation: 2s rotate linear infinite/*, 2s colorChange linear infinite*/; 
+    animation: 2s rotate linear infinite, 2s colorChangeBlur linear infinite;
 }
 
 @keyframes rotate {
@@ -100,11 +121,84 @@ body {
     }
 }
 
-/* @keyframes colorChange {
+@keyframes colorChangeBlur {
     0% {
-        transform: rotate(360deg)
+        background: linear-gradient(165deg,
+                rgba(0, 255, 255, 1) 0%,
+                rgb(2, 207, 207) 40%,
+                rgb(0, 145, 145) 98%,
+                rgb(10, 10, 10) 100%);
     }
-} */
+
+    25% {
+        background: linear-gradient(165deg,
+                rgba(255, 0, 255, 1) 0%,
+                rgb(204, 0, 204) 40%,
+                rgb(145, 0, 145) 98%,
+                rgb(10, 10, 10) 100%);
+    }
+
+    50% {
+        background: linear-gradient(165deg,
+                rgba(255, 255, 0, 1) 0%,
+                rgb(207, 207, 0) 40%,
+                rgb(153, 153, 0) 98%,
+                rgb(10, 10, 10) 100%);
+    }
+
+    75% {
+        background: linear-gradient(165deg,
+                rgba(26, 165, 67, 1) 0%,
+                rgb(20, 128, 52) 40%,
+                rgb(14, 87, 35) 98%,
+                rgb(10, 10, 10) 100%);
+    }
+
+    100% {
+        background: linear-gradient(165deg,
+                rgba(0, 255, 255, 1) 0%,
+                rgb(2, 207, 207) 40%,
+                rgb(0, 145, 145) 98%,
+                rgb(10, 10, 10) 100%);
+    }
+}
+
+@keyframes colorChangeBlur {
+    0% {
+        box-shadow: 0 -10px 20px 20px #00ffff40 inset,
+            0 -5px 15px 10px #00ffff50 inset, 0 -2px 5px #00ffff80 inset,
+            0 -3px 2px #00ffffbb inset, 0 2px 0px #00ffff, 0 2px 3px #00ffff,
+            0 5px 5px #00ffff90, 0 10px 15px #00ffff60, 0 10px 20px 20px #00ffff40;
+    }
+
+    25% {
+        box-shadow: 0 -10px 20px 20px #ff00ff40 inset,
+            0 -5px 15px 10px #ff00ff50 inset, 0 -2px 5px #ff00ff80 inset,
+            0 -3px 2px #ff00ffbb inset, 0 2px 0px #ff00ff, 0 2px 3px #ff00ff,
+            0 5px 5px #ff00ff90, 0 10px 15px #ff00ff60, 0 10px 20px 20px #ff00ff40;
+    }
+
+    50% {
+        box-shadow: 0 -10px 20px 20px #ffff0040 inset,
+            0 -5px 15px 10px #ffff0050 inset, 0 -2px 5px #ffff0080 inset,
+            0 -3px 2px #ffff00bb inset, 0 2px 0px #ffff00, 0 2px 3px #ffff00,
+            0 5px 5px #ffff0090, 0 10px 15px #ffff0060, 0 10px 20px 20px #ffff0040;
+    }
+
+    75% {
+        box-shadow: 0 -10px 20px 20px #1aa54340 inset,
+            0 -5px 15px 10px #1aa54350 inset, 0 -2px 5px #1aa54380 inset,
+            0 -3px 2px #1aa543bb inset, 0 2px 0px #1aa543, 0 2px 3px #1aa543,
+            0 5px 5px #1aa54390, 0 10px 15px #1aa54360, 0 10px 20px 20px #1aa54340;
+    }
+
+    100% {
+        box-shadow: 0 -10px 20px 20px #00ffff40 inset,
+            0 -5px 15px 10px #00ffff50 inset, 0 -2px 5px #00ffff80 inset,
+            0 -3px 2px #00ffffbb inset, 0 2px 0px #00ffff, 0 2px 3px #00ffff,
+            0 5px 5px #00ffff90, 0 10px 15px #00ffff60, 0 10px 20px 20px #00ffff40;
+    }
+}
 
 #startScreen {
     position: absolute;
@@ -151,15 +245,6 @@ h2 {
     font-weight: normal;
 }
 
-/* #btn-wrapper {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    backdrop-filter: blur(2px);
-    padding: 20px;
-} */
-
 #btn-wrapper {
     display: grid;
     justify-items: center;
@@ -199,7 +284,6 @@ h2 {
 }
 
 .unavailable {
-    /* background-color: rgb(133, 133, 133) !important; */
     border-color: #8D8D8D !important;
     color: #8D8D8D !important;
     box-shadow: none !important;
@@ -217,5 +301,9 @@ h2 {
 
 #continueAsPreviousPlayer {
     display: none;
+    position: absolute;
+    text-align: center;
     background-color: blueviolet;
+    left: calc(50% - 125px);
+    bottom: 50px;
 }

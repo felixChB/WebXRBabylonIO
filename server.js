@@ -333,7 +333,7 @@ setInterval(function () {
 
             if (ball.position.x > playCubeSize.x / 2 + outOfBoundsValue) {
                 // player 1 missed
-                console.log('Player 1 missed');
+                //console.log('Player 1 missed');
                 Object.keys(playerList).forEach((key) => {
                     if (playerList[key].playerNumber != 1) {
                         playerList[key].score += 1;
@@ -342,7 +342,7 @@ setInterval(function () {
                 });
             } else if (ball.position.x < -playCubeSize.x / 2 - outOfBoundsValue) {
                 // player 2 missed
-                console.log('Player 2 missed');
+                //console.log('Player 2 missed');
                 Object.keys(playerList).forEach((key) => {
                     if (playerList[key].playerNumber != 2) {
                         playerList[key].score += 1;
@@ -351,7 +351,7 @@ setInterval(function () {
                 });
             } else if (ball.position.z > playCubeSize.z / 2 + outOfBoundsValue) {
                 // player 3 missed
-                console.log('Player 3 missed');
+                //console.log('Player 3 missed');
                 Object.keys(playerList).forEach((key) => {
                     if (playerList[key].playerNumber != 3) {
                         playerList[key].score += 1;
@@ -360,7 +360,7 @@ setInterval(function () {
                 });
             } else if (ball.position.z < -playCubeSize.z / 2 - outOfBoundsValue) {
                 // player 4 missed
-                console.log('Player 4 missed');
+                //console.log('Player 4 missed');
                 Object.keys(playerList).forEach((key) => {
                     if (playerList[key].playerNumber != 4) {
                         playerList[key].score += 1;
