@@ -280,6 +280,7 @@ setInterval(function () {
             }
         }
 
+        // Check for collision with player paddles
         Object.keys(playerList).forEach((key) => {
             if (playerList[key].playerNumber == 1) {
                 if (ball.position.x + ball.size > playCubeSize.x / 2 && ball.position.x < playCubeSize.x / 2 &&
@@ -287,8 +288,10 @@ setInterval(function () {
                     playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y + ball.size && ball.position.y - ball.size < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
                     if (ball.direction.x > 0) {
                         ball.direction.x *= -1;  // Reverse X direction
+                        playerList[key].score += 1;
                         changeTestColor(playerList[key].color);
                         wallBounce(1, true);
+                        io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
                 }
 
@@ -298,8 +301,10 @@ setInterval(function () {
                     playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y && ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
                     if (ball.direction.x < 0) {
                         ball.direction.x *= -1;  // Reverse X direction
+                        playerList[key].score += 1;
                         changeTestColor(playerList[key].color);
                         wallBounce(2, true);
+                        io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
                 }
             } else if (playerList[key].playerNumber == 3) {
@@ -308,8 +313,10 @@ setInterval(function () {
                     playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y && ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
                     if (ball.direction.z > 0) {
                         ball.direction.z *= -1;  // Reverse Z direction
+                        playerList[key].score += 1;
                         changeTestColor(playerList[key].color);
                         wallBounce(3, true);
+                        io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
                 }
             } else if (playerList[key].playerNumber == 4) {
@@ -318,8 +325,10 @@ setInterval(function () {
                     playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y && ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
                     if (ball.direction.z < 0) {
                         ball.direction.z *= -1;  // Reverse Z direction
+                        playerList[key].score += 1;
                         changeTestColor(playerList[key].color);
                         wallBounce(4, true);
+                        io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
                 }
             }
@@ -335,8 +344,8 @@ setInterval(function () {
                 // player 1 missed
                 //console.log('Player 1 missed');
                 Object.keys(playerList).forEach((key) => {
-                    if (playerList[key].playerNumber != 1) {
-                        playerList[key].score += 1;
+                    if (playerList[key].playerNumber == 1) {
+                        playerList[key].score = 0;
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
                 });
@@ -344,8 +353,8 @@ setInterval(function () {
                 // player 2 missed
                 //console.log('Player 2 missed');
                 Object.keys(playerList).forEach((key) => {
-                    if (playerList[key].playerNumber != 2) {
-                        playerList[key].score += 1;
+                    if (playerList[key].playerNumber == 2) {
+                        playerList[key].score = 0;
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
                 });
@@ -353,8 +362,8 @@ setInterval(function () {
                 // player 3 missed
                 //console.log('Player 3 missed');
                 Object.keys(playerList).forEach((key) => {
-                    if (playerList[key].playerNumber != 3) {
-                        playerList[key].score += 1;
+                    if (playerList[key].playerNumber == 3) {
+                        playerList[key].score = 0;
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
                 });
@@ -362,8 +371,8 @@ setInterval(function () {
                 // player 4 missed
                 //console.log('Player 4 missed');
                 Object.keys(playerList).forEach((key) => {
-                    if (playerList[key].playerNumber != 4) {
-                        playerList[key].score += 1;
+                    if (playerList[key].playerNumber == 4) {
+                        playerList[key].score = 0;
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
                 });
