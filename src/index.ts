@@ -605,7 +605,7 @@ window.addEventListener('resize', function () {
     });
 
     // Add an event listener to each button
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= Object.keys(startButtons).length; i++) {
 
         // mouse hover effect and camera position change
         startButtons[i].addEventListener('mouseover', () => {
@@ -1010,7 +1010,7 @@ function updatePlayerScore(scoredPlayerID: string, newScore: number) {
 }
 
 function setStartButtonColor(startPositions: { [key: number]: PlayerStartInfo }) {
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= Object.keys(startButtons).length; i++) {
         let startButton = document.getElementById(`startPos-${i}`);
         if (startButton) {
             startButton.style.setProperty('border-color', startPositions[i].color);
@@ -1028,7 +1028,7 @@ function setStartButtonColor(startPositions: { [key: number]: PlayerStartInfo })
 
 // set the availability of the start buttons according to the used startpositions on the server
 function setStartButtonAvailability(startPositions: { [key: number]: PlayerStartInfo }) {
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= Object.keys(startButtons).length; i++) {
         let playerWall = scene.getMeshByName(`player${i}Wall`) as Mesh;
         if (startPositions[i].used == true) {
             if (playerWall) {
