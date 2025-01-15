@@ -35,6 +35,9 @@ let xrCamera: FreeCamera | null = null;
 let leftController: WebXRInputSource | null = null;
 let rightController: WebXRInputSource | null = null;
 
+// store the textBlock GUI elements for updating the scores
+const guiElements: { [key: string]: GUI.TextBlock } = {};
+
 // Get HTML Elements
 const divFps = document.getElementById('fps');
 const divID = document.getElementById('playerID');
@@ -171,9 +174,10 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
 
     // plane meshes for the player scores
     var player1ScoreMesh = MeshBuilder.CreatePlane("player1ScoreMesh", { size: 1 }, scene);
-    player1ScoreMesh.position = new Vector3((playCubeSize.x / 2 + playerAreaDepth / 2), 3, 0);
-    player1ScoreMesh.scaling = new Vector3(1, 0.5, 1);
-    // player1ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+    // player1ScoreMesh.position = new Vector3((playCubeSize.x / 2 + playerAreaDepth / 2), 3, 0);
+    player1ScoreMesh.position = new Vector3(0, 3, 1);
+    // player1ScoreMesh.scaling = new Vector3(1, 0.5, 1);
+    player1ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
 
     var player2ScoreMesh = MeshBuilder.CreatePlane('player2ScoreMesh', { size: 1 }, scene);
     player2ScoreMesh.position = new Vector3(-(playCubeSize.x / 2 + playerAreaDepth / 2), 3, 0);
@@ -192,11 +196,24 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
 
     // GUI --------------------------------------------------------------------------------------
 
-    var player1ScoreTex = GUI.AdvancedDynamicTexture.CreateForMesh(player1ScoreMesh, 512, 512);
+    var player1ScoreTex = GUI.AdvancedDynamicTexture.CreateForMesh(player1ScoreMesh);
     // player1ScoreTex.hasAlpha = true;
 
     // Fullscreen UI (maybe for own score)
     var advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+    var rect1 = new GUI.Rectangle();
+    rect1.thickness = 0;
+    player1ScoreTex.addControl(rect1);   
+
+    var score1Label = new GUI.TextBlock();
+    score1Label.fontFamily = "BrunoAce";
+    score1Label.text = "0";
+    score1Label.color = "white";
+    score1Label.fontSize = 128;
+    rect1.addControl(score1Label);
+
+    guiElements["score1Label"] = score1Label;
 
     // var rect1 = new GUI.Rectangle();
     // rect1.width = 0.2;
@@ -208,16 +225,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     // advancedTexture.addControl(rect1);
     // rect1.linkWithMesh(player1ScoreMesh);
 
-    player1ScoreTex.drawText("Player 1 Score:", 5, 5, "24px Arial", playerStartInfos[1].color, "transparent");
-
-    var player1ScoreMat = new StandardMaterial('player1ScoreMat', scene);
-    player1ScoreMat.diffuseTexture = player1ScoreTex;
-    player1ScoreMat.emissiveColor = Color3.FromHexString(playerStartInfos[1].color);
-    player1ScoreMat.diffuseTexture.hasAlpha = true;
-    //player1ScoreMat.useAlphaFromDiffuseTexture = true;
-    player1ScoreMat.backFaceCulling = false;
-
-    player1ScoreMesh.material = player1ScoreMat;
+    // player1ScoreTex.drawText("Player 1 Score:", 5, 5, "24px Arial", playerStartInfos[1].color, "transparent");
 
     // var player1Score = new GUI.TextBlock();
     // player1Score.width = 1;
@@ -233,6 +241,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     player2Score.color = playerStartInfos[2].color;
     advancedTexture.addControl(player2Score);
     player2Score.linkWithMesh(player2ScoreMesh);
+    player2Score.fontFamily = "BrunoAce";
 
     var player3Score = new GUI.TextBlock();
     player3Score.text = "Player 3 Score:";
@@ -970,6 +979,18 @@ socket.on('serverUpdate', (players, ball) => {
 
     let testSphere = scene.getMeshByName('testSphere') as Mesh;
     testSphere.position = new Vector3(ball.position.x, ball.position.y, ball.position.z);
+});
+
+socket.on('scoreUpdate', (scoredPlayerID, newScore) => {
+    if (playerList[scoredPlayerID]) {
+        playerList[scoredPlayerID].score = newScore;
+
+        console.log(`Player ${playerList[scoredPlayerID].playerNumber} scored. New Score: ${newScore}`);
+
+        if (guiElements[`score${playerList[scoredPlayerID].playerNumber}Label`]) {
+            guiElements[`score${playerList[scoredPlayerID].playerNumber}Label`].text = newScore.toString();
+        }
+    }
 });
 
 function setStartButtonColor(startPositions: { [key: number]: PlayerStartInfo }) {

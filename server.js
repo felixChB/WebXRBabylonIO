@@ -336,6 +336,7 @@ setInterval(function () {
                 Object.keys(playerList).forEach((key) => {
                     if (playerList[key].playerNumber != 1) {
                         playerList[key].score += 1;
+                        io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
                 });
             } else if (ball.position.x < -playCubeSize.x / 2 - outOfBoundsValue) {
@@ -344,6 +345,7 @@ setInterval(function () {
                 Object.keys(playerList).forEach((key) => {
                     if (playerList[key].playerNumber != 2) {
                         playerList[key].score += 1;
+                        io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
                 });
             } else if (ball.position.z > playCubeSize.z / 2 + outOfBoundsValue) {
@@ -352,6 +354,7 @@ setInterval(function () {
                 Object.keys(playerList).forEach((key) => {
                     if (playerList[key].playerNumber != 3) {
                         playerList[key].score += 1;
+                        io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
                 });
             } else if (ball.position.z < -playCubeSize.z / 2 - outOfBoundsValue) {
@@ -360,6 +363,7 @@ setInterval(function () {
                 Object.keys(playerList).forEach((key) => {
                     if (playerList[key].playerNumber != 4) {
                         playerList[key].score += 1;
+                        io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
                 });
             }
@@ -407,8 +411,8 @@ function startClientGame(newPlayer, socket) {
     });
 
     socket.on('testClick', (id) => {
-        console.log(`Player Position: x: ${playerList[id].contrPosR.x}, y: ${playerList[id].contrPosR.y}, z: ${playerList[id].contrPosR.z}`);
-        console.log(`Ball Position: x: ${ball.position.x}, y: ${ball.position.y}, z: ${ball.position.z}`);
+        playerList[id].score += 1;
+        io.emit('scoreUpdate', id, playerList[id].score);
     });
 };
 
