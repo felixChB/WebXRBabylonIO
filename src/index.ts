@@ -41,10 +41,17 @@ const guiElements: { [key: string]: GUI.TextBlock } = {};
 // Get HTML Elements
 const divFps = document.getElementById('fps');
 const divID = document.getElementById('playerID');
-const startPosButtons = document.querySelectorAll('.posSelection');
 const startScreen = document.getElementById('startScreen');
 const continueAsPreviousPlayer = document.getElementById('continueAsPreviousPlayer');
 const loadingScreen = document.getElementById('loadingScreen');
+const startButtons: { [key: number]: HTMLButtonElement } = {};
+for (let i = 1; i <= 4; i++) {
+    let startbutton = document.getElementById(`startPos-${i}`);
+    startButtons[i] = startbutton as HTMLButtonElement;
+}
+// const startPosButtons = document.querySelectorAll('.posSelection');
+
+console.log('Start Buttons: ', startButtons);
 
 // Create HTML Elements
 const canvas = document.createElement('canvas'); // Create a canvas element for rendering
@@ -598,22 +605,22 @@ window.addEventListener('resize', function () {
     });
 
     // Add an event listener to each button
-    for (let i = 0; i < startPosButtons.length; i++) {
+    for (let i = 1; i <= 4; i++) {
 
         // mouse hover effect and camera position change
-        startPosButtons[i].addEventListener('mouseover', () => {
-            handleMouseOver(i + 1);
+        startButtons[i].addEventListener('mouseover', () => {
+            handleMouseOver(i);
         });
         // end mouse hover effect and camera position change to default
-        startPosButtons[i].addEventListener('mouseout', () => {
-            handleMouseOut(i + 1);
+        startButtons[i].addEventListener('mouseout', () => {
+            handleMouseOut(i);
         });
 
-        startPosButtons[i].addEventListener('click', (event) => {
-            const htmlBtnId = (event.target as HTMLElement).id;
-            const btnPlayerNumber = Number(htmlBtnId.split('-')[1]);
+        startButtons[i].addEventListener('click', () => {
+            // const htmlBtnId = (event.target as HTMLElement).id;
+            // const btnPlayerNumber = Number(htmlBtnId.split('-')[]);
             // console.log(`Button with id ${htmlBtnId} clicked`);
-            socket.emit('requestGameStart', btnPlayerNumber);
+            socket.emit('requestGameStart', i);
         });
     }
 
@@ -969,8 +976,8 @@ socket.on('newPlayer', (newPlayer) => {
     }
 
     // set the availability of the start buttons according to the used startpositions on the server
-    if (!startPosButtons[newPlayer.playerNumber - 1].classList.contains('unavailable')) {
-        startPosButtons[newPlayer.playerNumber - 1].classList.add('unavailable');
+    if (!startButtons[newPlayer.playerNumber].classList.contains('unavailable')) {
+        startButtons[newPlayer.playerNumber].classList.add('unavailable');
     }
 
     updatePlayerScore(newPlayer.id, playerList[newPlayer.id].score);
@@ -1003,39 +1010,39 @@ function updatePlayerScore(scoredPlayerID: string, newScore: number) {
 }
 
 function setStartButtonColor(startPositions: { [key: number]: PlayerStartInfo }) {
-    for (let i = 0; i < startPosButtons.length; i++) {
-        let startButton = document.getElementById(`startPos-${i + 1}`);
+    for (let i = 1; i <= 4; i++) {
+        let startButton = document.getElementById(`startPos-${i}`);
         if (startButton) {
-            startButton.style.setProperty('border-color', startPositions[i + 1].color);
-            startButton.style.setProperty('color', startPositions[i + 1].color);
-            startButton.style.setProperty('box-shadow', `0 0 15px ${startPositions[i + 1].color}50, 0 0 30px ${startPositions[i + 1].color}50, inset 0 0 10px ${startPositions[i + 1].color}50`);
-            startButton.style.setProperty('text-shadow', `0 0 10px ${startPositions[i + 1].color}, 0 0 20px ${startPositions[i + 1].color}`);
+            startButton.style.setProperty('border-color', startPositions[i].color);
+            startButton.style.setProperty('color', startPositions[i].color);
+            startButton.style.setProperty('box-shadow', `0 0 15px ${startPositions[i].color}50, 0 0 30px ${startPositions[i].color}50, inset 0 0 10px ${startPositions[i].color}50`);
+            startButton.style.setProperty('text-shadow', `0 0 10px ${startPositions[i].color}, 0 0 20px ${startPositions[i].color}`);
         }
         // set the color of the button arrow
-        let buttonArrow = document.getElementById(`btn-arrow-${i + 1}`);
+        let buttonArrow = document.getElementById(`btn-arrow-${i}`);
         if (buttonArrow) {
-            buttonArrow.style.setProperty('border-color', startPositions[i + 1].color);
+            buttonArrow.style.setProperty('border-color', startPositions[i].color);
         }
     }
 }
 
 // set the availability of the start buttons according to the used startpositions on the server
 function setStartButtonAvailability(startPositions: { [key: number]: PlayerStartInfo }) {
-    for (let i = 0; i < startPosButtons.length; i++) {
-        let playerWall = scene.getMeshByName(`player${i + 1}Wall`) as Mesh;
-        if (startPositions[i + 1].used == true) {
+    for (let i = 1; i <= 4; i++) {
+        let playerWall = scene.getMeshByName(`player${i}Wall`) as Mesh;
+        if (startPositions[i].used == true) {
             if (playerWall) {
                 playerWall.isVisible = false;
             }
-            if (!startPosButtons[i].classList.contains('unavailable')) {
-                startPosButtons[i].classList.add('unavailable');
+            if (!startButtons[i].classList.contains('unavailable')) {
+                startButtons[i].classList.add('unavailable');
             }
         } else {
             if (playerWall) {
                 playerWall.isVisible = true;
             }
-            if (startPosButtons[i].classList.contains('unavailable')) {
-                startPosButtons[i].classList.remove('unavailable');
+            if (startButtons[i].classList.contains('unavailable')) {
+                startButtons[i].classList.remove('unavailable');
             }
         }
     }
@@ -1117,8 +1124,8 @@ socket.on('playerDisconnected', (id) => {
         }
 
         // set the availability of the start buttons according to the used startpositions on the server
-        if (startPosButtons[playerList[id].playerNumber - 1].classList.contains('unavailable')) {
-            startPosButtons[playerList[id].playerNumber - 1].classList.remove('unavailable');
+        if (startButtons[playerList[id].playerNumber].classList.contains('unavailable')) {
+            startButtons[playerList[id].playerNumber].classList.remove('unavailable');
         }
 
         delete playerList[id];
