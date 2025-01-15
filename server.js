@@ -210,6 +210,7 @@ io.on('connection', (socket) => {
             socket.join('waitingRoom');
 
             io.emit('playerDisconnected', socket.id);
+            io.emit('scoreUpdate', socket.id, 0);
         }
     });
 
@@ -227,6 +228,7 @@ io.on('connection', (socket) => {
         }
 
         io.emit('playerDisconnected', socket.id);
+        io.emit('scoreUpdate', socket.id, 0);
     });
 });
 
@@ -328,7 +330,6 @@ setInterval(function () {
         // reset the ball if out of bounds
         if (ball.position.x > playCubeSize.x / 2 + outOfBoundsValue || ball.position.x < -playCubeSize.x / 2 - outOfBoundsValue ||
             ball.position.z > playCubeSize.z / 2 + outOfBoundsValue || ball.position.z < -playCubeSize.z / 2 - outOfBoundsValue) {
-            resetGame();
 
             if (ball.position.x > playCubeSize.x / 2 + outOfBoundsValue) {
                 // player 1 missed
@@ -367,13 +368,14 @@ setInterval(function () {
                     }
                 });
             }
+            resetGame();
         } else {
             // make the Ball faster, if nobody missed
             ball.speed += 0.00001;
         }
     } else {
         // reset the ball if no player is in the game
-        if (ball.position.x != 0 && ball.position.y != playCubeSize.y / 2 && ball.position.z != 0 ) {
+        if (ball.position.x != 0 && ball.position.y != playCubeSize.y / 2 && ball.position.z != 0) {
             ball.position = { x: 0, y: playCubeSize.y / 2, z: 0 };
             resetGame();
         }
