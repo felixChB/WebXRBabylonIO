@@ -1243,6 +1243,8 @@ function handleMouseOver(playerNumber: number) {
         let buttonArrow = document.getElementById(`btn-arrow-${playerNumber}`);
         if (buttonArrow) {
             buttonArrow.style.setProperty('border-color', 'black');
+            buttonArrow.style.setProperty('width', '10px');
+            buttonArrow.style.setProperty('height', '10px');
         }
 
         if (playerStartInfo) {
@@ -1299,6 +1301,8 @@ function handleMouseOut(playerNumber: number) {
         let buttonArrow = document.getElementById(`btn-arrow-${playerNumber}`);
         if (buttonArrow) {
             buttonArrow.style.setProperty('border-color', playerStartInfo.color);
+            buttonArrow.style.setProperty('width', '6px');
+            buttonArrow.style.setProperty('height', '6px');
         }
 
         if (playerStartInfo) {
