@@ -981,6 +981,11 @@ function setStartButtonColor(startPositions: { [key: number]: PlayerStartInfo })
             startButton.style.setProperty('box-shadow', `0 0 15px ${startPositions[i + 1].color}50, 0 0 30px ${startPositions[i + 1].color}50, inset 0 0 10px ${startPositions[i + 1].color}50`);
             startButton.style.setProperty('text-shadow', `0 0 10px ${startPositions[i + 1].color}, 0 0 20px ${startPositions[i + 1].color}`);
         }
+        // set the color of the button arrow
+        let buttonArrow = document.getElementById(`btn-arrow-${i + 1}`);
+        if (buttonArrow) {
+            buttonArrow.style.setProperty('border-color', startPositions[i + 1].color);
+        }
     }
 }
 
@@ -1235,6 +1240,11 @@ function handleMouseOver(playerNumber: number) {
         button.style.backgroundColor = playerStartInfo.color;
         button.style.color = 'black';
 
+        let buttonArrow = document.getElementById(`btn-arrow-${playerNumber}`);
+        if (buttonArrow) {
+            buttonArrow.style.setProperty('border-color', 'black');
+        }
+
         if (playerStartInfo) {
             // change camera position to the player start position while hovering over the button
             let defaultCamera = scene.getCameraByName('Camera') as FreeCamera;
@@ -1285,6 +1295,11 @@ function handleMouseOut(playerNumber: number) {
         // change colors back to default
         button.style.backgroundColor = '#00000000';
         button.style.color = playerStartInfo.color;
+
+        let buttonArrow = document.getElementById(`btn-arrow-${playerNumber}`);
+        if (buttonArrow) {
+            buttonArrow.style.setProperty('border-color', playerStartInfo.color);
+        }
 
         if (playerStartInfo) {
             // change camera position back to default

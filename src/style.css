@@ -133,30 +133,32 @@ h1 {
     /* border-radius: 10px; */
     font-size: 20px;
     background-color: #00000000;
+    border: solid 2px;
 }
 
-.btn::after {
+.btn span {
+    display: block;
     content: "";
     position: absolute;
-    top: 2px;
-    right: 2px;
-    width: 5px;
-    height: 5px;
-    border: solid rgb(255, 255, 255);
+    top: 4px;
+    right: 4px;
+    width: 6px;
+    height: 6px;
+    border: solid;
     border-width: 1px 1px 0 0;
-    /* transition: 0.5s; */
-}
-
-.posSelection {
-    border: solid 2px;
-    border-radius: 5px;
 }
 
 .unavailable {
     /* background-color: rgb(133, 133, 133) !important; */
     border-color: #8D8D8D !important;
     color: #8D8D8D !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
     cursor: not-allowed;
+}
+
+.unavailable span {
+    display: none;
 }
 
 .xr-button-overlay {
