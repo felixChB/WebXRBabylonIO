@@ -181,23 +181,23 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
 
     // plane meshes for the player scores
     var player1ScoreMesh = MeshBuilder.CreatePlane("player1ScoreMesh", { size: 1 }, scene);
-    player1ScoreMesh.position = new Vector3((playCubeSize.x / 2), playCubeSize.x / 2, 0);
+    player1ScoreMesh.position = new Vector3((playCubeSize.x / 2), playCubeSize.y / 2, 0);
     // player1ScoreMesh.position = new Vector3(0, 3, 1);
     // player1ScoreMesh.scaling = new Vector3(1, 0.5, 1);
     player1ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
 
     var player2ScoreMesh = MeshBuilder.CreatePlane('player2ScoreMesh', { size: 1 }, scene);
-    player2ScoreMesh.position = new Vector3(-(playCubeSize.x / 2), playCubeSize.x / 2, 0);
+    player2ScoreMesh.position = new Vector3(-(playCubeSize.x / 2), playCubeSize.y / 2, 0);
     // player2ScoreMesh.scaling = new Vector3(1, 0.5, 1);
     player2ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
 
     var player3ScoreMesh = MeshBuilder.CreatePlane('player3ScoreMesh', { size: 1 }, scene);
-    player3ScoreMesh.position = new Vector3(0, playCubeSize.x / 2, (playCubeSize.z / 2));
+    player3ScoreMesh.position = new Vector3(0, playCubeSize.y / 2, (playCubeSize.z / 2));
     // player3ScoreMesh.scaling = new Vector3(1, 0.5, 1);
     player3ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
 
     var player4ScoreMesh = MeshBuilder.CreatePlane('player4ScoreMesh', { size: 1 }, scene);
-    player4ScoreMesh.position = new Vector3(0, playCubeSize.x / 2, -(playCubeSize.z / 2));
+    player4ScoreMesh.position = new Vector3(0, playCubeSize.y / 2, -(playCubeSize.z / 2));
     // player4ScoreMesh.scaling = new Vector3(1, 0.5, 1);
     player4ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
 
@@ -639,6 +639,7 @@ window.addEventListener('resize', function () {
         });
 
         xr.baseExperience.sessionManager.onXRSessionEnded.add(() => {
+            getLocalStorage();
             playerUsingVR = false;
             console.log('Player is leaving VR');
             socket.emit('playerEndVR');

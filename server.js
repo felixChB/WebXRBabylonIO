@@ -208,6 +208,7 @@ io.on('connection', (socket) => {
 
             socket.leave('gameRoom');
             socket.join('waitingRoom');
+            socket.emit('timeForPreviousPlayers');
 
             io.emit('playerDisconnected', socket.id);
             io.emit('scoreUpdate', socket.id, 0);
