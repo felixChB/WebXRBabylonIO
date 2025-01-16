@@ -40,7 +40,7 @@ const guiElements: { [key: string]: GUI.TextBlock } = {};
 
 // Get HTML Elements
 const divFps = document.getElementById('fps');
-const divID = document.getElementById('playerID');
+// const divID = document.getElementById('playerID');
 const startScreen = document.getElementById('startScreen');
 const continueAsPreviousPlayer = document.getElementById('continueAsPreviousPlayer');
 const loadingScreen = document.getElementById('loadingScreen');
@@ -181,23 +181,23 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
 
     // plane meshes for the player scores
     var player1ScoreMesh = MeshBuilder.CreatePlane("player1ScoreMesh", { size: 1 }, scene);
-    player1ScoreMesh.position = new Vector3((playCubeSize.x / 2 + playerAreaDepth / 2), 3, 0);
+    player1ScoreMesh.position = new Vector3((playCubeSize.x / 2 + playerAreaDepth / 2), 0, 0);
     // player1ScoreMesh.position = new Vector3(0, 3, 1);
     // player1ScoreMesh.scaling = new Vector3(1, 0.5, 1);
     player1ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
 
     var player2ScoreMesh = MeshBuilder.CreatePlane('player2ScoreMesh', { size: 1 }, scene);
-    player2ScoreMesh.position = new Vector3(-(playCubeSize.x / 2 + playerAreaDepth / 2), 3, 0);
+    player2ScoreMesh.position = new Vector3(-(playCubeSize.x / 2 + playerAreaDepth / 2), 0, 0);
     // player2ScoreMesh.scaling = new Vector3(1, 0.5, 1);
     player2ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
 
     var player3ScoreMesh = MeshBuilder.CreatePlane('player3ScoreMesh', { size: 1 }, scene);
-    player3ScoreMesh.position = new Vector3(0, 3, (playCubeSize.z / 2 + playerAreaDepth / 2));
+    player3ScoreMesh.position = new Vector3(0, 0, (playCubeSize.z / 2 + playerAreaDepth / 2));
     // player3ScoreMesh.scaling = new Vector3(1, 0.5, 1);
     player3ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
 
     var player4ScoreMesh = MeshBuilder.CreatePlane('player4ScoreMesh', { size: 1 }, scene);
-    player4ScoreMesh.position = new Vector3(0, 3, -(playCubeSize.z / 2 + playerAreaDepth / 2));
+    player4ScoreMesh.position = new Vector3(0, 0, -(playCubeSize.z / 2 + playerAreaDepth / 2));
     // player4ScoreMesh.scaling = new Vector3(1, 0.5, 1);
     player4ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
 
@@ -738,20 +738,16 @@ socket.on('currentState', (players: { [key: string]: Player }, testColor: string
     sceneStartInfos = sceneStartInfosServer;
     playerStartInfos = playerStartInfosServer;
 
-    console.log(playerStartInfos);
-
+    // create the Basic babylonjs scene with the infos from the server
     createBasicScene(sceneStartInfos, playerStartInfos);
-
-    console.log('Get the Current State');
 
     let testMaterial = scene.getMaterialByName('testMaterial') as StandardMaterial;
     testMaterial.emissiveColor = Color3.FromHexString(testColor);
 
-    console.log('Playercount: ', Object.keys(players).length);
+    // console.log('Playercount: ', Object.keys(players).length);
 
     Object.keys(players).forEach((id) => {
 
-        console.log('Found a Player')
         // Add new player to the playerList
         playerList[id] = new Player(players[id]);
 
@@ -760,7 +756,7 @@ socket.on('currentState', (players: { [key: string]: Player }, testColor: string
     });
 
     setStartButtonColor(playerStartInfos);
-    setStartButtonAvailability(playerStartInfos);
+    setPlayerAvailability(playerStartInfos);
 });
 
 // when the current player is already on the server and starts the game
@@ -768,9 +764,9 @@ socket.on('startClientGame', (newSocketPlayer) => {
 
     startScreen?.style.setProperty('display', 'none');
 
-    if (divID) {
-        divID.innerHTML = `Player ID: ${newSocketPlayer.id}`;
-    }
+    // if (divID) {
+    //     divID.innerHTML = `Player ID: ${newSocketPlayer.id}`;
+    // }
 
     // Start VR Session for the client
     xr.baseExperience.enterXRAsync('immersive-vr', 'local-floor').then(() => {
@@ -791,18 +787,13 @@ socket.on('startClientGame', (newSocketPlayer) => {
 
                     leftController = controller;
 
-                    // sphere = leftSphere;
-                    // material = leftMaterial;
-                    // color = leftColor;
-
                     const xrIDs = motionController.getComponentIds();
 
                     let triggerComponent = motionController.getComponent(xrIDs[0]); //xr-standard-trigger
                     triggerComponent.onButtonStateChangedObservable.add(() => {
                         if (triggerComponent.pressed) {
                             // socket.emit('clicked');
-                            xr.baseExperience.exitXRAsync();
-                        } else {
+                            // xr.baseExperience.exitXRAsync();
                         }
                     });
 
@@ -810,9 +801,6 @@ socket.on('startClientGame', (newSocketPlayer) => {
                     squeezeComponent.onButtonStateChangedObservable.add(() => {
                         if (squeezeComponent.pressed) {
                             socket.emit('clicked', playerList[playerID].color);
-
-                        } else {
-
                         }
                     });
 
@@ -821,8 +809,6 @@ socket.on('startClientGame', (newSocketPlayer) => {
                         if (thumbstickComponent.pressed) {
                             socket.emit('clicked', playerList[playerID].color);
                             debugTestclick();
-                        } else {
-
                         }
                     });
 
@@ -830,9 +816,6 @@ socket.on('startClientGame', (newSocketPlayer) => {
                     xbuttonComponent.onButtonStateChangedObservable.add(() => {
                         if (xbuttonComponent.pressed) {
                             socket.emit('clicked', playerList[playerID].color);
-
-                        } else {
-
                         }
                     });
 
@@ -840,31 +823,12 @@ socket.on('startClientGame', (newSocketPlayer) => {
                     ybuttonComponent.onButtonStateChangedObservable.add(() => {
                         if (ybuttonComponent.pressed) {
                             socket.emit('clicked', playerList[playerID].color);
-
-                        } else {
-
                         }
                     });
-                    /* not worked.
-                    let thumbrestComponent = motionController.getComponent(xrIDs[5]);//thumrest
-                    thumbrestComponent.onButtonStateChangedObservable.add(() => {
-                        //not worked
-                        if ((thumbrestComponent.value>0.1&&thumbrestComponent.value<0.6) {
-                            sphere1.position.y=10;
-                        }
-                        if(thumbrestComponent.touched){
-                             sphere1.position.y=10;
-                        }
-     
-                    });  
-                    */
                 }
                 if (motionController.handness === 'right') {
 
                     rightController = controller;
-                    // sphere = rightSphere;
-                    // material = rightMaterial;
-                    // color = rightColor;
 
                     const xrIDs = motionController.getComponentIds();
 
@@ -873,8 +837,6 @@ socket.on('startClientGame', (newSocketPlayer) => {
                         if (triggerComponent.pressed) {
                             // socket.emit('clicked');
                             xr.baseExperience.exitXRAsync();
-                        } else {
-
                         }
                     });
 
@@ -882,9 +844,6 @@ socket.on('startClientGame', (newSocketPlayer) => {
                     squeezeComponent.onButtonStateChangedObservable.add(() => {
                         if (squeezeComponent.pressed) {
                             socket.emit('clicked', playerList[playerID].color);
-
-                        } else {
-
                         }
                     });
 
@@ -893,19 +852,13 @@ socket.on('startClientGame', (newSocketPlayer) => {
                         if (thumbstickComponent.pressed) {
                             socket.emit('clicked', playerList[playerID].color);
                             debugTestclick();
-                        } else {
-
                         }
-
                     });
 
                     let abuttonComponent = motionController.getComponent(xrIDs[3]);//a-button
                     abuttonComponent.onButtonStateChangedObservable.add(() => {
                         if (abuttonComponent.pressed) {
                             socket.emit('clicked', playerList[playerID].color);
-
-                        } else {
-
                         }
                     });
 
@@ -913,9 +866,6 @@ socket.on('startClientGame', (newSocketPlayer) => {
                     bbuttonComponent.onButtonStateChangedObservable.add(() => {
                         if (bbuttonComponent.pressed) {
                             socket.emit('clicked', playerList[playerID].color);
-
-                        } else {
-
                         }
                     });
                 }
@@ -924,33 +874,41 @@ socket.on('startClientGame', (newSocketPlayer) => {
 
         // get the Connection ID of the Player
         playerID = newSocketPlayer.id;
-        // clientStartPos = newSocketPlayer.startPosition;
 
+        // get the player of this socket
         clientPlayer = new Player(newSocketPlayer);
 
+        // remove the previous player from the local storage
         localStorage.removeItem('playerID');
 
+        // add this socket player to the playerList
         playerList[playerID] = clientPlayer;
-
-        // camera.position = new Vector3(clientStartPos.x, clientStartPos.y, clientStartPos.z);
-        // camera.rotation = new Vector3(0, 0, 0);
-        // camera.setTarget(Vector3.Zero());
 
         let playerWall = scene.getMeshByName(`player${playerList[playerID].playerNumber}Wall`) as Mesh;
         if (playerWall) {
             playerWall.isVisible = false;
         }
-
-        console.log(playerWall.isVisible);
+        let playerScore = scene.getMeshByName(`player${playerList[playerID].playerNumber}ScoreMesh`) as Mesh;
+        if (playerScore) {
+            playerScore.isVisible = true;
+            if (clientPlayer.playerNumber == 1) {
+                playerScore.position = new Vector3(sceneStartInfos.playCubeSize.x / 2, sceneStartInfos.playCubeSize.y - 0.1, sceneStartInfos.playCubeSize.z / 2 - 0.1);
+            } else if (clientPlayer.playerNumber == 2) {
+                playerScore.position = new Vector3(-(sceneStartInfos.playCubeSize.x / 2), sceneStartInfos.playCubeSize.y - 0.1, -(sceneStartInfos.playCubeSize.z / 2) + 0.1);
+            } else if (clientPlayer.playerNumber == 3) {
+                playerScore.position = new Vector3(-(sceneStartInfos.playCubeSize.x / 2) + 0.1, sceneStartInfos.playCubeSize.y - 0.1, sceneStartInfos.playCubeSize.z / 2);
+            } else if (clientPlayer.playerNumber == 4) {
+                playerScore.position = new Vector3((sceneStartInfos.playCubeSize.x / 2) - 0.1, sceneStartInfos.playCubeSize.y - 0.1, -(sceneStartInfos.playCubeSize.z / 2));
+            }
+        }
 
         // Spawn yourself Entity
         addPlayer(playerList[playerID], true);
 
+        // set the xrCamera position and rotation to the player position and rotation from the server
         if (xrCamera) {
             xrCamera.position = new Vector3(playerList[playerID].position.x, playerList[playerID].position.y, playerList[playerID].position.z);
             xrCamera.rotationQuaternion = Quaternion.FromEulerAngles(playerList[playerID].rotation.x, playerList[playerID].rotation.y, playerList[playerID].rotation.z);
-
-            console.log('XrCamera Rotation: ', xrCamera.rotationQuaternion);
         }
 
         updatePlayerScore(playerID, playerList[playerID].score);
@@ -974,6 +932,10 @@ socket.on('newPlayer', (newPlayer) => {
     if (playerWall) {
         playerWall.isVisible = false;
     }
+    let playerScore = scene.getMeshByName(`player${playerList[newPlayer.id].playerNumber}ScoreMesh`) as Mesh;
+    if (playerScore) {
+        playerScore.isVisible = true;
+    }
 
     // set the availability of the start buttons according to the used startpositions on the server
     if (!startButtons[newPlayer.playerNumber].classList.contains('unavailable')) {
@@ -995,6 +957,7 @@ socket.on('serverUpdate', (players, ball) => {
     testSphere.position = new Vector3(ball.position.x, ball.position.y, ball.position.z);
 });
 
+// recieve a score update from the server
 socket.on('scoreUpdate', (scoredPlayerID, newScore) => {
     if (playerList[scoredPlayerID]) {
         playerList[scoredPlayerID].score = newScore;
@@ -1003,12 +966,15 @@ socket.on('scoreUpdate', (scoredPlayerID, newScore) => {
     }
 });
 
+// update the score gui element for the specific player
 function updatePlayerScore(scoredPlayerID: string, newScore: number) {
     if (guiElements[`score${playerList[scoredPlayerID].playerNumber}Label`]) {
         guiElements[`score${playerList[scoredPlayerID].playerNumber}Label`].text = newScore.toString();
     }
 }
 
+// when the scene is first loaded this will set the color of the start buttons
+// the information can so be send from the server to the client
 function setStartButtonColor(startPositions: { [key: number]: PlayerStartInfo }) {
     for (let i = 1; i <= Object.keys(startButtons).length; i++) {
         let startButton = document.getElementById(`startPos-${i}`);
@@ -1026,13 +992,18 @@ function setStartButtonColor(startPositions: { [key: number]: PlayerStartInfo })
     }
 }
 
-// set the availability of the start buttons according to the used startpositions on the server
-function setStartButtonAvailability(startPositions: { [key: number]: PlayerStartInfo }) {
+// set which player positions are available for the client
+// set the availability of the start buttons, the visibility of the player walls and the visibility of the player scores
+function setPlayerAvailability(startPositions: { [key: number]: PlayerStartInfo }) {
     for (let i = 1; i <= Object.keys(startButtons).length; i++) {
         let playerWall = scene.getMeshByName(`player${i}Wall`) as Mesh;
+        let playerScoreMesh = scene.getMeshByName(`player${i}ScoreMesh`) as Mesh;
         if (startPositions[i].used == true) {
             if (playerWall) {
                 playerWall.isVisible = false;
+            }
+            if (playerScoreMesh) {
+                playerScoreMesh.isVisible = true;
             }
             if (!startButtons[i].classList.contains('unavailable')) {
                 startButtons[i].classList.add('unavailable');
@@ -1040,6 +1011,9 @@ function setStartButtonAvailability(startPositions: { [key: number]: PlayerStart
         } else {
             if (playerWall) {
                 playerWall.isVisible = true;
+            }
+            if (playerScoreMesh) {
+                playerScoreMesh.isVisible = false;
             }
             if (startButtons[i].classList.contains('unavailable')) {
                 startButtons[i].classList.remove('unavailable');
