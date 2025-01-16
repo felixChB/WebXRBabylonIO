@@ -703,11 +703,37 @@ socket.on('timeForPreviousPlayers', () => {
 
             if (continueAsPreviousPlayer) {
                 continueAsPreviousPlayer.style.display = 'block';
-                continueAsPreviousPlayer.innerHTML = `Continue as Player ${previousPlayer.playerNumber}`;
+                continueAsPreviousPlayer.innerHTML = `Continue as Player ${previousPlayer.playerNumber} <span id="btn-arrow-pre"></span>`;
+                continueAsPreviousPlayer.style.setProperty('border-color', previousPlayer.color);
+                continueAsPreviousPlayer.style.setProperty('color', previousPlayer.color);
+                continueAsPreviousPlayer.style.setProperty('box-shadow', `0 0 15px ${previousPlayer.color}50, 0 0 30px ${previousPlayer.color}50, inset 0 0 10px ${previousPlayer.color}50`);
+                continueAsPreviousPlayer.style.setProperty('text-shadow', `0 0 10px ${previousPlayer.color}, 0 0 20px ${previousPlayer.color}`);
+                // set the color of the button arrow
+                let buttonArrow = document.getElementById(`btn-arrow-pre`);
+                if (buttonArrow) {
+                    buttonArrow.style.setProperty('border-color', previousPlayer.color);
+                }
+
+                // click event listener for the continue as previous player button
                 continueAsPreviousPlayer.addEventListener('click', () => {
                     console.log('Pressed continue as Previous Player');
                     socket.emit('continueAsPreviousPlayer', previousPlayer);
                 });
+
+                // mouse over effect for the continue as previous player button
+                continueAsPreviousPlayer.addEventListener('mouseover', () => {
+                    if (previousPlayer) {
+                        handleMouseOver(previousPlayer.playerNumber, true);
+                    }
+                });
+
+                // mouse out effect for the continue as previous player button
+                continueAsPreviousPlayer.addEventListener('mouseout', () => {
+                    if (previousPlayer) {
+                        handleMouseOut(previousPlayer.playerNumber, true);
+                    }
+                });
+
             }
         } else {
             console.log('Previous Player found, but too late.');
@@ -941,6 +967,13 @@ socket.on('newPlayer', (newPlayer) => {
     if (!startButtons[newPlayer.playerNumber].classList.contains('unavailable')) {
         startButtons[newPlayer.playerNumber].classList.add('unavailable');
     }
+    if (previousPlayer) {
+        if (previousPlayer.playerNumber == newPlayer.playerNumber) {
+            if (continueAsPreviousPlayer && continueAsPreviousPlayer.style.display != 'none' && !continueAsPreviousPlayer.classList.contains('unavailable')) {
+                continueAsPreviousPlayer.classList.add('unavailable');
+            }
+        }
+    }
 
     updatePlayerScore(newPlayer.id, playerList[newPlayer.id].score);
 });
@@ -1008,6 +1041,13 @@ function setPlayerAvailability(startPositions: { [key: number]: PlayerStartInfo 
             if (!startButtons[i].classList.contains('unavailable')) {
                 startButtons[i].classList.add('unavailable');
             }
+            if (previousPlayer) {
+                if (previousPlayer.playerNumber == i) {
+                    if (continueAsPreviousPlayer && continueAsPreviousPlayer.style.display != 'none' && !continueAsPreviousPlayer.classList.contains('unavailable')) {
+                        continueAsPreviousPlayer.classList.add('unavailable');
+                    }
+                }
+            }
         } else {
             if (playerWall) {
                 playerWall.isVisible = true;
@@ -1017,6 +1057,13 @@ function setPlayerAvailability(startPositions: { [key: number]: PlayerStartInfo 
             }
             if (startButtons[i].classList.contains('unavailable')) {
                 startButtons[i].classList.remove('unavailable');
+            }
+            if (previousPlayer) {
+                if (previousPlayer.playerNumber == i) {
+                    if (continueAsPreviousPlayer && continueAsPreviousPlayer.style.display != 'none' && continueAsPreviousPlayer.classList.contains('unavailable')) {
+                        continueAsPreviousPlayer.classList.remove('unavailable');
+                    }
+                }
             }
         }
     }
@@ -1115,6 +1162,13 @@ socket.on('playerDisconnected', (id) => {
         // set the availability of the start buttons according to the used startpositions on the server
         if (startButtons[disconnectedPlayer.playerNumber].classList.contains('unavailable')) {
             startButtons[disconnectedPlayer.playerNumber].classList.remove('unavailable');
+        }
+        if (previousPlayer) {
+            if (previousPlayer.playerNumber == disconnectedPlayer.playerNumber) {
+                if (continueAsPreviousPlayer && continueAsPreviousPlayer.style.display != 'none' && continueAsPreviousPlayer.classList.contains('unavailable')) {
+                    continueAsPreviousPlayer.classList.remove('unavailable');
+                }
+            }
         }
 
         delete playerList[id];
@@ -1258,15 +1312,21 @@ function darkenColor4(color: Color4, factor: number): Color4 {
     return new Color4(darkR, darkG, darkB, color.a);
 }
 
-function handleMouseOver(playerNumber: number) {
+function handleMouseOver(playerNumber: number, isPreButton: boolean = false) {
     const playerStartInfo = playerStartInfos[playerNumber];
-    const button = document.getElementById(`startPos-${playerNumber}`);
+    let button, buttonArrow;
+    if (isPreButton == false) {
+        button = document.getElementById(`startPos-${playerNumber}`);
+        buttonArrow = document.getElementById(`btn-arrow-${playerNumber}`);
+    } else {
+        button = document.getElementById(`continueAsPreviousPlayer`);
+        buttonArrow = document.getElementById(`btn-arrow-pre`);
+    }
     if (button && !button.classList.contains('unavailable')) {
         // hover effect for the start button
         button.style.backgroundColor = playerStartInfo.color;
         button.style.color = 'black';
 
-        let buttonArrow = document.getElementById(`btn-arrow-${playerNumber}`);
         if (buttonArrow) {
             buttonArrow.style.setProperty('border-color', 'black');
             buttonArrow.style.setProperty('width', '10px');
@@ -1316,15 +1376,22 @@ function handleMouseOver(playerNumber: number) {
     }
 }
 
-function handleMouseOut(playerNumber: number) {
+function handleMouseOut(playerNumber: number, isPreButton: boolean = false) {
     const playerStartInfo = playerStartInfos[playerNumber];
-    const button = document.getElementById(`startPos-${playerNumber}`);
+    let button, buttonArrow;
+    if (isPreButton == false) {
+        button = document.getElementById(`startPos-${playerNumber}`);
+        buttonArrow = document.getElementById(`btn-arrow-${playerNumber}`);
+    } else {
+        button = document.getElementById(`continueAsPreviousPlayer`);
+        buttonArrow = document.getElementById(`btn-arrow-pre`);
+    }
     if (button && !button.classList.contains('unavailable')) {
         // change colors back to default
         button.style.backgroundColor = '#00000000';
         button.style.color = playerStartInfo.color;
 
-        let buttonArrow = document.getElementById(`btn-arrow-${playerNumber}`);
+        // let buttonArrow = document.getElementById(`btn-arrow-${playerNumber}`);
         if (buttonArrow) {
             buttonArrow.style.setProperty('border-color', playerStartInfo.color);
             buttonArrow.style.setProperty('width', '6px');

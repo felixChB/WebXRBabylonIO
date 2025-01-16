@@ -303,7 +303,7 @@ h2 {
     display: none;
     position: absolute;
     text-align: center;
-    background-color: blueviolet;
-    left: calc(50% - 125px);
+    width: 350px;
+    left: calc(50% - 175px);
     bottom: 50px;
 }
