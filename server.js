@@ -288,9 +288,9 @@ setInterval(function () {
         Object.keys(playerList).forEach((key) => {
             if (playerList[key].playerNumber == 1) {
                 if (ball.position.x + ball.size > playCubeSize.x / 2 && ball.position.x < playCubeSize.x / 2 &&
-                    playerList[key].contrPosR.z - playerPaddleSize.w / 2 < ball.position.z + ball.size && ball.position.z - ball.size < playerList[key].contrPosR.z + playerPaddleSize.w / 2 &&
-                    playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y + ball.size && ball.position.y - ball.size < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
-                    if (ball.velocity.x > 0) {
+                    playerList[key].contrPosR.z - playerPaddleSize.w / 2 <= ball.position.z + ball.size && ball.position.z - ball.size <= playerList[key].contrPosR.z + playerPaddleSize.w / 2 &&
+                    playerList[key].contrPosR.y - playerPaddleSize.h / 2 <= ball.position.y + ball.size && ball.position.y - ball.size <= playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
+                    if (ball.velocity.x >= 0) {
                         ball.velocity.x *= -1;  // Reverse X velocity
 
                         console.log(`New Balldirection: ${ball.velocity.x}, ${ball.velocity.y}, ${ball.velocity.z}`);
@@ -304,8 +304,8 @@ setInterval(function () {
 
             } else if (playerList[key].playerNumber == 2) {
                 if (ball.position.x - ball.size < -playCubeSize.x / 2 && ball.position.x > -playCubeSize.x / 2 &&
-                    playerList[key].contrPosR.z - playerPaddleSize.w / 2 < ball.position.z && ball.position.z < playerList[key].contrPosR.z + playerPaddleSize.w / 2 &&
-                    playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y && ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
+                    playerList[key].contrPosR.z - playerPaddleSize.w / 2 <= ball.position.z + ball.size && ball.position.z - ball.size <= playerList[key].contrPosR.z + playerPaddleSize.w / 2 &&
+                    playerList[key].contrPosR.y - playerPaddleSize.h / 2 <= ball.position.y + ball.size && ball.position.y - ball.size <= playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
                     if (ball.velocity.x < 0) {
                         ball.velocity.x *= -1;  // Reverse X velocity
                         playerList[key].score += 1;
@@ -315,9 +315,9 @@ setInterval(function () {
                 }
             } else if (playerList[key].playerNumber == 3) {
                 if (ball.position.z + ball.size > playCubeSize.z / 2 && ball.position.z < playCubeSize.x / 2 &&
-                    playerList[key].contrPosR.x - playerPaddleSize.w / 2 < ball.position.x && ball.position.x < playerList[key].contrPosR.x + playerPaddleSize.w / 2 &&
-                    playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y && ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
-                    if (ball.velocity.z > 0) {
+                    playerList[key].contrPosR.x - playerPaddleSize.w / 2 < ball.position.x + ball.size && ball.position.x - ball.size < playerList[key].contrPosR.x + playerPaddleSize.w / 2 &&
+                    playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y + ball.size && ball.position.y - ball.size < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
+                    if (ball.velocity.z >= 0) {
                         ball.velocity.z *= -1;  // Reverse Z velocity
                         playerList[key].score += 1;
                         ballBounce(3, true);
@@ -326,8 +326,8 @@ setInterval(function () {
                 }
             } else if (playerList[key].playerNumber == 4) {
                 if (ball.position.z - ball.size < -playCubeSize.z / 2 && ball.position.z > -playCubeSize.x / 2 &&
-                    playerList[key].contrPosR.x - playerPaddleSize.w / 2 < ball.position.x && ball.position.x < playerList[key].contrPosR.x + playerPaddleSize.w / 2 &&
-                    playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y && ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
+                    playerList[key].contrPosR.x - playerPaddleSize.w / 2 < ball.position.x + ball.size && ball.position.x - ball.size < playerList[key].contrPosR.x + playerPaddleSize.w / 2 &&
+                    playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y + ball.size && ball.position.y - ball.size < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
                     if (ball.velocity.z < 0) {
                         ball.velocity.z *= -1;  // Reverse Z velocity
                         playerList[key].score += 1;
@@ -463,8 +463,11 @@ function calculateBallBounce(contrRPos, playerNumber) {
     console.log('Ball position z: ' + ball.position.z);
     console.log('Paddle position z: ' + contrRPos.z);
 
-    const impactZ = ball.position.z - contrRPos.z;  // [-1, 1]
-    const impactY = ball.position.y - contrRPos.y; // [-1, 1]
+    // const impactZ = ball.position.z - contrRPos.z;  // [-1, 1]
+    // const impactY = ball.position.y - contrRPos.y; // [-1, 1]
+
+    const impactZ = (ball.position.z - contrRPos.z) / (playerPaddleSize.w / 2);  // [-1, 1]
+    const impactY = (ball.position.z - contrRPos.z) / (playerPaddleSize.h / 2);  // [-1, 1]
 
     console.log('impactZ: ' + impactZ);
     console.log('impactY: ' + impactY);
