@@ -1221,7 +1221,7 @@ socket.on('colorChanged', (color) => {
     }
 });
 
-socket.on('wallBounce', (whichPlayer: number, isPaddle: boolean) => {
+socket.on('ballBounce', (whichPlayer: number, isPaddle: boolean) => {
 
     Object.keys(playerList).forEach((id) => {
         if (playerList[id].playerNumber == whichPlayer) {

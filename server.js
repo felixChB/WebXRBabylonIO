@@ -240,47 +240,50 @@ httpsServer.listen(port, ipAdress, () => {
     // console.log('Server start time: ' + serverStartTime);
 });
 
-// Game loop
+///////////////////////// Game loop and logic /////////////////////////////
 setInterval(function () {
 
+    // if there are players in the game
     if (Object.keys(playerList).length > 0) {
         // Update the ball position
         ball.position.x += ball.direction.x * ball.speed;
         ball.position.y += ball.direction.y * ball.speed;
         ball.position.z += ball.direction.z * ball.speed;
 
+        // Bounce off walls --------------------------------------------------------------------------------------
         // Always bounce the ball off the top and bottom
         if (ball.position.y + ball.size > playCubeSize.y || ball.position.y - ball.size < 0) {
             ball.direction.y *= -1;  // Reverse Y direction
-            //changeTestColor();
+            //changeBallColor();
         }
 
         // Bounce the ball of the wall if there is no player
         if (playerStartInfos[1].used == false) {
             if (ball.position.x + ball.size > playCubeSize.x / 2) {
                 ball.direction.x *= -1;  // Reverse X direction
-                wallBounce(1, false);
+                ballBounce(1, false);
             }
         }
         if (playerStartInfos[2].used == false) {
             if (ball.position.x - ball.size < -playCubeSize.x / 2) {
                 ball.direction.x *= -1;  // Reverse X direction
-                wallBounce(2, false);
+                ballBounce(2, false);
             }
         }
         if (playerStartInfos[3].used == false) {
             if (ball.position.z + ball.size > playCubeSize.z / 2) {
                 ball.direction.z *= -1;  // Reverse Z direction
-                wallBounce(3, false);
+                ballBounce(3, false);
             }
         }
         if (playerStartInfos[4].used == false) {
             if (ball.position.z - ball.size < -playCubeSize.z / 2) {
                 ball.direction.z *= -1;  // Reverse Z direction
-                wallBounce(4, false);
+                ballBounce(4, false);
             }
         }
 
+        // Bounce off paddles --------------------------------------------------------------------------------------
         // Check for collision with player paddles
         Object.keys(playerList).forEach((key) => {
             if (playerList[key].playerNumber == 1) {
@@ -288,10 +291,12 @@ setInterval(function () {
                     playerList[key].contrPosR.z - playerPaddleSize.w / 2 < ball.position.z + ball.size && ball.position.z - ball.size < playerList[key].contrPosR.z + playerPaddleSize.w / 2 &&
                     playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y + ball.size && ball.position.y - ball.size < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
                     if (ball.direction.x > 0) {
-                        ball.direction.x *= -1;  // Reverse X direction
+                        // ball.direction.x *= -1;  // Reverse X direction
+
+                        calculateBallBounce(playerList[key].contrPosR, 1);
+
                         playerList[key].score += 1;
-                        changeTestColor(playerList[key].color);
-                        wallBounce(1, true);
+                        ballBounce(1, true);
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
                 }
@@ -303,8 +308,7 @@ setInterval(function () {
                     if (ball.direction.x < 0) {
                         ball.direction.x *= -1;  // Reverse X direction
                         playerList[key].score += 1;
-                        changeTestColor(playerList[key].color);
-                        wallBounce(2, true);
+                        ballBounce(2, true);
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
                 }
@@ -315,8 +319,7 @@ setInterval(function () {
                     if (ball.direction.z > 0) {
                         ball.direction.z *= -1;  // Reverse Z direction
                         playerList[key].score += 1;
-                        changeTestColor(playerList[key].color);
-                        wallBounce(3, true);
+                        ballBounce(3, true);
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
                 }
@@ -327,8 +330,7 @@ setInterval(function () {
                     if (ball.direction.z < 0) {
                         ball.direction.z *= -1;  // Reverse Z direction
                         playerList[key].score += 1;
-                        changeTestColor(playerList[key].color);
-                        wallBounce(4, true);
+                        ballBounce(4, true);
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
                 }
@@ -341,9 +343,10 @@ setInterval(function () {
         if (ball.position.x > playCubeSize.x / 2 + outOfBoundsValue || ball.position.x < -playCubeSize.x / 2 - outOfBoundsValue ||
             ball.position.z > playCubeSize.z / 2 + outOfBoundsValue || ball.position.z < -playCubeSize.z / 2 - outOfBoundsValue) {
 
+
+            // Reset Player points on miss --------------------------------------------------------------------------------------
             if (ball.position.x > playCubeSize.x / 2 + outOfBoundsValue) {
                 // player 1 missed
-                //console.log('Player 1 missed');
                 Object.keys(playerList).forEach((key) => {
                     if (playerList[key].playerNumber == 1) {
                         playerList[key].score = 0;
@@ -352,7 +355,6 @@ setInterval(function () {
                 });
             } else if (ball.position.x < -playCubeSize.x / 2 - outOfBoundsValue) {
                 // player 2 missed
-                //console.log('Player 2 missed');
                 Object.keys(playerList).forEach((key) => {
                     if (playerList[key].playerNumber == 2) {
                         playerList[key].score = 0;
@@ -361,7 +363,6 @@ setInterval(function () {
                 });
             } else if (ball.position.z > playCubeSize.z / 2 + outOfBoundsValue) {
                 // player 3 missed
-                //console.log('Player 3 missed');
                 Object.keys(playerList).forEach((key) => {
                     if (playerList[key].playerNumber == 3) {
                         playerList[key].score = 0;
@@ -370,7 +371,6 @@ setInterval(function () {
                 });
             } else if (ball.position.z < -playCubeSize.z / 2 - outOfBoundsValue) {
                 // player 4 missed
-                //console.log('Player 4 missed');
                 Object.keys(playerList).forEach((key) => {
                     if (playerList[key].playerNumber == 4) {
                         playerList[key].score = 0;
@@ -378,10 +378,8 @@ setInterval(function () {
                     }
                 });
             }
+            // Reset the ball
             resetGame();
-        } else {
-            // make the Ball faster, if nobody missed
-            ball.speed += 0.00001;
         }
     } else {
         // reset the ball if no player is in the game
@@ -394,6 +392,8 @@ setInterval(function () {
     // Send the updated player list to all clients
     io.emit('serverUpdate', playerList, ball);
 }, 20);
+
+///////////////////////// End Game loop and logic /////////////////////////////
 
 // Start the game for the new player
 // can be called from a new player or an previous player
@@ -419,7 +419,7 @@ function startClientGame(newPlayer, socket) {
 
     // Test color change for connection
     socket.on('clicked', (playerColor) => {
-        changeTestColor(playerColor);
+        changeBallColor(playerColor);
     });
 
     socket.on('testClick', (id) => {
@@ -428,7 +428,7 @@ function startClientGame(newPlayer, socket) {
     });
 };
 
-function changeTestColor(playerColor) {
+function changeBallColor(playerColor) {
     // if (activeColor == color1) {
     //     activeColor = color2;
     // } else {
@@ -454,9 +454,32 @@ function resetGame() {
     ball.direction = getNormalizedVector({ x: getRandomNumber(0.5, 2), y: getRandomNumber(0.5, 1), z: getRandomNumber(0.5, 2) });
     ball.speed = ballStartSpeed;
     ball.color = ballStartColor;
-    changeTestColor(ballStartColor);
+    changeBallColor(ballStartColor);
 }
 
-function wallBounce(playerNumber, isPaddle) {
-    io.emit('wallBounce', playerNumber, isPaddle);
+function calculateBallBounce(contrRPos, playerNumber) {
+
+    const impactZ = (ball.x - contrRPos.x) / (playerPaddleSize.w / 2);  // [-1, 1]
+    const impactY = (ball.y - contrRPos.y) / (playerPaddleSize.h / 2); // [-1, 1]
+
+    // Adjust ball velocity based on impact positions
+    const maxBounceAngleZ = Math.PI / 4; // 45 degrees max angle for horizontal direction
+    const maxBounceAngleY = Math.PI / 4; // 45 degrees max angle for vertical direction
+
+    const bounceAngleZ = impactZ * maxBounceAngleZ;
+    const bounceAngleY = impactY * maxBounceAngleY;
+
+    const speed = Math.sqrt(ball.vx ** 2 + ball.vy ** 2 + ball.vz ** 2); // Keep speed constant
+    ball.direction.z = speed * Math.sin(bounceAngleZ);
+    ball.direction.y = speed * Math.sin(bounceAngleY);
+    ball.direction.x = -Math.sqrt(speed ** 2 - ball.direction.x ** 2 - ball.direction.y ** 2); // Adjust depth velocity to maintain speed
+}
+
+function ballBounce(playerNumber, isPaddle) {
+    if (isPaddle == true) {
+        changeBallColor(playerStartInfos[playerNumber].color);
+        // make the Ball faster, if the ball hits a paddle
+        ball.speed += 0.001;
+    }
+    io.emit('ballBounce', playerNumber, isPaddle);
 }
