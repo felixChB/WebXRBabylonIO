@@ -91,7 +91,7 @@ let activeColor = ballStartColor;
 
 let ball = {
     position: { x: 0, y: playCubeSize.y / 2, z: 0 },
-    direction: getNormalizedVector({ x: getRandomNumber(0.5, 2), y: getRandomNumber(0.5, 1), z: getRandomNumber(0.5, 2) }),
+    velocity: getNormalizedVector({ x: getRandomNumber(0.5, 2), y: getRandomNumber(0.5, 1), z: getRandomNumber(0.5, 2) }),
     speed: ballStartSpeed,
     size: 0.07,
     color: ballStartColor
@@ -246,39 +246,39 @@ setInterval(function () {
     // if there are players in the game
     if (Object.keys(playerList).length > 0) {
         // Update the ball position
-        ball.position.x += ball.direction.x * ball.speed;
-        ball.position.y += ball.direction.y * ball.speed;
-        ball.position.z += ball.direction.z * ball.speed;
+        ball.position.x += ball.velocity.x * ball.speed;
+        ball.position.y += ball.velocity.y * ball.speed;
+        ball.position.z += ball.velocity.z * ball.speed;
 
         // Bounce off walls --------------------------------------------------------------------------------------
         // Always bounce the ball off the top and bottom
         if (ball.position.y + ball.size > playCubeSize.y || ball.position.y - ball.size < 0) {
-            ball.direction.y *= -1;  // Reverse Y direction
+            ball.velocity.y *= -1;  // Reverse Y velocity
             //changeBallColor();
         }
 
         // Bounce the ball of the wall if there is no player
         if (playerStartInfos[1].used == false) {
             if (ball.position.x + ball.size > playCubeSize.x / 2) {
-                ball.direction.x *= -1;  // Reverse X direction
+                ball.velocity.x *= -1;  // Reverse X velocity
                 ballBounce(1, false);
             }
         }
         if (playerStartInfos[2].used == false) {
             if (ball.position.x - ball.size < -playCubeSize.x / 2) {
-                ball.direction.x *= -1;  // Reverse X direction
+                ball.velocity.x *= -1;  // Reverse X velocity
                 ballBounce(2, false);
             }
         }
         if (playerStartInfos[3].used == false) {
             if (ball.position.z + ball.size > playCubeSize.z / 2) {
-                ball.direction.z *= -1;  // Reverse Z direction
+                ball.velocity.z *= -1;  // Reverse Z velocity
                 ballBounce(3, false);
             }
         }
         if (playerStartInfos[4].used == false) {
             if (ball.position.z - ball.size < -playCubeSize.z / 2) {
-                ball.direction.z *= -1;  // Reverse Z direction
+                ball.velocity.z *= -1;  // Reverse Z velocity
                 ballBounce(4, false);
             }
         }
@@ -290,9 +290,10 @@ setInterval(function () {
                 if (ball.position.x + ball.size > playCubeSize.x / 2 && ball.position.x < playCubeSize.x / 2 &&
                     playerList[key].contrPosR.z - playerPaddleSize.w / 2 < ball.position.z + ball.size && ball.position.z - ball.size < playerList[key].contrPosR.z + playerPaddleSize.w / 2 &&
                     playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y + ball.size && ball.position.y - ball.size < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
-                    if (ball.direction.x > 0) {
-                        // ball.direction.x *= -1;  // Reverse X direction
+                    if (ball.velocity.x > 0) {
+                        ball.velocity.x *= -1;  // Reverse X velocity
 
+                        console.log(`New Balldirection: ${ball.velocity.x}, ${ball.velocity.y}, ${ball.velocity.z}`);
                         calculateBallBounce(playerList[key].contrPosR, 1);
 
                         playerList[key].score += 1;
@@ -305,8 +306,8 @@ setInterval(function () {
                 if (ball.position.x - ball.size < -playCubeSize.x / 2 && ball.position.x > -playCubeSize.x / 2 &&
                     playerList[key].contrPosR.z - playerPaddleSize.w / 2 < ball.position.z && ball.position.z < playerList[key].contrPosR.z + playerPaddleSize.w / 2 &&
                     playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y && ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
-                    if (ball.direction.x < 0) {
-                        ball.direction.x *= -1;  // Reverse X direction
+                    if (ball.velocity.x < 0) {
+                        ball.velocity.x *= -1;  // Reverse X velocity
                         playerList[key].score += 1;
                         ballBounce(2, true);
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
@@ -316,8 +317,8 @@ setInterval(function () {
                 if (ball.position.z + ball.size > playCubeSize.z / 2 && ball.position.z < playCubeSize.x / 2 &&
                     playerList[key].contrPosR.x - playerPaddleSize.w / 2 < ball.position.x && ball.position.x < playerList[key].contrPosR.x + playerPaddleSize.w / 2 &&
                     playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y && ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
-                    if (ball.direction.z > 0) {
-                        ball.direction.z *= -1;  // Reverse Z direction
+                    if (ball.velocity.z > 0) {
+                        ball.velocity.z *= -1;  // Reverse Z velocity
                         playerList[key].score += 1;
                         ballBounce(3, true);
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
@@ -327,8 +328,8 @@ setInterval(function () {
                 if (ball.position.z - ball.size < -playCubeSize.z / 2 && ball.position.z > -playCubeSize.x / 2 &&
                     playerList[key].contrPosR.x - playerPaddleSize.w / 2 < ball.position.x && ball.position.x < playerList[key].contrPosR.x + playerPaddleSize.w / 2 &&
                     playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y && ball.position.y < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
-                    if (ball.direction.z < 0) {
-                        ball.direction.z *= -1;  // Reverse Z direction
+                    if (ball.velocity.z < 0) {
+                        ball.velocity.z *= -1;  // Reverse Z velocity
                         playerList[key].score += 1;
                         ballBounce(4, true);
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
@@ -451,7 +452,7 @@ function getNormalizedVector(vector) {
 
 function resetGame() {
     ball.position = { x: 0, y: playCubeSize.y / 2, z: 0 };
-    ball.direction = getNormalizedVector({ x: getRandomNumber(0.5, 2), y: getRandomNumber(0.5, 1), z: getRandomNumber(0.5, 2) });
+    ball.velocity = getNormalizedVector({ x: getRandomNumber(0.5, 2), y: getRandomNumber(0.5, 1), z: getRandomNumber(0.5, 2) });
     ball.speed = ballStartSpeed;
     ball.color = ballStartColor;
     changeBallColor(ballStartColor);
@@ -459,20 +460,27 @@ function resetGame() {
 
 function calculateBallBounce(contrRPos, playerNumber) {
 
-    const impactZ = (ball.x - contrRPos.x) / (playerPaddleSize.w / 2);  // [-1, 1]
-    const impactY = (ball.y - contrRPos.y) / (playerPaddleSize.h / 2); // [-1, 1]
+    console.log('Ball position z: ' + ball.position.z);
+    console.log('Paddle position z: ' + contrRPos.z);
+
+    const impactZ = ball.position.z - contrRPos.z;  // [-1, 1]
+    const impactY = ball.position.y - contrRPos.y; // [-1, 1]
+
+    console.log('impactZ: ' + impactZ);
+    console.log('impactY: ' + impactY);
 
     // Adjust ball velocity based on impact positions
-    const maxBounceAngleZ = Math.PI / 4; // 45 degrees max angle for horizontal direction
-    const maxBounceAngleY = Math.PI / 4; // 45 degrees max angle for vertical direction
+    // const maxBounceAngleZ = Math.PI / 4; // 45 degrees max angle for horizontal velocity
+    // const maxBounceAngleY = Math.PI / 4; // 45 degrees max angle for vertical velocity
 
-    const bounceAngleZ = impactZ * maxBounceAngleZ;
-    const bounceAngleY = impactY * maxBounceAngleY;
+    // const bounceAngleZ = impactZ * maxBounceAngleZ;
+    // const bounceAngleY = impactY * maxBounceAngleY;
 
-    const speed = Math.sqrt(ball.vx ** 2 + ball.vy ** 2 + ball.vz ** 2); // Keep speed constant
-    ball.direction.z = speed * Math.sin(bounceAngleZ);
-    ball.direction.y = speed * Math.sin(bounceAngleY);
-    ball.direction.x = -Math.sqrt(speed ** 2 - ball.direction.x ** 2 - ball.direction.y ** 2); // Adjust depth velocity to maintain speed
+    // const speed = Math.sqrt(ball.velocity.x ** 2 + ball.velocity.y ** 2 + ball.velocity.z ** 2); // Keep speed constant
+
+    // ball.velocity.z = speed * Math.sin(bounceAngleZ);
+    // ball.velocity.y = speed * Math.sin(bounceAngleY);
+    // ball.velocity.x = -Math.sqrt(speed ** 2 - ball.velocity.x ** 2 - ball.velocity.y ** 2); // Adjust depth velocity to maintain speed
 }
 
 function ballBounce(playerNumber, isPaddle) {
