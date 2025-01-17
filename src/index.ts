@@ -602,6 +602,11 @@ window.addEventListener('resize', function () {
             doNotLoadControllerMeshes: true, // move, but hide controllers
             // forceInputProfile: 'generic-trigger-squeeze-thumbstick',
         },
+        handSupportOptions: {
+            jointMeshes: {
+                invisible: true,
+            },
+          },
     });
 
     // Add an event listener to each button
@@ -1078,11 +1083,11 @@ function addPlayer(player: Player, isPlayer: boolean) {
     let controllerScaling = 0.1;
     let paddleThickness = 0.01;
 
-    player.headObj = MeshBuilder.CreateBox('player_' + player.id, { size: 1 }, scene);
+    player.headObj = MeshBuilder.CreateBox(`player${player.playerNumber}_head`, { size: 1 }, scene);
     player.headObj.scaling = new Vector3(headScaling, headScaling, headScaling);
     player.headObj.position = new Vector3(player.position.x, player.position.y, player.position.z);
     player.headObj.rotation = new Vector3(player.rotation.x, player.rotation.y, player.rotation.z);
-    player.headObj.material = new StandardMaterial('mat_' + player.id, scene);
+    player.headObj.material = new StandardMaterial('mat_' + player.playerNumber, scene);
     (player.headObj.material as StandardMaterial).emissiveColor = Color3.FromHexString(player.color);
     player.headObj.material.alpha = 0.3;
 
@@ -1090,21 +1095,21 @@ function addPlayer(player: Player, isPlayer: boolean) {
         player.headObj.isVisible = false;
     }
 
-    player.controllerR = MeshBuilder.CreateBox('conR_' + player.id, { size: 1 });
+    player.controllerR = MeshBuilder.CreateBox(`player${player.playerNumber}_contrR`, { size: 1 });
     player.controllerR.scaling = new Vector3(controllerScaling, controllerScaling, controllerScaling);
     player.controllerR.position = new Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
     player.controllerR.rotation = new Vector3(player.contrRotR.x, player.contrRotR.y, player.contrRotR.z);
     player.controllerR.material = player.headObj.material;
     //(player.controllerR.material as StandardMaterial).emissiveColor = Color3.FromHexString(player.color);
 
-    player.controllerL = MeshBuilder.CreateBox('conL_' + player.id, { size: 1 });
+    player.controllerL = MeshBuilder.CreateBox(`player${player.playerNumber}_contrL`, { size: 1 });
     player.controllerL.scaling = new Vector3(controllerScaling, controllerScaling, controllerScaling);
     player.controllerL.position = new Vector3(player.contrPosL.x, player.contrPosL.y, player.contrPosL.z);
     player.controllerL.rotation = new Vector3(player.contrRotL.x, player.contrRotL.y, player.contrRotL.z);
     player.controllerL.material = player.headObj.material;
     //(player.controllerL.material as StandardMaterial).emissiveColor = Color3.FromHexString(player.color);
 
-    player.paddle = MeshBuilder.CreateBox('paddle_' + player.id, { size: 1 });
+    player.paddle = MeshBuilder.CreateBox(`player${player.playerNumber}_paddle`, { size: 1 });
     if (player.playerNumber == 1) {
         player.paddle.scaling = new Vector3(paddleThickness, sceneStartInfos.playerPaddleSize.h, sceneStartInfos.playerPaddleSize.w);
         player.paddle.position = new Vector3(sceneStartInfos.playCubeSize.x / 2, player.contrPosR.y, player.contrPosR.z);
