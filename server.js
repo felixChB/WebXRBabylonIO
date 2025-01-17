@@ -291,10 +291,8 @@ setInterval(function () {
                     playerList[key].contrPosR.z - playerPaddleSize.w / 2 <= ball.position.z + ball.size && ball.position.z - ball.size <= playerList[key].contrPosR.z + playerPaddleSize.w / 2 &&
                     playerList[key].contrPosR.y - playerPaddleSize.h / 2 <= ball.position.y + ball.size && ball.position.y - ball.size <= playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
                     if (ball.velocity.x >= 0) {
-                        ball.velocity.x *= -1;  // Reverse X velocity
-
-                        console.log(`New Balldirection: ${ball.velocity.x}, ${ball.velocity.y}, ${ball.velocity.z}`);
-                        calculateBallBounce(playerList[key].contrPosR, 1);
+                        //ball.velocity.x *= -1;  // Reverse X velocity
+                        calculateBallBounce(playerList[key].contrPosR, playerList[key].playerNumber);
 
                         playerList[key].score += 1;
                         ballBounce(1, true);
@@ -307,7 +305,9 @@ setInterval(function () {
                     playerList[key].contrPosR.z - playerPaddleSize.w / 2 <= ball.position.z + ball.size && ball.position.z - ball.size <= playerList[key].contrPosR.z + playerPaddleSize.w / 2 &&
                     playerList[key].contrPosR.y - playerPaddleSize.h / 2 <= ball.position.y + ball.size && ball.position.y - ball.size <= playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
                     if (ball.velocity.x < 0) {
-                        ball.velocity.x *= -1;  // Reverse X velocity
+                        // ball.velocity.x *= -1;  // Reverse X velocity
+                        calculateBallBounce(playerList[key].contrPosR, playerList[key].playerNumber);
+
                         playerList[key].score += 1;
                         ballBounce(2, true);
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
@@ -318,7 +318,9 @@ setInterval(function () {
                     playerList[key].contrPosR.x - playerPaddleSize.w / 2 < ball.position.x + ball.size && ball.position.x - ball.size < playerList[key].contrPosR.x + playerPaddleSize.w / 2 &&
                     playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y + ball.size && ball.position.y - ball.size < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
                     if (ball.velocity.z >= 0) {
-                        ball.velocity.z *= -1;  // Reverse Z velocity
+                        // ball.velocity.z *= -1;  // Reverse Z velocity
+                        calculateBallBounce(playerList[key].contrPosR, playerList[key].playerNumber);
+
                         playerList[key].score += 1;
                         ballBounce(3, true);
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
@@ -329,7 +331,9 @@ setInterval(function () {
                     playerList[key].contrPosR.x - playerPaddleSize.w / 2 < ball.position.x + ball.size && ball.position.x - ball.size < playerList[key].contrPosR.x + playerPaddleSize.w / 2 &&
                     playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y + ball.size && ball.position.y - ball.size < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
                     if (ball.velocity.z < 0) {
-                        ball.velocity.z *= -1;  // Reverse Z velocity
+                        // ball.velocity.z *= -1;  // Reverse Z velocity
+                        calculateBallBounce(playerList[key].contrPosR, playerList[key].playerNumber);
+
                         playerList[key].score += 1;
                         ballBounce(4, true);
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
@@ -460,43 +464,70 @@ function resetGame() {
 
 function calculateBallBounce(contrRPos, playerNumber) {
 
-    console.log('Ball position z: ' + ball.position.z);
-    console.log('Paddle position z: ' + contrRPos.z);
+    // define the min and max distance from the paddle center to the ball
+    // for the width and height
+    let ballPaddleMinDistW = -playerPaddleSize.w / 2 - ball.size;
+    let ballPaddleMaxDistW = playerPaddleSize.w / 2 + ball.size;
 
-    // const impactZ = ball.position.z - contrRPos.z;  // [-1, 1]
-    // const impactY = ball.position.y - contrRPos.y; // [-1, 1]
+    let ballPaddleMinDistH = -playerPaddleSize.h / 2 - ball.size;
+    let ballPaddleMaxDistH = playerPaddleSize.h / 2 + ball.size;
 
-    let ballPaddleMinDistZ = -playerPaddleSize.w / 2 - ball.size;
-    let ballPaddleMaxDistZ = playerPaddleSize.w / 2 + ball.size;
+    // define the max angle for the bounce
+    // 2 = 90°, 4 = 45°, 6 = 30°, 8 = 22.5°, 9 = 20°
+    const maxBounceAngleW = Math.PI / 3;
+    const maxBounceAngleH = Math.PI / 3;
 
-    let ballPaddleMinDistY = -playerPaddleSize.h / 2 - ball.size;
-    let ballPaddleMaxDistY = playerPaddleSize.h / 2 + ball.size;
+    // constant speed (should always be 1)
+    const velocitySpeed = Math.sqrt(ball.velocity.x ** 2 + ball.velocity.y ** 2 + ball.velocity.z ** 2);
+    console.log('velocitySpeed: ' + velocitySpeed);
 
-    const impactZ = 2 * (((ball.position.z - contrRPos.z) - ballPaddleMinDistZ) / (ballPaddleMaxDistZ - ballPaddleMinDistZ)) - 1;  // [-1, 1]
-    const impactY = 2 * (((ball.position.y - contrRPos.y) - ballPaddleMinDistY) / (ballPaddleMaxDistY - ballPaddleMinDistY)) - 1; // [-1, 1]
+    let impactZ, impactX;
+    let bounceAngleZ, bounceAngleX;
 
-    console.log('impactZ: ' + impactZ);
-    console.log('impactY: ' + impactY);
+    // always calculate the impact on the height
+    const impactY = 2 * (((ball.position.y - contrRPos.y) - ballPaddleMinDistH) / (ballPaddleMaxDistH - ballPaddleMinDistH)) - 1; // [-1, 1]
+    const bounceAngleY = impactY * maxBounceAngleH;
 
-    // Adjust ball velocity based on impact positions
-    // const maxBounceAngleZ = Math.PI / 4; // 45 degrees max angle for horizontal velocity
-    // const maxBounceAngleY = Math.PI / 4; // 45 degrees max angle for vertical velocity
+    ball.velocity.y = velocitySpeed * Math.sin(bounceAngleY);
 
-    // const bounceAngleZ = impactZ * maxBounceAngleZ;
-    // const bounceAngleY = impactY * maxBounceAngleY;
+    // calculate the impact diffenrently for the players because of the different axis
+    if (playerNumber == 1 || playerNumber == 2) {
+        impactZ = 2 * (((ball.position.z - contrRPos.z) - ballPaddleMinDistW) / (ballPaddleMaxDistW - ballPaddleMinDistW)) - 1;  // [-1, 1]
+        bounceAngleZ = impactZ * maxBounceAngleW;
 
-    // const speed = Math.sqrt(ball.velocity.x ** 2 + ball.velocity.y ** 2 + ball.velocity.z ** 2); // Keep speed constant
+        // calculate the new velocity for z and x
+        // for player 1 and 2 z is fo the width and x for the depth
+        ball.velocity.z = velocitySpeed * Math.sin(bounceAngleZ);
 
-    // ball.velocity.z = speed * Math.sin(bounceAngleZ);
-    // ball.velocity.y = speed * Math.sin(bounceAngleY);
-    // ball.velocity.x = -Math.sqrt(speed ** 2 - ball.velocity.x ** 2 - ball.velocity.y ** 2); // Adjust depth velocity to maintain speed
+        if (playerNumber == 1) { // negative x direction for player 1
+            ball.velocity.x = -Math.sqrt(Math.max(0.01, velocitySpeed ** 2 - ball.velocity.z ** 2 - ball.velocity.y ** 2)); // Adjust depth velocity to maintain speed
+        } else if (playerNumber == 2) { // positive x direction for player 2
+            ball.velocity.x = Math.sqrt(Math.max(0.01, velocitySpeed ** 2 - ball.velocity.z ** 2 - ball.velocity.y ** 2)); // Adjust depth velocity to maintain speed
+        }
+    } else if (playerNumber == 3 || playerNumber == 4) {
+        impactX = 2 * (((ball.position.x - contrRPos.x) - ballPaddleMinDistW) / (ballPaddleMaxDistW - ballPaddleMinDistW)) - 1;  // [-1, 1]
+        bounceAngleX = impactX * maxBounceAngleW;
+
+        // calculate the new velocity for x and z
+        // for player 3 and 4 x is fo the width and z for the depth
+        ball.velocity.x = velocitySpeed * Math.sin(bounceAngleX);
+
+        if (playerNumber == 3) { // negative z direction for player 3
+            ball.velocity.z = -Math.sqrt(Math.max(0.01, velocitySpeed ** 2 - ball.velocity.x ** 2 - ball.velocity.y ** 2)); // Adjust depth velocity to maintain speed
+        } else if (playerNumber == 4) { // positive z direction for player 4
+            ball.velocity.z = Math.sqrt(Math.max(0.01, velocitySpeed ** 2 - ball.velocity.x ** 2 - ball.velocity.y ** 2)); // Adjust depth velocity to maintain speed
+        }
+    }
+    // the fix with the Math.max(0.01, ...) is needed because sometimes the velocity is negative and the sqrt function can't handle negative values
+    // so the velocity is set to 0.01 to avoid the error
+    // this will affect the balls speed a little bit, but it is not noticeable and will fix itself after a view bounces
 }
 
 function ballBounce(playerNumber, isPaddle) {
     if (isPaddle == true) {
         changeBallColor(playerStartInfos[playerNumber].color);
         // make the Ball faster, if the ball hits a paddle
-        ball.speed += 0.001;
+        // ball.speed += 0.001;
     }
     io.emit('ballBounce', playerNumber, isPaddle);
 }
