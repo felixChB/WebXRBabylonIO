@@ -466,8 +466,14 @@ function calculateBallBounce(contrRPos, playerNumber) {
     // const impactZ = ball.position.z - contrRPos.z;  // [-1, 1]
     // const impactY = ball.position.y - contrRPos.y; // [-1, 1]
 
-    const impactZ = (ball.position.z - contrRPos.z) / (playerPaddleSize.w / 2);  // [-1, 1]
-    const impactY = (ball.position.z - contrRPos.z) / (playerPaddleSize.h / 2);  // [-1, 1]
+    let ballPaddleMinDistZ = -playerPaddleSize.w / 2 - ball.size;
+    let ballPaddleMaxDistZ = playerPaddleSize.w / 2 + ball.size;
+
+    let ballPaddleMinDistY = -playerPaddleSize.h / 2 - ball.size;
+    let ballPaddleMaxDistY = playerPaddleSize.h / 2 + ball.size;
+
+    const impactZ = 2 * (((ball.position.z - contrRPos.z) - ballPaddleMinDistZ) / (ballPaddleMaxDistZ - ballPaddleMinDistZ)) - 1;  // [-1, 1]
+    const impactY = 2 * (((ball.position.y - contrRPos.y) - ballPaddleMinDistY) / (ballPaddleMaxDistY - ballPaddleMinDistY)) - 1; // [-1, 1]
 
     console.log('impactZ: ' + impactZ);
     console.log('impactY: ' + impactY);
