@@ -385,6 +385,9 @@ setInterval(function () {
             }
             // Reset the ball
             resetGame();
+        } else {
+            // make the ball always a litle bit faster
+            ball.speed += 0.00001;
         }
     } else {
         // reset the ball if no player is in the game
@@ -478,7 +481,8 @@ function calculateBallBounce(contrRPos, playerNumber) {
     const maxBounceAngleH = Math.PI / 3;
 
     // constant speed (should always be 1)
-    const velocitySpeed = Math.sqrt(ball.velocity.x ** 2 + ball.velocity.y ** 2 + ball.velocity.z ** 2);
+    const velocitySpeedCheck = Math.sqrt(ball.velocity.x ** 2 + ball.velocity.y ** 2 + ball.velocity.z ** 2);
+    const velocitySpeed = 1;
     console.log('velocitySpeed: ' + velocitySpeed);
 
     let impactZ, impactX;
@@ -527,7 +531,7 @@ function ballBounce(playerNumber, isPaddle) {
     if (isPaddle == true) {
         changeBallColor(playerStartInfos[playerNumber].color);
         // make the Ball faster, if the ball hits a paddle
-        // ball.speed += 0.001;
+        ball.speed += 0.0001;
     }
     io.emit('ballBounce', playerNumber, isPaddle);
 }
