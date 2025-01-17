@@ -117,9 +117,9 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
 
     let edgeWidth = 0.2;
 
-    var testSphere = MeshBuilder.CreateSphere('testSphere', { diameter: 2, segments: 32 }, scene);
-    testSphere.position = new Vector3(ballStartPos.x, ballStartPos.y, ballStartPos.z);
-    testSphere.scaling = new Vector3(ballSize, ballSize, ballSize);
+    var ballSphere = MeshBuilder.CreateSphere('ballSphere', { diameter: 2, segments: 32 }, scene);
+    ballSphere.position = new Vector3(ballStartPos.x, ballStartPos.y, ballStartPos.z);
+    ballSphere.scaling = new Vector3(ballSize, ballSize, ballSize);
 
     // Built-in 'ground' shape.
     var ground = MeshBuilder.CreateGround('ground', { width: 60, height: 60 }, scene);
@@ -267,7 +267,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
 
     var ballParticles = new ParticleSystem('ballParticles', 500, scene);
     ballParticles.particleTexture = new Texture('./assets/particleTexture.png', scene);
-    ballParticles.emitter = testSphere;
+    ballParticles.emitter = ballSphere;
     ballParticles.id = 'ballParticles';
     var ballSphereEmitter = ballParticles.createSphereEmitter(ballSize);
     ballSphereEmitter.radiusRange = 0;
@@ -313,8 +313,8 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     playBoxMat.diffuseColor = Color3.FromHexString('#ffffff');
     playBoxMat.alpha = 0.1;
 
-    var testMaterial = new StandardMaterial('testMaterial', scene);
-    testMaterial.emissiveColor = Color3.FromHexString(ballColor);
+    var ballMaterial = new StandardMaterial('ballMaterial', scene);
+    ballMaterial.emissiveColor = Color3.FromHexString(ballColor);
 
     var staticBlocksMat = new StandardMaterial('staticBlocksMat', scene);
     staticBlocksMat.diffuseColor = Color3.FromHexString('#f7b705'); // orange
@@ -333,7 +333,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
 
     // Setting Materials
     ground.material = wireframeMat;
-    testSphere.material = testMaterial;
+    ballSphere.material = ballMaterial;
 
     playBox.material = playBoxMat;
 
@@ -764,7 +764,7 @@ socket.on('startPosDenied', () => {
 
 // get all current Player Information from the Server at the start
 // and spawning all current players except yourself
-socket.on('currentState', (players: { [key: string]: Player }, testColor: string,
+socket.on('currentState', (players: { [key: string]: Player }, ballColor: string,
     playerStartInfosServer: { [key: number]: PlayerStartInfo }, sceneStartInfosServer: SceneStartInfos) => {
 
     sceneStartInfos = sceneStartInfosServer;
@@ -773,8 +773,8 @@ socket.on('currentState', (players: { [key: string]: Player }, testColor: string
     // create the Basic babylonjs scene with the infos from the server
     createBasicScene(sceneStartInfos, playerStartInfos);
 
-    let testMaterial = scene.getMaterialByName('testMaterial') as StandardMaterial;
-    testMaterial.emissiveColor = Color3.FromHexString(testColor);
+    let ballMaterial = scene.getMaterialByName('ballMaterial') as StandardMaterial;
+    ballMaterial.emissiveColor = Color3.FromHexString(ballColor);
 
     // console.log('Playercount: ', Object.keys(players).length);
 
@@ -992,8 +992,8 @@ socket.on('serverUpdate', (players, ball) => {
         }
     });
 
-    let testSphere = scene.getMeshByName('testSphere') as Mesh;
-    testSphere.position = new Vector3(ball.position.x, ball.position.y, ball.position.z);
+    let ballSphere = scene.getMeshByName('ballSphere') as Mesh;
+    ballSphere.position = new Vector3(ball.position.x, ball.position.y, ball.position.z);
 });
 
 // recieve a score update from the server
@@ -1209,10 +1209,10 @@ document.addEventListener('click', () => {
 
 socket.on('colorChanged', (color) => {
     // change color of the sphere
-    let testMaterial = scene.getMaterialByName('testMaterial') as StandardMaterial;
+    let ballMaterial = scene.getMaterialByName('ballMaterial') as StandardMaterial;
     let ballParticleSystem = scene.getParticleSystemById('ballParticles');
 
-    testMaterial.emissiveColor = Color3.FromHexString(color);
+    ballMaterial.emissiveColor = Color3.FromHexString(color);
     if (ballParticleSystem) {
         ballParticleSystem.color1 = Color4.FromHexString(color);
         ballParticleSystem.color2 = darkenColor4(Color4.FromHexString(color), 0.5);
