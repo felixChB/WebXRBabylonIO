@@ -462,6 +462,7 @@ class Player implements PlayerData {
             this.controllerL.position = new Vector3(this.contrPosL.x, this.contrPosL.y, this.contrPosL.z);
             this.controllerL.rotation = new Vector3(this.contrRotL.x, this.contrRotL.y, this.contrRotL.z);
         }
+        // clamp the paddle position to the play area
         if (this.paddle) {
             if (this.playerNumber == 1) {
                 let paddleY, paddleZ;

@@ -287,12 +287,31 @@ setInterval(function () {
         // Check for collision with player paddles
         Object.keys(playerList).forEach((key) => {
             if (playerList[key].playerNumber == 1) {
+                // clamp the paddle position to the play area
+                let paddleY, paddleZ;
+                if (playerList[key].contrPosR.y + playerPaddleSize.h / 2 > playCubeSize.y) {
+                    paddleY = playCubeSize.y - playerPaddleSize.h / 2;
+                } else if (playerList[key].contrPosR.y - playerPaddleSize.h / 2 < 0) {
+                    paddleY = 0 + playerPaddleSize.h / 2;
+                } else {
+                    paddleY = playerList[key].contrPosR.y;
+                }
+                if (playerList[key].contrPosR.z + playerPaddleSize.w / 2 > playCubeSize.z / 2) {
+                    paddleZ = playCubeSize.z / 2 - playerPaddleSize.w / 2;
+                } else if (playerList[key].contrPosR.z - playerPaddleSize.w / 2 < -playCubeSize.z / 2) {
+                    paddleZ = -playCubeSize.z / 2 + playerPaddleSize.w / 2;
+                } else {
+                    paddleZ = playerList[key].contrPosR.z;
+                }
+                // clamped paddle position to use for the collision and bounce calculation
+                let clampedPaddlePos = { x: playCubeSize.x / 2, y: paddleY, z: paddleZ };
+
                 if (ball.position.x + ball.size > playCubeSize.x / 2 && ball.position.x < playCubeSize.x / 2 &&
-                    playerList[key].contrPosR.z - playerPaddleSize.w / 2 <= ball.position.z + ball.size && ball.position.z - ball.size <= playerList[key].contrPosR.z + playerPaddleSize.w / 2 &&
-                    playerList[key].contrPosR.y - playerPaddleSize.h / 2 <= ball.position.y + ball.size && ball.position.y - ball.size <= playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
+                    clampedPaddlePos.z - playerPaddleSize.w / 2 <= ball.position.z + ball.size && ball.position.z - ball.size <= clampedPaddlePos.z + playerPaddleSize.w / 2 &&
+                    clampedPaddlePos.y - playerPaddleSize.h / 2 <= ball.position.y + ball.size && ball.position.y - ball.size <= clampedPaddlePos.y + playerPaddleSize.h / 2) {
                     if (ball.velocity.x >= 0) {
                         //ball.velocity.x *= -1;  // Reverse X velocity
-                        calculateBallBounce(playerList[key].contrPosR, playerList[key].playerNumber);
+                        calculateBallBounce(clampedPaddlePos, playerList[key].playerNumber);
 
                         playerList[key].score += 1;
                         ballBounce(1, true);
@@ -301,12 +320,31 @@ setInterval(function () {
                 }
 
             } else if (playerList[key].playerNumber == 2) {
+                // clamp the paddle position to the play area
+                let paddleY, paddleZ;
+                if (playerList[key].contrPosR.y + playerPaddleSize.h / 2 > playCubeSize.y) {
+                    paddleY = playCubeSize.y - playerPaddleSize.h / 2;
+                } else if (playerList[key].contrPosR.y - playerPaddleSize.h / 2 < 0) {
+                    paddleY = 0 + playerPaddleSize.h / 2;
+                } else {
+                    paddleY = playerList[key].contrPosR.y;
+                }
+                if (playerList[key].contrPosR.z + playerPaddleSize.w / 2 > playCubeSize.z / 2) {
+                    paddleZ = playCubeSize.z / 2 - playerPaddleSize.w / 2;
+                } else if (playerList[key].contrPosR.z - playerPaddleSize.w / 2 < -playCubeSize.z / 2) {
+                    paddleZ = -playCubeSize.z / 2 + playerPaddleSize.w / 2;
+                } else {
+                    paddleZ = playerList[key].contrPosR.z;
+                }
+                // clamped paddle position to use for the collision and bounce calculation
+                let clampedPaddlePos = { x: -playCubeSize.x / 2, y: paddleY, z: paddleZ };
+
                 if (ball.position.x - ball.size < -playCubeSize.x / 2 && ball.position.x > -playCubeSize.x / 2 &&
-                    playerList[key].contrPosR.z - playerPaddleSize.w / 2 <= ball.position.z + ball.size && ball.position.z - ball.size <= playerList[key].contrPosR.z + playerPaddleSize.w / 2 &&
-                    playerList[key].contrPosR.y - playerPaddleSize.h / 2 <= ball.position.y + ball.size && ball.position.y - ball.size <= playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
+                    clampedPaddlePos.z - playerPaddleSize.w / 2 <= ball.position.z + ball.size && ball.position.z - ball.size <= clampedPaddlePos.z + playerPaddleSize.w / 2 &&
+                    clampedPaddlePos.y - playerPaddleSize.h / 2 <= ball.position.y + ball.size && ball.position.y - ball.size <= clampedPaddlePos.y + playerPaddleSize.h / 2) {
                     if (ball.velocity.x < 0) {
                         // ball.velocity.x *= -1;  // Reverse X velocity
-                        calculateBallBounce(playerList[key].contrPosR, playerList[key].playerNumber);
+                        calculateBallBounce(clampedPaddlePos, playerList[key].playerNumber);
 
                         playerList[key].score += 1;
                         ballBounce(2, true);
@@ -314,12 +352,31 @@ setInterval(function () {
                     }
                 }
             } else if (playerList[key].playerNumber == 3) {
+                // clamp the paddle position to the play area
+                let paddleY, paddleX;
+                if (playerList[key].contrPosR.y + playerPaddleSize.h / 2 > playCubeSize.y) {
+                    paddleY = playCubeSize.y - playerPaddleSize.h / 2;
+                } else if (playerList[key].contrPosR.y - playerPaddleSize.h / 2 < 0) {
+                    paddleY = 0 + playerPaddleSize.h / 2;
+                } else {
+                    paddleY = playerList[key].contrPosR.y;
+                }
+                if (playerList[key].contrPosR.x + playerPaddleSize.w / 2 > playCubeSize.x / 2) {
+                    paddleX = playCubeSize.x / 2 - playerPaddleSize.w / 2;
+                } else if (playerList[key].contrPosR.x - playerPaddleSize.w / 2 < -playCubeSize.x / 2) {
+                    paddleX = -playCubeSize.x / 2 + playerPaddleSize.w / 2;
+                } else {
+                    paddleX = playerList[key].contrPosR.x;
+                }
+                // clamped paddle position to use for the collision and bounce calculation
+                let clampedPaddlePos = { x: paddleX, y: paddleY, z: playCubeSize.z / 2 };
+
                 if (ball.position.z + ball.size > playCubeSize.z / 2 && ball.position.z < playCubeSize.x / 2 &&
-                    playerList[key].contrPosR.x - playerPaddleSize.w / 2 < ball.position.x + ball.size && ball.position.x - ball.size < playerList[key].contrPosR.x + playerPaddleSize.w / 2 &&
-                    playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y + ball.size && ball.position.y - ball.size < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
+                    clampedPaddlePos.x - playerPaddleSize.w / 2 < ball.position.x + ball.size && ball.position.x - ball.size < clampedPaddlePos.x + playerPaddleSize.w / 2 &&
+                    clampedPaddlePos.y - playerPaddleSize.h / 2 < ball.position.y + ball.size && ball.position.y - ball.size < clampedPaddlePos.y + playerPaddleSize.h / 2) {
                     if (ball.velocity.z >= 0) {
                         // ball.velocity.z *= -1;  // Reverse Z velocity
-                        calculateBallBounce(playerList[key].contrPosR, playerList[key].playerNumber);
+                        calculateBallBounce(clampedPaddlePos, playerList[key].playerNumber);
 
                         playerList[key].score += 1;
                         ballBounce(3, true);
@@ -327,12 +384,31 @@ setInterval(function () {
                     }
                 }
             } else if (playerList[key].playerNumber == 4) {
+                // clamp the paddle position to the play area
+                let paddleY, paddleX;
+                if (playerList[key].contrPosR.y + playerPaddleSize.h / 2 > playCubeSize.y) {
+                    paddleY = playCubeSize.y - playerPaddleSize.h / 2;
+                } else if (playerList[key].contrPosR.y - playerPaddleSize.h / 2 < 0) {
+                    paddleY = 0 + playerPaddleSize.h / 2;
+                } else {
+                    paddleY = playerList[key].contrPosR.y;
+                }
+                if (playerList[key].contrPosR.x + playerPaddleSize.w / 2 > playCubeSize.x / 2) {
+                    paddleX = playCubeSize.x / 2 - playerPaddleSize.w / 2;
+                } else if (playerList[key].contrPosR.x - playerPaddleSize.w / 2 < -playCubeSize.x / 2) {
+                    paddleX = -playCubeSize.x / 2 + playerPaddleSize.w / 2;
+                } else {
+                    paddleX = playerList[key].contrPosR.x;
+                }
+                // clamped paddle position to use for the collision and bounce calculation
+                let clampedPaddlePos = { x: paddleX, y: paddleY, z: -playCubeSize.z / 2 };
+
                 if (ball.position.z - ball.size < -playCubeSize.z / 2 && ball.position.z > -playCubeSize.x / 2 &&
-                    playerList[key].contrPosR.x - playerPaddleSize.w / 2 < ball.position.x + ball.size && ball.position.x - ball.size < playerList[key].contrPosR.x + playerPaddleSize.w / 2 &&
-                    playerList[key].contrPosR.y - playerPaddleSize.h / 2 < ball.position.y + ball.size && ball.position.y - ball.size < playerList[key].contrPosR.y + playerPaddleSize.h / 2) {
+                    clampedPaddlePos.x - playerPaddleSize.w / 2 < ball.position.x + ball.size && ball.position.x - ball.size < clampedPaddlePos.x + playerPaddleSize.w / 2 &&
+                    clampedPaddlePos.y - playerPaddleSize.h / 2 < ball.position.y + ball.size && ball.position.y - ball.size < clampedPaddlePos.y + playerPaddleSize.h / 2) {
                     if (ball.velocity.z < 0) {
                         // ball.velocity.z *= -1;  // Reverse Z velocity
-                        calculateBallBounce(playerList[key].contrPosR, playerList[key].playerNumber);
+                        calculateBallBounce(clampedPaddlePos, playerList[key].playerNumber);
 
                         playerList[key].score += 1;
                         ballBounce(4, true);
@@ -483,7 +559,7 @@ function calculateBallBounce(contrRPos, playerNumber) {
     // constant speed (should always be 1)
     const velocitySpeedCheck = Math.sqrt(ball.velocity.x ** 2 + ball.velocity.y ** 2 + ball.velocity.z ** 2);
     const velocitySpeed = 1;
-    console.log('velocitySpeed: ' + velocitySpeed);
+    console.log('velocitySpeedCheck: ' + velocitySpeedCheck);
 
     let impactZ, impactX;
     let bounceAngleZ, bounceAngleX;
