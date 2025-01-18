@@ -645,6 +645,7 @@ window.addEventListener('resize', function () {
         });
 
         xr.baseExperience.sessionManager.onXRSessionEnded.add(() => {
+            engine.resize();
             getLocalStorage();
             playerUsingVR = false;
             console.log('Player is leaving VR');
@@ -664,6 +665,7 @@ window.addEventListener('resize', function () {
                 // console.log('Escape Key pressed');
                 if (playerUsingVR) {
                     xr.baseExperience.exitXRAsync();
+                    // engine.resize();
                 }
             }
         });
@@ -869,7 +871,7 @@ socket.on('startClientGame', (newSocketPlayer) => {
                     triggerComponent.onButtonStateChangedObservable.add(() => {
                         if (triggerComponent.pressed) {
                             // socket.emit('clicked');
-                            xr.baseExperience.exitXRAsync();
+                            // xr.baseExperience.exitXRAsync();
                         }
                     });
 
