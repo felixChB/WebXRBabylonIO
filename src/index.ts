@@ -607,7 +607,7 @@ window.addEventListener('resize', function () {
             jointMeshes: {
                 invisible: true,
             },
-          },
+        },
     });
 
     // Add an event listener to each button
@@ -1180,10 +1180,12 @@ socket.on('playerDisconnected', (id) => {
 
         delete playerList[id];
 
-        let defaultCamera = scene.getCameraByName('Camera') as FreeCamera;
-        scene.activeCamera = defaultCamera;
-        defaultCamera.position = new Vector3(0, 5, 0);
-        defaultCamera.rotation = new Vector3(Math.PI / 2, Math.PI, Math.PI / 4);
+        if (id == playerID) {
+            let defaultCamera = scene.getCameraByName('Camera') as FreeCamera;
+            scene.activeCamera = defaultCamera;
+            defaultCamera.position = new Vector3(0, 5, 0);
+            defaultCamera.rotation = new Vector3(Math.PI / 2, Math.PI, Math.PI / 4);
+        }
     }
 });
 

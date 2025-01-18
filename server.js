@@ -250,6 +250,8 @@ setInterval(function () {
         ball.position.y += ball.velocity.y * ball.speed;
         ball.position.z += ball.velocity.z * ball.speed;
 
+        // if (ball.position.x < playCubeSize.x / 2 || ball.position.x > -playCubeSize.x / 2 || ball.position.z < playCubeSize.z / 2 || ball.position.z > -playCubeSize.z / 2) {
+
         // Bounce off walls --------------------------------------------------------------------------------------
         // Always bounce the ball off the top and bottom
         if (ball.position.y + ball.size > playCubeSize.y || ball.position.y - ball.size < 0) {
@@ -282,6 +284,7 @@ setInterval(function () {
                 ballBounce(4, false);
             }
         }
+        // }
 
         // Bounce off paddles --------------------------------------------------------------------------------------
         // Check for collision with player paddles
