@@ -609,6 +609,10 @@ function calculateBallBounce(contrRPos, playerNumber) {
     // so the velocity is set to 0.01 to avoid the error
     // this will affect the balls speed a little bit, but it is not noticeable and will fix itself after a view bounces
 
+    // take the middle vector between the normal bounce and the paddle bounce
+    let middleVector = { x: (ballBounceVelocity.x + ball.velocity.x), y: (ballBounceVelocity.y + ball.velocity.y), z: (ballBounceVelocity.z + ball.velocity.z) };
+    ballBounceVelocity = getNormalizedVector(middleVector);
+
     ball.velocity = ballBounceVelocity;
 }
 
