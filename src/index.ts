@@ -1,5 +1,5 @@
 import { io } from 'socket.io-client';
-import { /*Camera,*/ Engine, FreeCamera, Scene } from '@babylonjs/core';
+import { /*Camera,*/ Engine, FreeCamera, /*PBRBaseMaterial,*/ PBRMaterial, Scene } from '@babylonjs/core';
 import { /*ArcRotateCamera,*/ MeshBuilder, /*ShadowGenerator,*/ GlowLayer, ParticleSystem, Animation } from '@babylonjs/core';
 import { HemisphericLight, DirectionalLight, /*SSRRenderingPipeline, Constants*/ } from '@babylonjs/core';
 import { Mesh, StandardMaterial, Texture, Color3, Color4, Vector3, Quaternion, /*LinesMesh*/ } from '@babylonjs/core';
@@ -64,6 +64,8 @@ document.body.appendChild(canvas);
 // Basic Setup ---------------------------------------------------------------------------------
 const engine = new Engine(canvas, true);
 const scene = new Scene(engine);
+
+// let ssr: SSRRenderingPipeline;
 
 function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { [key: number]: PlayerStartInfo }) {
 
@@ -312,24 +314,30 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     var playBoxMat = new StandardMaterial('playBoxMat', scene);
     playBoxMat.diffuseColor = Color3.FromHexString('#ffffff');
     playBoxMat.alpha = 0.1;
+    playBoxMat.specularColor = new Color3(0, 0, 0);
 
-    var ballMaterial = new StandardMaterial('ballMaterial', scene);
+    var ballMaterial = new PBRMaterial('ballMaterial', scene);
     ballMaterial.emissiveColor = Color3.FromHexString(ballColor);
+    ballMaterial.metallic = 0;
+    ballMaterial.emissiveIntensity = 10;
 
     var staticBlocksMat = new StandardMaterial('staticBlocksMat', scene);
-    staticBlocksMat.diffuseColor = Color3.FromHexString('#f7b705'); // orange
+    staticBlocksMat.diffuseColor = Color3.FromHexString('#f7b705');
 
-    var playerStartMat = new StandardMaterial('playerStartMat', scene);
-    playerStartMat.diffuseColor = Color3.FromHexString('#2b2b2b');
+    var playerStartMat = new PBRMaterial('playerStartMat', scene);
+    playerStartMat.albedoColor = Color3.FromHexString('#2b2b2b');
+    playerStartMat.metallic = 0.2;
 
-    var playerWallMat = new StandardMaterial('playerWallMat', scene);
-    playerWallMat.diffuseColor = Color3.FromHexString('#2b2b2b');
-    playerWallMat.alpha = 0.8;
+    var playerWallMat = new PBRMaterial('playerWallMat', scene);
+    playerWallMat.albedoColor = Color3.FromHexString('#000000');
+    playerWallMat.alpha = 0.7;
+    playerWallMat.metallic = 0.2;
 
     var wallBounceMat = new StandardMaterial('wallBounceMat', scene);
     wallBounceMat.diffuseColor = Color3.FromHexString('#383838');
     //wallBounceMat.emissiveColor = Color3.FromHexString('#ffffff');
     wallBounceMat.alpha = 0.8;
+    wallBounceMat.specularColor = new Color3(0, 0, 0);
 
     // Setting Materials
     ground.material = wireframeMat;
@@ -350,13 +358,14 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
 
     ground.isVisible = false;
 
-    // const ssr = new SSRRenderingPipeline(
+    // ssr = new SSRRenderingPipeline(
     //     "ssr", // The name of the pipeline
     //     scene, // The scene to which the pipeline belongs
     //     [scene.activeCamera], // The list of cameras to attach the pipeline to
     //     false, // Whether or not to use the geometry buffer renderer (default: false, use the pre-pass renderer)
     //     Constants.TEXTURETYPE_UNSIGNED_BYTE, // The texture type used by the SSR effect (default: TEXTURETYPE_UNSIGNED_BYTE)
     // );
+    // ssr.samples = 16; // The number of samples used to calculate the reflections (default: 16)
 }
 
 // var allLineMesh: LinesMesh;
@@ -642,6 +651,7 @@ window.addEventListener('resize', function () {
             xrCamera = xr.baseExperience.camera;
             playerUsingVR = true;
             scene.activeCamera = xrCamera;
+            // ssr.addCamera(xrCamera);
         });
 
         xr.baseExperience.sessionManager.onXRSessionEnded.add(() => {
@@ -776,8 +786,14 @@ socket.on('currentState', (players: { [key: string]: Player }, ballColor: string
     // create the Basic babylonjs scene with the infos from the server
     createBasicScene(sceneStartInfos, playerStartInfos);
 
-    let ballMaterial = scene.getMaterialByName('ballMaterial') as StandardMaterial;
+    let ballMaterial = scene.getMaterialByName('ballMaterial') as PBRMaterial;
     ballMaterial.emissiveColor = Color3.FromHexString(ballColor);
+
+    let ballParticleSystem = scene.getParticleSystemById('ballParticles');
+    if (ballParticleSystem) {
+        ballParticleSystem.color1 = Color4.FromHexString(ballColor);
+        ballParticleSystem.color2 = darkenColor4(Color4.FromHexString(ballColor), 0.5);
+    }
 
     // console.log('Playercount: ', Object.keys(players).length);
 
@@ -1213,16 +1229,16 @@ document.addEventListener('click', () => {
 });
 
 socket.on('colorChanged', (color) => {
-    // change color of the sphere
-    let ballMaterial = scene.getMaterialByName('ballMaterial') as StandardMaterial;
-    let ballParticleSystem = scene.getParticleSystemById('ballParticles');
 
+    console.log('Color Changed to: ', color);
+    // change color of the sphere
+    let ballMaterial = scene.getMaterialByName('ballMaterial') as PBRMaterial;
     ballMaterial.emissiveColor = Color3.FromHexString(color);
+
+    let ballParticleSystem = scene.getParticleSystemById('ballParticles');
     if (ballParticleSystem) {
         ballParticleSystem.color1 = Color4.FromHexString(color);
         ballParticleSystem.color2 = darkenColor4(Color4.FromHexString(color), 0.5);
-        // console.log(ballParticleSystem.color1);
-        // console.log(ballParticleSystem.color2);
     }
 });
 

@@ -567,11 +567,15 @@ function calculateBallBounce(contrRPos, playerNumber) {
     let impactZ, impactX;
     let bounceAngleZ, bounceAngleX;
 
+    // new variable to calculate the bounce
+    // first assign the current velocity to the bounce velocity
+    let ballBounceVelocity = { x: ball.velocity.x, y: ball.velocity.y, z: ball.velocity.z };
+
     // always calculate the impact on the height
     const impactY = 2 * (((ball.position.y - contrRPos.y) - ballPaddleMinDistH) / (ballPaddleMaxDistH - ballPaddleMinDistH)) - 1; // [-1, 1]
     const bounceAngleY = impactY * maxBounceAngleH;
 
-    ball.velocity.y = velocitySpeed * Math.sin(bounceAngleY);
+    ballBounceVelocity.y = velocitySpeed * Math.sin(bounceAngleY);
 
     // calculate the impact diffenrently for the players because of the different axis
     if (playerNumber == 1 || playerNumber == 2) {
@@ -580,12 +584,12 @@ function calculateBallBounce(contrRPos, playerNumber) {
 
         // calculate the new velocity for z and x
         // for player 1 and 2 z is fo the width and x for the depth
-        ball.velocity.z = velocitySpeed * Math.sin(bounceAngleZ);
+        ballBounceVelocity.z = velocitySpeed * Math.sin(bounceAngleZ);
 
         if (playerNumber == 1) { // negative x direction for player 1
-            ball.velocity.x = -Math.sqrt(Math.max(0.01, velocitySpeed ** 2 - ball.velocity.z ** 2 - ball.velocity.y ** 2)); // Adjust depth velocity to maintain speed
+            ballBounceVelocity.x = -Math.sqrt(Math.max(0.01, velocitySpeed ** 2 - ballBounceVelocity.z ** 2 - ballBounceVelocity.y ** 2)); // Adjust depth velocity to maintain speed
         } else if (playerNumber == 2) { // positive x direction for player 2
-            ball.velocity.x = Math.sqrt(Math.max(0.01, velocitySpeed ** 2 - ball.velocity.z ** 2 - ball.velocity.y ** 2)); // Adjust depth velocity to maintain speed
+            ballBounceVelocity.x = Math.sqrt(Math.max(0.01, velocitySpeed ** 2 - ballBounceVelocity.z ** 2 - ballBounceVelocity.y ** 2)); // Adjust depth velocity to maintain speed
         }
     } else if (playerNumber == 3 || playerNumber == 4) {
         impactX = 2 * (((ball.position.x - contrRPos.x) - ballPaddleMinDistW) / (ballPaddleMaxDistW - ballPaddleMinDistW)) - 1;  // [-1, 1]
@@ -593,17 +597,19 @@ function calculateBallBounce(contrRPos, playerNumber) {
 
         // calculate the new velocity for x and z
         // for player 3 and 4 x is fo the width and z for the depth
-        ball.velocity.x = velocitySpeed * Math.sin(bounceAngleX);
+        ballBounceVelocity.x = velocitySpeed * Math.sin(bounceAngleX);
 
         if (playerNumber == 3) { // negative z direction for player 3
-            ball.velocity.z = -Math.sqrt(Math.max(0.01, velocitySpeed ** 2 - ball.velocity.x ** 2 - ball.velocity.y ** 2)); // Adjust depth velocity to maintain speed
+            ballBounceVelocity.z = -Math.sqrt(Math.max(0.01, velocitySpeed ** 2 - ballBounceVelocity.x ** 2 - ballBounceVelocity.y ** 2)); // Adjust depth velocity to maintain speed
         } else if (playerNumber == 4) { // positive z direction for player 4
-            ball.velocity.z = Math.sqrt(Math.max(0.01, velocitySpeed ** 2 - ball.velocity.x ** 2 - ball.velocity.y ** 2)); // Adjust depth velocity to maintain speed
+            ballBounceVelocity.z = Math.sqrt(Math.max(0.01, velocitySpeed ** 2 - ballBounceVelocity.x ** 2 - ballBounceVelocity.y ** 2)); // Adjust depth velocity to maintain speed
         }
     }
     // the fix with the Math.max(0.01, ...) is needed because sometimes the velocity is negative and the sqrt function can't handle negative values
     // so the velocity is set to 0.01 to avoid the error
     // this will affect the balls speed a little bit, but it is not noticeable and will fix itself after a view bounces
+
+    ball.velocity = ballBounceVelocity;
 }
 
 function ballBounce(playerNumber, isPaddle) {
