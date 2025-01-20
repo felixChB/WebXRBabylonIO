@@ -11,8 +11,8 @@ import { start } from "repl";
 const port = process.env.PORT || 3000;
 
 ////////////// CHANGE THIS TO YOUR LOCAL IP ADDRESS ///////////////////
-//const ipAdress = '192.168.178.156'; // for local network // Desktop
-const ipAdress = '192.168.1.163'; // for local network // Router
+const ipAdress = '192.168.178.156'; // for local network // Desktop
+// const ipAdress = '192.168.1.163'; // for local network // Router
 
 // const ipAdress = '192.168.200.6'; //wlan fuwa
 //const ipAdress = '192.168.1.188'; // Router
