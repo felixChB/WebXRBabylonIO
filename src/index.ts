@@ -1,7 +1,7 @@
 import { io } from 'socket.io-client';
 import { /*Camera,*/ Engine, FreeCamera, /*PBRBaseMaterial,*/ PBRMaterial, Scene } from '@babylonjs/core';
 import { /*ArcRotateCamera,*/ MeshBuilder, /*ShadowGenerator,*/ GlowLayer, ParticleSystem, Animation } from '@babylonjs/core';
-import { HemisphericLight, DirectionalLight, /*SSRRenderingPipeline, Constants*/ } from '@babylonjs/core';
+import { HemisphericLight, DirectionalLight, PointLight /*SSRRenderingPipeline, Constants*/ } from '@babylonjs/core';
 import { Mesh, StandardMaterial, Texture, Color3, Color4, Vector3, Quaternion, /*LinesMesh*/ } from '@babylonjs/core';
 import { WebXRDefaultExperience, WebXRInputSource } from '@babylonjs/core/XR';
 import { Inspector } from '@babylonjs/inspector';
@@ -98,15 +98,9 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     dirLight.shadowMaxZ = 130;
     dirLight.shadowMinZ = 10;
 
-    // const pointLight = new PointLight('pointLight', new Vector3(0, 10, 0), scene);
-    // pointLight.intensity = 0.3;
-    // pointLight.position = new Vector3(12, 3, -6);
-    // pointLight.diffuse = new Color3(1, 0.09, 0.043);
-
-    // const pointLight2 = new PointLight('pointLight2', new Vector3(0, 10, 0), scene);
-    // pointLight2.intensity = 0.3;
-    // pointLight2.position = new Vector3(-12, 3, -6);
-    // pointLight2.diffuse = new Color3(0.459, 0.047, 1);
+    const ballLight = new PointLight('ballLight', new Vector3(ballStartPos.x, ballStartPos.y, ballStartPos.z), scene);
+    ballLight.intensity = 0.5;
+    
 
     // add a Glowlayer to let emissive materials glow
     var gl = new GlowLayer("glow", scene, {
@@ -267,7 +261,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
 
     // Particle System --------------------------------------------------------------------------------------
 
-    var ballParticles = new ParticleSystem('ballParticles', 500, scene);
+    var ballParticles = new ParticleSystem('ballParticles', 300, scene);
     ballParticles.particleTexture = new Texture('./assets/particleTexture.png', scene);
     ballParticles.emitter = ballSphere;
     ballParticles.id = 'ballParticles';
@@ -278,11 +272,11 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     ballParticles.color1 = Color4.FromHexString(ballColor);
     ballParticles.color2 = Color4.FromHexString('#ff0000');
     ballParticles.colorDead = new Color4(0, 0, 0, 0.0);
-    ballParticles.minSize = 0.005;
-    ballParticles.maxSize = 0.05;
-    ballParticles.minLifeTime = 0.2;
-    ballParticles.maxLifeTime = 0.5;
-    ballParticles.emitRate = 500;
+    ballParticles.minSize = 0.001;
+    ballParticles.maxSize = 0.005;
+    ballParticles.minLifeTime = 0.05;
+    ballParticles.maxLifeTime = 0.1;
+    ballParticles.emitRate = 300;
     ballParticles.blendMode = ParticleSystem.BLENDMODE_ONEONE;
     //ballParticles.gravity = new Vector3(0, -9.81, 0);
     //ballParticles.direction1 = new Vector3(0, 8, 0);
@@ -293,7 +287,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     ballParticles.maxEmitPower = 3;
     ballParticles.updateSpeed = 0.005;
 
-    ballParticles.start();
+    //ballParticles.start();
 
 
     // Materials --------------------------------------------------------------------------------------
@@ -690,11 +684,6 @@ window.addEventListener('resize', function () {
                     }
                 }
             }
-            // if (leftController && rightController) {
-            //     console.log('LeftController Pointer Position: ', leftController.pointer.position);
-            //     console.log('LeftController Grip Position: ', leftController.grip?.position);
-            //     console.log('leftController Pointer Rotation: ', leftController.pointer.rotationQuaternion?.toEulerAngles());
-            // }
         }, 20);
     }
 })();
@@ -789,11 +778,11 @@ socket.on('currentState', (players: { [key: string]: Player }, ballColor: string
     let ballMaterial = scene.getMaterialByName('ballMaterial') as PBRMaterial;
     ballMaterial.emissiveColor = Color3.FromHexString(ballColor);
 
-    let ballParticleSystem = scene.getParticleSystemById('ballParticles');
-    if (ballParticleSystem) {
-        ballParticleSystem.color1 = Color4.FromHexString(ballColor);
-        ballParticleSystem.color2 = darkenColor4(Color4.FromHexString(ballColor), 0.5);
-    }
+    // let ballParticleSystem = scene.getParticleSystemById('ballParticles');
+    // if (ballParticleSystem) {
+    //     ballParticleSystem.color1 = Color4.FromHexString(ballColor);
+    //     ballParticleSystem.color2 = darkenColor4(Color4.FromHexString(ballColor), 0.5);
+    // }
 
     // console.log('Playercount: ', Object.keys(players).length);
 
@@ -1007,13 +996,23 @@ socket.on('newPlayer', (newPlayer) => {
 socket.on('serverUpdate', (players, ball) => {
     Object.keys(players).forEach((id) => {
         if (playerList[id]) {
+            // set the new data from the server to the player
             playerList[id].setData(players[id]);
+            // update the player object in the scene
+            playerList[id].updateObj();
         }
     });
 
+    updateBall(ball);
+});
+
+function updateBall (ball: { position: { x: number, y: number, z: number } }) {
     let ballSphere = scene.getMeshByName('ballSphere') as Mesh;
     ballSphere.position = new Vector3(ball.position.x, ball.position.y, ball.position.z);
-});
+
+    let ballLight = scene.getLightByName('ballLight') as PointLight;
+    ballLight.position = new Vector3(ball.position.x, ball.position.y, ball.position.z);
+}
 
 // recieve a score update from the server
 socket.on('scoreUpdate', (scoredPlayerID, newScore) => {
@@ -1108,7 +1107,7 @@ function addPlayer(player: Player, isPlayer: boolean) {
     player.headObj.rotation = new Vector3(player.rotation.x, player.rotation.y, player.rotation.z);
     player.headObj.material = new StandardMaterial('mat_' + player.playerNumber, scene);
     (player.headObj.material as StandardMaterial).emissiveColor = Color3.FromHexString(player.color);
-    player.headObj.material.alpha = 0.3;
+    player.headObj.material.alpha = 0.1;
 
     if (isPlayer) {
         player.headObj.isVisible = false;
@@ -1146,14 +1145,41 @@ function addPlayer(player: Player, isPlayer: boolean) {
     player.paddle.material = player.controllerR.material;
 
 
-
-    // player.controllerL.isVisible = false;
+    player.headObj.isVisible = false;
+    player.controllerL.isVisible = false;
+    player.controllerR.isVisible = false;
 
     playerList[player.id].headObj = player.headObj;
     playerList[player.id].controllerR = player.controllerR;
     playerList[player.id].controllerL = player.controllerL;
     playerList[player.id].paddle = player.paddle;
 }
+
+socket.on('ballBounce', (whichPlayer: number, isPaddle: boolean) => {
+
+    Object.keys(playerList).forEach((id) => {
+        if (playerList[id].playerNumber == whichPlayer) {
+            if (isPaddle) {
+
+                (playerList[id].paddle?.material as StandardMaterial).emissiveColor = Color3.White();
+                //(playerList[id].paddle?.material as StandardMaterial).emissiveColor = darkenColor3(Color3.FromHexString(playerList[id].color), 1.5);
+                setTimeout(function () {
+                    (playerList[id].paddle?.material as StandardMaterial).emissiveColor = Color3.FromHexString(playerList[id].color);
+                }, 150);
+            }
+        }
+    });
+
+    (scene.getMeshByName(`player${whichPlayer}Wall`) as Mesh).material;
+
+    if (!isPaddle) {
+
+        (scene.getMeshByName(`player${whichPlayer}Wall`) as Mesh).material = scene.getMaterialByName('wallBounceMat') as StandardMaterial;
+        setTimeout(function () {
+            (scene.getMeshByName(`player${whichPlayer}Wall`) as Mesh).material = scene.getMaterialByName('playerWallMat') as StandardMaterial;
+        }, 150);
+    }
+});
 
 socket.on('playerDisconnected', (id) => {
     const disconnectedPlayer = playerList[id];
@@ -1232,40 +1258,14 @@ socket.on('colorChanged', (color) => {
 
     console.log('Color Changed to: ', color);
     // change color of the sphere
-    let ballMaterial = scene.getMaterialByName('ballMaterial') as PBRMaterial;
-    ballMaterial.emissiveColor = Color3.FromHexString(color);
+    // let ballMaterial = scene.getMaterialByName('ballMaterial') as PBRMaterial;
+    // ballMaterial.emissiveColor = Color3.FromHexString(color);
 
-    let ballParticleSystem = scene.getParticleSystemById('ballParticles');
-    if (ballParticleSystem) {
-        ballParticleSystem.color1 = Color4.FromHexString(color);
-        ballParticleSystem.color2 = darkenColor4(Color4.FromHexString(color), 0.5);
-    }
-});
-
-socket.on('ballBounce', (whichPlayer: number, isPaddle: boolean) => {
-
-    Object.keys(playerList).forEach((id) => {
-        if (playerList[id].playerNumber == whichPlayer) {
-            if (isPaddle) {
-
-                (playerList[id].paddle?.material as StandardMaterial).emissiveColor = Color3.White();
-                //(playerList[id].paddle?.material as StandardMaterial).emissiveColor = darkenColor3(Color3.FromHexString(playerList[id].color), 1.5);
-                setTimeout(function () {
-                    (playerList[id].paddle?.material as StandardMaterial).emissiveColor = Color3.FromHexString(playerList[id].color);
-                }, 150);
-            }
-        }
-    });
-
-    (scene.getMeshByName(`player${whichPlayer}Wall`) as Mesh).material;
-
-    if (!isPaddle) {
-
-        (scene.getMeshByName(`player${whichPlayer}Wall`) as Mesh).material = scene.getMaterialByName('wallBounceMat') as StandardMaterial;
-        setTimeout(function () {
-            (scene.getMeshByName(`player${whichPlayer}Wall`) as Mesh).material = scene.getMaterialByName('playerWallMat') as StandardMaterial;
-        }, 150);
-    }
+    // let ballParticleSystem = scene.getParticleSystemById('ballParticles');
+    // if (ballParticleSystem) {
+    //     ballParticleSystem.color1 = Color4.FromHexString(color);
+    //     ballParticleSystem.color2 = darkenColor4(Color4.FromHexString(color), 0.5);
+    // }
 });
 
 function debugTestclick() {
@@ -1276,11 +1276,18 @@ function debugTestclick() {
 
 ////////////////////////// END TESTING GROUND //////////////////////////////            
 
+////////////////////////// RENDER LOOP //////////////////////////////
 // Register a render loop to repeatedly render the scene
 engine.runRenderLoop(function () {
     if (divFps) {
         divFps.innerHTML = engine.getFps().toFixed() + ' fps';
     }
+
+    // Object.keys(playerList).forEach((id) => {
+    //     if (playerList[id]) {
+    //         playerList[id].updateObj();
+    //     }
+    // });
 
     // Direct controller movement
     // if (leftController && rightController) {
@@ -1290,36 +1297,10 @@ engine.runRenderLoop(function () {
     //     rightSphere.rotation = rightController.pointer.rotationQuaternion?.toEulerAngles() || new Vector3(0, 0, 0);
     // }
 
-    Object.keys(playerList).forEach((id) => {
-        if (playerList[id]) {
-            // console.log('Updating Player: ', id);
-            playerList[id].updateObj();
-        }
-    });
-
-    // renderPlayerLines();
-
     scene.render();
 });
 
-// function renderPlayerLines() {
-//     let linePoints: Vector3[] = [];
-//     allLineMesh?.dispose();
-//     if (Object.keys(playerList).length > 1) {
-//         Object.keys(playerList).forEach((id) => {
-//             if (playerList[id]) {
-//                 linePoints.push(new Vector3(playerList[id].contrPosR.x, playerList[id].contrPosR.y, playerList[id].contrPosR.z));
-//             }
-//         });
-//         if (Object.keys(playerList).length > 2) {
-//             linePoints.push(new Vector3(playerList[Object.keys(playerList)[0]].contrPosR.x, playerList[Object.keys(playerList)[0]].contrPosR.y, playerList[Object.keys(playerList)[0]].contrPosR.z));
-//         }
-//         allLineMesh = MeshBuilder.CreateLines("allLine", {
-//             points: linePoints,
-//         }, scene);
-//         allLineMesh.color = new Color3(0, 1, 0);
-//     }
-// }
+////////////////////////// END RENDER LOOP //////////////////////////////
 
 // function darkenColor3(color: Color3, factor: number): Color3 {
 //     // Darken the RGB components
@@ -1330,14 +1311,16 @@ engine.runRenderLoop(function () {
 //     return new Color3(darkR, darkG, darkB);
 // }
 
-function darkenColor4(color: Color4, factor: number): Color4 {
-    // Darken the RGB components
-    const darkR = Math.max(0, Math.min(1, color.r * factor));
-    const darkG = Math.max(0, Math.min(1, color.g * factor));
-    const darkB = Math.max(0, Math.min(1, color.b * factor));
+// function darkenColor4(color: Color4, factor: number): Color4 {
+//     // Darken the RGB components
+//     const darkR = Math.max(0, Math.min(1, color.r * factor));
+//     const darkG = Math.max(0, Math.min(1, color.g * factor));
+//     const darkB = Math.max(0, Math.min(1, color.b * factor));
 
-    return new Color4(darkR, darkG, darkB, color.a);
-}
+//     return new Color4(darkR, darkG, darkB, color.a);
+// }
+
+/////////////////////////// HTML CSS Stuff //////////////////////////////
 
 function handleMouseOver(playerNumber: number, isPreButton: boolean = false) {
     const playerStartInfo = playerStartInfos[playerNumber];
@@ -1473,7 +1456,7 @@ function createCameraAnimation(property: string, startValue: Vector3, endValue: 
     return animation;
 }
 
-
+/////////////////////////// END HTML CSS Stuff //////////////////////////////
 
 /////////////////////////// LOCAL STORAGE //////////////////////////////
 // set up Interval function for the local storage of the player data

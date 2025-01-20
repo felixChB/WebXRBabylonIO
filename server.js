@@ -12,8 +12,9 @@ const port = process.env.PORT || 3000;
 
 ////////////// CHANGE THIS TO YOUR LOCAL IP ADDRESS ///////////////////
 //const ipAdress = '192.168.178.156'; // for local network // Desktop
-//const ipAdress = '192.168.1.11'; // for local network // Router
-const ipAdress = '192.168.178.156'; //wlan fuwa
+const ipAdress = '192.168.1.163'; // for local network // Router
+
+// const ipAdress = '192.168.200.6'; //wlan fuwa
 //const ipAdress = '192.168.1.188'; // Router
 ///////////////////////////////////////////////////////////////////////
 
@@ -81,8 +82,8 @@ let serverStartTime;
 
 // Game Variables
 const maxPlayers = 4;
-const playCubeSize = { x: 1.5, y: 2, z: 1.5 }; // the size of the player cube in meters
-const playerAreaDepth = 1; // the depth of the player area in the z direction in meters
+const playCubeSize = { x: 2.5, y: 2, z: 2.5 }; // the size of the player cube in meters
+const playerAreaDepth = 1.5; // the depth of the player area in the z direction in meters
 const ballStartSpeed = 0.02;
 const playerPaddleSize = { h: 0.2, w: 0.4 }; // the size of the player plane in meters
 const ballStartColor = '#ffffff';
@@ -93,7 +94,7 @@ let ball = {
     position: { x: 0, y: playCubeSize.y / 2, z: 0 },
     velocity: getNormalizedVector({ x: getRandomNumber(0.5, 2), y: getRandomNumber(0.5, 1), z: getRandomNumber(0.5, 2) }),
     speed: ballStartSpeed,
-    size: 0.07,
+    size: 0.03,
     color: ballStartColor
 }
 
@@ -562,7 +563,7 @@ function calculateBallBounce(contrRPos, playerNumber) {
     // constant speed (should always be 1)
     const velocitySpeedCheck = Math.sqrt(ball.velocity.x ** 2 + ball.velocity.y ** 2 + ball.velocity.z ** 2);
     const velocitySpeed = 1;
-    console.log('velocitySpeedCheck: ' + velocitySpeedCheck);
+    // console.log('velocitySpeedCheck: ' + velocitySpeedCheck);
 
     let impactZ, impactX;
     let bounceAngleZ, bounceAngleX;
@@ -609,9 +610,19 @@ function calculateBallBounce(contrRPos, playerNumber) {
     // so the velocity is set to 0.01 to avoid the error
     // this will affect the balls speed a little bit, but it is not noticeable and will fix itself after a view bounces
 
+    // if (playerNumber == 1) { // negative z direction for player 3
+    //     ballBounceVelocity.x *= -1; 
+    // } else if (playerNumber == 2) { // positive z direction for player 4
+    //     ballBounceVelocity.x *= -1; 
+    // } else if (playerNumber == 3) { // negative z direction for player 3
+    //     ballBounceVelocity.z *= -1; 
+    // } else if (playerNumber == 4) { // positive z direction for player 4
+    //     ballBounceVelocity.z *= -1; 
+    // }
+
     // take the middle vector between the normal bounce and the paddle bounce
-    let middleVector = { x: (ballBounceVelocity.x + ball.velocity.x), y: (ballBounceVelocity.y + ball.velocity.y), z: (ballBounceVelocity.z + ball.velocity.z) };
-    ballBounceVelocity = getNormalizedVector(middleVector);
+    //let middleVector = { x: (ballBounceVelocity.x + ball.velocity.x), y: (ballBounceVelocity.y + ball.velocity.y), z: (ballBounceVelocity.z + ball.velocity.z) };
+    //ballBounceVelocity = getNormalizedVector(middleVector);
 
     ball.velocity = ballBounceVelocity;
 }
