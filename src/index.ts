@@ -1,7 +1,7 @@
 import { io } from 'socket.io-client';
 import { /*Camera,*/ Engine, FreeCamera, /*PBRBaseMaterial,*/ PBRMaterial, Scene } from '@babylonjs/core';
 import { /*ArcRotateCamera,*/ MeshBuilder, /*ShadowGenerator,*/ GlowLayer, ParticleSystem, Animation } from '@babylonjs/core';
-import { HemisphericLight, DirectionalLight, PointLight /*SSRRenderingPipeline, Constants*/ } from '@babylonjs/core';
+import { HemisphericLight, DirectionalLight, /*PointLight*/ /*SSRRenderingPipeline, Constants*/ } from '@babylonjs/core';
 import { Mesh, StandardMaterial, Texture, Color3, Color4, Vector3, Quaternion, /*LinesMesh*/ } from '@babylonjs/core';
 import { WebXRDefaultExperience, WebXRInputSource } from '@babylonjs/core/XR';
 import { Inspector } from '@babylonjs/inspector';
@@ -98,9 +98,9 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     dirLight.shadowMaxZ = 130;
     dirLight.shadowMinZ = 10;
 
-    const ballLight = new PointLight('ballLight', new Vector3(ballStartPos.x, ballStartPos.y, ballStartPos.z), scene);
-    ballLight.intensity = 0.5;
-    
+    //const ballLight = new PointLight('ballLight', new Vector3(ballStartPos.x, ballStartPos.y, ballStartPos.z), scene);
+    //ballLight.intensity = 0.5;
+
 
     // add a Glowlayer to let emissive materials glow
     var gl = new GlowLayer("glow", scene, {
@@ -174,6 +174,15 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     var player4Wall = MeshBuilder.CreateBox('player4Wall', { size: 1 }, scene);
     player4Wall.position = new Vector3(0, playCubeSize.y / 2, -playCubeSize.z / 2 - 0);
     player4Wall.scaling = new Vector3(playCubeSize.x, playCubeSize.y, 0.01);
+
+    // create walls for the top and the bottom of the playcube
+    var topWall = MeshBuilder.CreateBox("topWall", { size: 1 }, scene);
+    topWall.position = new Vector3(0, playCubeSize.y, 0);
+    topWall.scaling = new Vector3(playCubeSize.x, 0.01, playCubeSize.z);
+
+    var bottomWall = MeshBuilder.CreateBox("bottomWall", { size: 1 }, scene);
+    bottomWall.position = new Vector3(0, 0, 0);
+    bottomWall.scaling = new Vector3(playCubeSize.x, 0.01, playCubeSize.z);
 
     // plane meshes for the player scores
     var player1ScoreMesh = MeshBuilder.CreatePlane("player1ScoreMesh", { size: 1 }, scene);
@@ -349,6 +358,9 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
             playerWall.material = playerWallMat;
         }
     }
+
+    topWall.material = playerWallMat;
+    bottomWall.material = playerWallMat;
 
     ground.isVisible = false;
 
@@ -1006,12 +1018,12 @@ socket.on('serverUpdate', (players, ball) => {
     updateBall(ball);
 });
 
-function updateBall (ball: { position: { x: number, y: number, z: number } }) {
+function updateBall(ball: { position: { x: number, y: number, z: number } }) {
     let ballSphere = scene.getMeshByName('ballSphere') as Mesh;
     ballSphere.position = new Vector3(ball.position.x, ball.position.y, ball.position.z);
 
-    let ballLight = scene.getLightByName('ballLight') as PointLight;
-    ballLight.position = new Vector3(ball.position.x, ball.position.y, ball.position.z);
+    //let ballLight = scene.getLightByName('ballLight') as PointLight;
+    //ballLight.position = new Vector3(ball.position.x, ball.position.y, ball.position.z);
 }
 
 // recieve a score update from the server
@@ -1155,31 +1167,31 @@ function addPlayer(player: Player, isPlayer: boolean) {
     playerList[player.id].paddle = player.paddle;
 }
 
-socket.on('ballBounce', (whichPlayer: number, isPaddle: boolean) => {
+// socket.on('ballBounce', (whichPlayer: number, isPaddle: boolean) => {
 
-    Object.keys(playerList).forEach((id) => {
-        if (playerList[id].playerNumber == whichPlayer) {
-            if (isPaddle) {
+//     Object.keys(playerList).forEach((id) => {
+//         if (playerList[id].playerNumber == whichPlayer) {
+//             if (isPaddle) {
 
-                (playerList[id].paddle?.material as StandardMaterial).emissiveColor = Color3.White();
-                //(playerList[id].paddle?.material as StandardMaterial).emissiveColor = darkenColor3(Color3.FromHexString(playerList[id].color), 1.5);
-                setTimeout(function () {
-                    (playerList[id].paddle?.material as StandardMaterial).emissiveColor = Color3.FromHexString(playerList[id].color);
-                }, 150);
-            }
-        }
-    });
+//                 (playerList[id].paddle?.material as StandardMaterial).emissiveColor = Color3.White();
+//                 //(playerList[id].paddle?.material as StandardMaterial).emissiveColor = darkenColor3(Color3.FromHexString(playerList[id].color), 1.5);
+//                 setTimeout(function () {
+//                     (playerList[id].paddle?.material as StandardMaterial).emissiveColor = Color3.FromHexString(playerList[id].color);
+//                 }, 150);
+//             }
+//         }
+//     });
 
-    (scene.getMeshByName(`player${whichPlayer}Wall`) as Mesh).material;
+//     (scene.getMeshByName(`player${whichPlayer}Wall`) as Mesh).material;
 
-    if (!isPaddle) {
+//     if (!isPaddle) {
 
-        (scene.getMeshByName(`player${whichPlayer}Wall`) as Mesh).material = scene.getMaterialByName('wallBounceMat') as StandardMaterial;
-        setTimeout(function () {
-            (scene.getMeshByName(`player${whichPlayer}Wall`) as Mesh).material = scene.getMaterialByName('playerWallMat') as StandardMaterial;
-        }, 150);
-    }
-});
+//         (scene.getMeshByName(`player${whichPlayer}Wall`) as Mesh).material = scene.getMaterialByName('wallBounceMat') as StandardMaterial;
+//         setTimeout(function () {
+//             (scene.getMeshByName(`player${whichPlayer}Wall`) as Mesh).material = scene.getMaterialByName('playerWallMat') as StandardMaterial;
+//         }, 150);
+//     }
+// });
 
 socket.on('playerDisconnected', (id) => {
     const disconnectedPlayer = playerList[id];

@@ -314,8 +314,8 @@ setInterval(function () {
                     clampedPaddlePos.z - playerPaddleSize.w / 2 <= ball.position.z + ball.size && ball.position.z - ball.size <= clampedPaddlePos.z + playerPaddleSize.w / 2 &&
                     clampedPaddlePos.y - playerPaddleSize.h / 2 <= ball.position.y + ball.size && ball.position.y - ball.size <= clampedPaddlePos.y + playerPaddleSize.h / 2) {
                     if (ball.velocity.x >= 0) {
-                        //ball.velocity.x *= -1;  // Reverse X velocity
-                        calculateBallBounce(clampedPaddlePos, playerList[key].playerNumber);
+                        ball.velocity.x *= -1;  // Reverse X velocity
+                        // calculateBallBounce(clampedPaddlePos, playerList[key].playerNumber);
 
                         playerList[key].score += 1;
                         ballBounce(1, true);
