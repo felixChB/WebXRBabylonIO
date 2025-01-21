@@ -74,9 +74,6 @@ export class Player {
 };
 
 /////////////////////////////  VARIABLES  //////////////////////////////////
-const color1 = '#d60040';
-const color2 = '#91ff42';
-
 // Server Variables
 let serverStartTime;
 
@@ -86,7 +83,7 @@ const playCubeSize = { x: 1.5, y: 2, z: 1.5 }; // the size of the player cube in
 const playerAreaDepth = 1; // the depth of the player area in the z direction in meters
 const ballStartSpeed = 0.02;
 const playerPaddleSize = { h: 0.2, w: 0.4 }; // the size of the player plane in meters
-const ballStartColor = '#ffffff';
+const ballStartColor = '#1f53ff';
 
 let activeColor = ballStartColor;
 

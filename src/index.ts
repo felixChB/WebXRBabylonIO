@@ -1,8 +1,8 @@
 import { io } from 'socket.io-client';
 import { /*Camera,*/ Engine, FreeCamera, /*PBRBaseMaterial,*/ PBRMaterial, Scene } from '@babylonjs/core';
 import { /*ArcRotateCamera,*/ MeshBuilder, /*ShadowGenerator,*/ GlowLayer, ParticleSystem, Animation } from '@babylonjs/core';
-import { HemisphericLight, DirectionalLight, /*PointLight*/ /*SSRRenderingPipeline, Constants*/ } from '@babylonjs/core';
-import { Mesh, StandardMaterial, Texture, Color3, Color4, Vector3, Quaternion, /*LinesMesh*/ } from '@babylonjs/core';
+import { HemisphericLight, DirectionalLight, PointLight /*SSRRenderingPipeline, Constants*/ } from '@babylonjs/core';
+import { Mesh, StandardMaterial, Texture, Color3, Color4, Vector3, Quaternion,  /*LinesMesh*/ } from '@babylonjs/core';
 import { WebXRDefaultExperience, WebXRInputSource } from '@babylonjs/core/XR';
 import { Inspector } from '@babylonjs/inspector';
 import * as GUI from '@babylonjs/gui'
@@ -98,8 +98,9 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     dirLight.shadowMaxZ = 130;
     dirLight.shadowMinZ = 10;
 
-    //const ballLight = new PointLight('ballLight', new Vector3(ballStartPos.x, ballStartPos.y, ballStartPos.z), scene);
-    //ballLight.intensity = 0.5;
+    const ballLight = new PointLight('ballLight', new Vector3(ballStartPos.x, ballStartPos.y, ballStartPos.z), scene);
+    ballLight.diffuse = Color3.FromHexString('#1f53ff');
+    ballLight.intensity = 2;
 
 
     // add a Glowlayer to let emissive materials glow
@@ -330,8 +331,9 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     ballMaterial.emissiveIntensity = 10;
 
     var playerStartMat = new PBRMaterial('playerStartMat', scene);
-    playerStartMat.albedoColor = Color3.FromHexString('#2b2b2b');
+    playerStartMat.albedoColor = Color3.FromHexString('#121212');
     playerStartMat.metallic = 0.2;
+    playerStartMat.roughness = 0.8;
 
     var playerWallMat = new PBRMaterial('playerWallMat', scene);
     playerWallMat.albedoColor = Color3.FromHexString('#000000');
@@ -1026,8 +1028,8 @@ function updateBall(ball: { position: { x: number, y: number, z: number } }) {
     let ballSphere = scene.getMeshByName('ballSphere') as Mesh;
     ballSphere.position = new Vector3(ball.position.x, ball.position.y, ball.position.z);
 
-    //let ballLight = scene.getLightByName('ballLight') as PointLight;
-    //ballLight.position = new Vector3(ball.position.x, ball.position.y, ball.position.z);
+    let ballLight = scene.getLightByName('ballLight') as PointLight;
+    ballLight.position = new Vector3(ball.position.x, ball.position.y, ball.position.z);
 }
 
 // recieve a score update from the server
