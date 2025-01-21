@@ -131,30 +131,33 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     // playBox.isVisible = false;
 
     // Grounds for the Player Start Positions
-
     var player1Ground = MeshBuilder.CreateBox('player1Ground', { size: 1 }, scene);
-    player1Ground.position = new Vector3((playCubeSize.x / 2 + playerAreaDepth / 2) + 0, -25, 0);
+    // player1Ground.position = new Vector3((playCubeSize.x / 2 + playerAreaDepth / 2) + 0, -25, 0);
+    player1Ground.position = new Vector3(playerStartInfos[1].position.x, -25, 0);
     player1Ground.scaling = new Vector3(playerAreaDepth, 50, playCubeSize.z);
     player1Ground.enableEdgesRendering();
     player1Ground.edgesWidth = edgeWidth;
     player1Ground.edgesColor = Color4.FromHexString(playerStartInfos[1].color);
 
     var player2Ground = MeshBuilder.CreateBox('player2Ground', { size: 1 }, scene);
-    player2Ground.position = new Vector3(-(playCubeSize.x / 2 + playerAreaDepth / 2) - 0, -25, 0);
+    // player2Ground.position = new Vector3(-(playCubeSize.x / 2 + playerAreaDepth / 2), -25, 0);
+    player2Ground.position = new Vector3(playerStartInfos[2].position.x, -25, 0);
     player2Ground.scaling = new Vector3(playerAreaDepth, 50, playCubeSize.z);
     player2Ground.enableEdgesRendering();
     player2Ground.edgesWidth = edgeWidth;
     player2Ground.edgesColor = Color4.FromHexString(playerStartInfos[2].color);
 
     var player3Ground = MeshBuilder.CreateBox('player3Ground', { size: 1 }, scene);
-    player3Ground.position = new Vector3(0, -25, (playCubeSize.z / 2 + playerAreaDepth / 2) + 0);
+    // player3Ground.position = new Vector3(0, -25, (playCubeSize.z / 2 + playerAreaDepth / 2));
+    player3Ground.position = new Vector3(0, -25, playerStartInfos[3].position.z);
     player3Ground.scaling = new Vector3(playCubeSize.x, 50, playerAreaDepth);
     player3Ground.enableEdgesRendering();
     player3Ground.edgesWidth = edgeWidth;
     player3Ground.edgesColor = Color4.FromHexString(playerStartInfos[3].color);
 
     var player4Ground = MeshBuilder.CreateBox('player4Ground', { size: 1 }, scene);
-    player4Ground.position = new Vector3(0, -25, -(playCubeSize.z / 2 + playerAreaDepth / 2) - 0);
+    // player4Ground.position = new Vector3(0, -25, -(playCubeSize.z / 2 + playerAreaDepth / 2));
+    player4Ground.position = new Vector3(0, -25, playerStartInfos[4].position.z);
     player4Ground.scaling = new Vector3(playCubeSize.x, 50, playerAreaDepth);
     player4Ground.enableEdgesRendering();
     player4Ground.edgesWidth = edgeWidth;
@@ -1136,9 +1139,9 @@ function addPlayer(player: Player, isPlayer: boolean) {
     player.headObj.scaling = new Vector3(headScaling, headScaling, headScaling);
     player.headObj.position = new Vector3(player.position.x, player.position.y, player.position.z);
     player.headObj.rotation = new Vector3(player.rotation.x, player.rotation.y, player.rotation.z);
-    player.headObj.material = new PBRMaterial('mat_' + player.playerNumber, scene);
+    player.headObj.material = new PBRMaterial(`player${player.playerNumber}_mat`, scene);
     (player.headObj.material as PBRMaterial).emissiveColor = Color3.FromHexString(player.color);
-    player.headObj.material.alpha = 0.1;
+    player.headObj.material.alpha = 0.2;
 
     if (isPlayer) {
         player.headObj.isVisible = false;
@@ -1190,7 +1193,11 @@ function addPlayer(player: Player, isPlayer: boolean) {
             player.scoreMesh.position = new Vector3(0, sceneStartInfos.playCubeSize.y / 2, -(sceneStartInfos.playCubeSize.z / 2));
         }
     }
-    player.scoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+    if (!isPlayer) {
+        player.scoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+    } else {
+        player.scoreMesh.rotation = new Vector3(playerStartInfos[player.playerNumber].rotation.x, playerStartInfos[player.playerNumber].rotation.y, playerStartInfos[player.playerNumber].rotation.z);
+    }
 
     var playerScoreTex = GUI.AdvancedDynamicTexture.CreateForMesh(player.scoreMesh);
     // Player Score
@@ -1206,9 +1213,9 @@ function addPlayer(player: Player, isPlayer: boolean) {
     // add to guiElements
     guiElements[`player${player.playerNumber}_scoreLabel`] = scoreLabel;
 
-    player.headObj.isVisible = false;
-    player.controllerL.isVisible = false;
-    player.controllerR.isVisible = false;
+    // player.headObj.isVisible = false;
+    // player.controllerL.isVisible = false;
+    // player.controllerR.isVisible = false;
 
     playerList[player.id].headObj = player.headObj;
     playerList[player.id].controllerR = player.controllerR;
