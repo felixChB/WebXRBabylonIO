@@ -438,7 +438,7 @@ setInterval(function () {
                 // player 1 missed
                 Object.keys(playerList).forEach((key) => {
                     if (playerList[key].playerNumber == 1) {
-                        playerList[key].score = 0;
+                        playerList[key].score = scoreAfterMiss(playerList[key].score);
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
                 });
@@ -446,7 +446,7 @@ setInterval(function () {
                 // player 2 missed
                 Object.keys(playerList).forEach((key) => {
                     if (playerList[key].playerNumber == 2) {
-                        playerList[key].score = 0;
+                        playerList[key].score = scoreAfterMiss(playerList[key].score);
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
                 });
@@ -454,7 +454,7 @@ setInterval(function () {
                 // player 3 missed
                 Object.keys(playerList).forEach((key) => {
                     if (playerList[key].playerNumber == 3) {
-                        playerList[key].score = 0;
+                        playerList[key].score = scoreAfterMiss(playerList[key].score);
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
                 });
@@ -462,7 +462,7 @@ setInterval(function () {
                 // player 4 missed
                 Object.keys(playerList).forEach((key) => {
                     if (playerList[key].playerNumber == 4) {
-                        playerList[key].score = 0;
+                        playerList[key].score = scoreAfterMiss(playerList[key].score);
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
                 });
@@ -486,6 +486,14 @@ setInterval(function () {
 }, 20);
 
 ///////////////////////// End Game loop and logic /////////////////////////////
+
+function scoreAfterMiss(oldScore) {
+    let newScore = oldScore - 10;
+    if (newScore < 0) {
+        newScore = 0;
+    }
+    return newScore;
+}
 
 // Start the game for the new player
 // can be called from a new player or an previous player
