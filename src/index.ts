@@ -186,88 +186,83 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     bottomWall.scaling = new Vector3(playCubeSize.x, 0.01, playCubeSize.z);
 
     // plane meshes for the player scores
-    var player1ScoreMesh = MeshBuilder.CreatePlane("player1ScoreMesh", { size: 1 }, scene);
-    player1ScoreMesh.position = new Vector3((playCubeSize.x / 2), playCubeSize.y / 2, 0);
-    // player1ScoreMesh.position = new Vector3(0, 3, 1);
-    // player1ScoreMesh.scaling = new Vector3(1, 0.5, 1);
-    player1ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+    // var player1ScoreMesh = MeshBuilder.CreatePlane("player1ScoreMesh", { size: 1 }, scene);
+    // player1ScoreMesh.position = new Vector3((playCubeSize.x / 2), playCubeSize.y / 2, 0);
+    // player1ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
 
-    var player2ScoreMesh = MeshBuilder.CreatePlane('player2ScoreMesh', { size: 1 }, scene);
-    player2ScoreMesh.position = new Vector3(-(playCubeSize.x / 2), playCubeSize.y / 2, 0);
-    // player2ScoreMesh.scaling = new Vector3(1, 0.5, 1);
-    player2ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+    // var player2ScoreMesh = MeshBuilder.CreatePlane('player2ScoreMesh', { size: 1 }, scene);
+    // player2ScoreMesh.position = new Vector3(-(playCubeSize.x / 2), playCubeSize.y / 2, 0);
+    // player2ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
 
-    var player3ScoreMesh = MeshBuilder.CreatePlane('player3ScoreMesh', { size: 1 }, scene);
-    player3ScoreMesh.position = new Vector3(0, playCubeSize.y / 2, (playCubeSize.z / 2));
-    // player3ScoreMesh.scaling = new Vector3(1, 0.5, 1);
-    player3ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+    // var player3ScoreMesh = MeshBuilder.CreatePlane('player3ScoreMesh', { size: 1 }, scene);
+    // player3ScoreMesh.position = new Vector3(0, playCubeSize.y / 2, (playCubeSize.z / 2));
+    // player3ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
 
-    var player4ScoreMesh = MeshBuilder.CreatePlane('player4ScoreMesh', { size: 1 }, scene);
-    player4ScoreMesh.position = new Vector3(0, playCubeSize.y / 2, -(playCubeSize.z / 2));
-    // player4ScoreMesh.scaling = new Vector3(1, 0.5, 1);
-    player4ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+    // var player4ScoreMesh = MeshBuilder.CreatePlane('player4ScoreMesh', { size: 1 }, scene);
+    // player4ScoreMesh.position = new Vector3(0, playCubeSize.y / 2, -(playCubeSize.z / 2));
+    // player4ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
 
     // GUI --------------------------------------------------------------------------------------
 
-    var player1ScoreTex = GUI.AdvancedDynamicTexture.CreateForMesh(player1ScoreMesh);
-    var player2ScoreTex = GUI.AdvancedDynamicTexture.CreateForMesh(player2ScoreMesh);
-    var player3ScoreTex = GUI.AdvancedDynamicTexture.CreateForMesh(player3ScoreMesh);
-    var player4ScoreTex = GUI.AdvancedDynamicTexture.CreateForMesh(player4ScoreMesh);
+    // var player1ScoreTex = GUI.AdvancedDynamicTexture.CreateForMesh(player1ScoreMesh);
+    // var player2ScoreTex = GUI.AdvancedDynamicTexture.CreateForMesh(player2ScoreMesh);
+    // var player3ScoreTex = GUI.AdvancedDynamicTexture.CreateForMesh(player3ScoreMesh);
+    // var player4ScoreTex = GUI.AdvancedDynamicTexture.CreateForMesh(player4ScoreMesh);
 
-    // Fullscreen UI (maybe for own score)
-    // var advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+    // // Fullscreen UI (maybe for own score)
+    // // var advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
-    // Player 1 Score
-    var score1Rect = new GUI.Rectangle();
-    score1Rect.thickness = 0;
-    player1ScoreTex.addControl(score1Rect);
-    var score1Label = new GUI.TextBlock();
-    score1Label.fontFamily = "loadedFont";
-    score1Label.text = "0";
-    score1Label.color = playerStartInfos[1].color;
-    score1Label.fontSize = 128;
-    score1Rect.addControl(score1Label);
-    // add to guiElements
-    guiElements["score1Label"] = score1Label;
+    // // Player 1 Score
+    // var score1Rect = new GUI.Rectangle();
+    // score1Rect.thickness = 0;
+    // player1ScoreTex.addControl(score1Rect);
+    // var score1Label = new GUI.TextBlock();
+    // score1Label.fontFamily = "loadedFont";
+    // score1Label.text = "0";
+    // score1Label.color = playerStartInfos[1].color;
+    // score1Label.fontSize = 128;
+    // score1Rect.addControl(score1Label);
+    // // add to guiElements
+    // //guiElements["score1Label"] = score1Label;
 
-    // Player 2 Score
-    var score2Rect = new GUI.Rectangle();
-    score2Rect.thickness = 0;
-    player2ScoreTex.addControl(score2Rect);
-    var score2Label = new GUI.TextBlock();
-    score2Label.fontFamily = "loadedFont";
-    score2Label.text = "0";
-    score2Label.color = playerStartInfos[2].color;
-    score2Label.fontSize = 128;
-    score2Rect.addControl(score2Label);
-    // add to guiElements
-    guiElements["score2Label"] = score2Label;
+    // // Player 2 Score
+    // var score2Rect = new GUI.Rectangle();
+    // score2Rect.thickness = 0;
+    // player2ScoreTex.addControl(score2Rect);
+    // var score2Label = new GUI.TextBlock();
+    // score2Label.fontFamily = "loadedFont";
+    // score2Label.text = "0";
+    // score2Label.color = playerStartInfos[2].color;
+    // score2Label.fontSize = 128;
+    // score2Rect.addControl(score2Label);
+    // // add to guiElements
+    // //guiElements["score2Label"] = score2Label;
 
-    // Player 3 Score
-    var score3Rect = new GUI.Rectangle();
-    score3Rect.thickness = 0;
-    player3ScoreTex.addControl(score3Rect);
-    var score3Label = new GUI.TextBlock();
-    score3Label.fontFamily = "loadedFont";
-    score3Label.text = "0";
-    score3Label.color = playerStartInfos[3].color;
-    score3Label.fontSize = 128;
-    score3Rect.addControl(score3Label);
-    // add to guiElements
-    guiElements["score3Label"] = score3Label;
+    // // Player 3 Score
+    // var score3Rect = new GUI.Rectangle();
+    // score3Rect.thickness = 0;
+    // player3ScoreTex.addControl(score3Rect);
+    // var score3Label = new GUI.TextBlock();
+    // score3Label.fontFamily = "loadedFont";
+    // score3Label.text = "0";
+    // score3Label.color = playerStartInfos[3].color;
+    // score3Label.fontSize = 128;
+    // score3Rect.addControl(score3Label);
+    // // add to guiElements
+    // //guiElements["score3Label"] = score3Label;
 
-    // Player 4 Score
-    var score4Rect = new GUI.Rectangle();
-    score4Rect.thickness = 0;
-    player4ScoreTex.addControl(score4Rect);
-    var score4Label = new GUI.TextBlock();
-    score4Label.fontFamily = "loadedFont";
-    score4Label.text = "0";
-    score4Label.color = playerStartInfos[4].color;
-    score4Label.fontSize = 128;
-    score4Rect.addControl(score4Label);
-    // add to guiElements
-    guiElements["score4Label"] = score4Label;
+    // // Player 4 Score
+    // var score4Rect = new GUI.Rectangle();
+    // score4Rect.thickness = 0;
+    // player4ScoreTex.addControl(score4Rect);
+    // var score4Label = new GUI.TextBlock();
+    // score4Label.fontFamily = "loadedFont";
+    // score4Label.text = "0";
+    // score4Label.color = playerStartInfos[4].color;
+    // score4Label.fontSize = 128;
+    // score4Rect.addControl(score4Label);
+    // // add to guiElements
+    // //guiElements["score4Label"] = score4Label;
 
     // Particle System --------------------------------------------------------------------------------------
 
@@ -443,8 +438,9 @@ class Player implements PlayerData {
     controllerR?: Mesh | null;
     controllerL?: Mesh | null;
     paddle?: Mesh | null;
+    scoreMesh?: Mesh | null;
 
-    constructor(player: PlayerData, headObj?: Mesh, controllerR?: Mesh, controllerL?: Mesh, paddle?: Mesh) {
+    constructor(player: PlayerData, headObj?: Mesh, controllerR?: Mesh, controllerL?: Mesh, paddle?: Mesh, scoreMesh?: Mesh) {
         this.id = player.id;
         this.color = player.color;
         this.playerNumber = player.playerNumber;
@@ -459,6 +455,7 @@ class Player implements PlayerData {
         this.controllerR = controllerR || null;
         this.controllerL = controllerL || null;
         this.paddle = paddle || null;
+        this.scoreMesh = scoreMesh || null;
     }
 
     setData(player: Player) {
@@ -502,6 +499,10 @@ class Player implements PlayerData {
                     paddleZ = this.contrPosR.z;
                 }
                 this.paddle.position = new Vector3(sceneStartInfos.playCubeSize.x / 2, paddleY, paddleZ);
+                if (this.scoreMesh && playerUsingVR) {
+                    this.scoreMesh.position = new Vector3(sceneStartInfos.playCubeSize.x / 2, paddleY, paddleZ);
+                }
+                this.scoreMesh
             } else if (this.playerNumber == 2) {
                 let paddleY, paddleZ;
                 if (this.contrPosR.y + sceneStartInfos.playerPaddleSize.h / 2 > sceneStartInfos.playCubeSize.y) {
@@ -519,6 +520,9 @@ class Player implements PlayerData {
                     paddleZ = this.contrPosR.z;
                 }
                 this.paddle.position = new Vector3(-sceneStartInfos.playCubeSize.x / 2, paddleY, paddleZ);
+                if (this.scoreMesh && playerUsingVR) {
+                    this.scoreMesh.position = new Vector3(-sceneStartInfos.playCubeSize.x / 2, paddleY, paddleZ);
+                }
             } else if (this.playerNumber == 3) {
                 let paddleY, paddleX;
                 if (this.contrPosR.y + sceneStartInfos.playerPaddleSize.h / 2 > sceneStartInfos.playCubeSize.y) {
@@ -536,6 +540,9 @@ class Player implements PlayerData {
                     paddleX = this.contrPosR.x;
                 }
                 this.paddle.position = new Vector3(paddleX, paddleY, sceneStartInfos.playCubeSize.z / 2);
+                if (this.scoreMesh && playerUsingVR) {
+                    this.scoreMesh.position = new Vector3(paddleX, paddleY, sceneStartInfos.playCubeSize.z / 2);
+                }
             } else if (this.playerNumber == 4) {
                 let paddleY, paddleX;
                 if (this.contrPosR.y + sceneStartInfos.playerPaddleSize.h / 2 > sceneStartInfos.playCubeSize.y) {
@@ -553,6 +560,9 @@ class Player implements PlayerData {
                     paddleX = this.contrPosR.x;
                 }
                 this.paddle.position = new Vector3(paddleX, paddleY, -sceneStartInfos.playCubeSize.z / 2);
+                if (this.scoreMesh && playerUsingVR) {
+                    this.scoreMesh.position = new Vector3(paddleX, paddleY, -sceneStartInfos.playCubeSize.z / 2);
+                }
             }
         }
     }
@@ -946,19 +956,19 @@ socket.on('startClientGame', (newSocketPlayer) => {
         if (playerWall) {
             playerWall.isVisible = false;
         }
-        let playerScore = scene.getMeshByName(`player${playerList[playerID].playerNumber}ScoreMesh`) as Mesh;
-        if (playerScore) {
-            playerScore.isVisible = true;
-            if (clientPlayer.playerNumber == 1) {
-                playerScore.position = new Vector3(sceneStartInfos.playCubeSize.x / 2, sceneStartInfos.playCubeSize.y - 0.1, sceneStartInfos.playCubeSize.z / 2 - 0.1);
-            } else if (clientPlayer.playerNumber == 2) {
-                playerScore.position = new Vector3(-(sceneStartInfos.playCubeSize.x / 2), sceneStartInfos.playCubeSize.y - 0.1, -(sceneStartInfos.playCubeSize.z / 2) + 0.1);
-            } else if (clientPlayer.playerNumber == 3) {
-                playerScore.position = new Vector3(-(sceneStartInfos.playCubeSize.x / 2) + 0.1, sceneStartInfos.playCubeSize.y - 0.1, sceneStartInfos.playCubeSize.z / 2);
-            } else if (clientPlayer.playerNumber == 4) {
-                playerScore.position = new Vector3((sceneStartInfos.playCubeSize.x / 2) - 0.1, sceneStartInfos.playCubeSize.y - 0.1, -(sceneStartInfos.playCubeSize.z / 2));
-            }
-        }
+        // let playerScore = scene.getMeshByName(`player${playerList[playerID].playerNumber}ScoreMesh`) as Mesh;
+        // if (playerScore) {
+        //     playerScore.isVisible = true;
+        //     if (clientPlayer.playerNumber == 1) {
+        //         playerScore.position = new Vector3(sceneStartInfos.playCubeSize.x / 2, sceneStartInfos.playCubeSize.y - 0.1, sceneStartInfos.playCubeSize.z / 2 - 0.1);
+        //     } else if (clientPlayer.playerNumber == 2) {
+        //         playerScore.position = new Vector3(-(sceneStartInfos.playCubeSize.x / 2), sceneStartInfos.playCubeSize.y - 0.1, -(sceneStartInfos.playCubeSize.z / 2) + 0.1);
+        //     } else if (clientPlayer.playerNumber == 3) {
+        //         playerScore.position = new Vector3(-(sceneStartInfos.playCubeSize.x / 2) + 0.1, sceneStartInfos.playCubeSize.y - 0.1, sceneStartInfos.playCubeSize.z / 2);
+        //     } else if (clientPlayer.playerNumber == 4) {
+        //         playerScore.position = new Vector3((sceneStartInfos.playCubeSize.x / 2) - 0.1, sceneStartInfos.playCubeSize.y - 0.1, -(sceneStartInfos.playCubeSize.z / 2));
+        //     }
+        // }
 
         // Spawn yourself Entity
         addPlayer(playerList[playerID], true);
@@ -990,10 +1000,10 @@ socket.on('newPlayer', (newPlayer) => {
     if (playerWall) {
         playerWall.isVisible = false;
     }
-    let playerScore = scene.getMeshByName(`player${playerList[newPlayer.id].playerNumber}ScoreMesh`) as Mesh;
-    if (playerScore) {
-        playerScore.isVisible = true;
-    }
+    // let playerScore = scene.getMeshByName(`player${playerList[newPlayer.id].playerNumber}ScoreMesh`) as Mesh;
+    // if (playerScore) {
+    //     playerScore.isVisible = true;
+    // }
 
     // set the availability of the start buttons according to the used startpositions on the server
     if (!startButtons[newPlayer.playerNumber].classList.contains('unavailable')) {
@@ -1043,8 +1053,11 @@ socket.on('scoreUpdate', (scoredPlayerID, newScore) => {
 
 // update the score gui element for the specific player
 function updatePlayerScore(scoredPlayerID: string, newScore: number) {
-    if (guiElements[`score${playerList[scoredPlayerID].playerNumber}Label`]) {
-        guiElements[`score${playerList[scoredPlayerID].playerNumber}Label`].text = newScore.toString();
+    // if (guiElements[`score${playerList[scoredPlayerID].playerNumber}Label`]) {
+    //     guiElements[`score${playerList[scoredPlayerID].playerNumber}Label`].text = newScore.toString();
+    // }
+    if (guiElements[`player${playerList[scoredPlayerID].playerNumber}_scoreLabel`]) {
+        guiElements[`player${playerList[scoredPlayerID].playerNumber}_scoreLabel`].text = newScore.toString();
     }
 }
 
@@ -1072,14 +1085,14 @@ function setStartButtonColor(startPositions: { [key: number]: PlayerStartInfo })
 function setPlayerAvailability(startPositions: { [key: number]: PlayerStartInfo }) {
     for (let i = 1; i <= Object.keys(startButtons).length; i++) {
         let playerWall = scene.getMeshByName(`player${i}Wall`) as Mesh;
-        let playerScoreMesh = scene.getMeshByName(`player${i}ScoreMesh`) as Mesh;
+        // let playerScoreMesh = scene.getMeshByName(`player${i}ScoreMesh`) as Mesh;
         if (startPositions[i].used == true) {
             if (playerWall) {
                 playerWall.isVisible = false;
             }
-            if (playerScoreMesh) {
-                playerScoreMesh.isVisible = true;
-            }
+            // if (playerScoreMesh) {
+            //     playerScoreMesh.isVisible = true;
+            // }
             if (!startButtons[i].classList.contains('unavailable')) {
                 startButtons[i].classList.add('unavailable');
             }
@@ -1094,9 +1107,9 @@ function setPlayerAvailability(startPositions: { [key: number]: PlayerStartInfo 
             if (playerWall) {
                 playerWall.isVisible = true;
             }
-            if (playerScoreMesh) {
-                playerScoreMesh.isVisible = false;
-            }
+            // if (playerScoreMesh) {
+            //     playerScoreMesh.isVisible = false;
+            // }
             if (startButtons[i].classList.contains('unavailable')) {
                 startButtons[i].classList.remove('unavailable');
             }
@@ -1123,8 +1136,8 @@ function addPlayer(player: Player, isPlayer: boolean) {
     player.headObj.scaling = new Vector3(headScaling, headScaling, headScaling);
     player.headObj.position = new Vector3(player.position.x, player.position.y, player.position.z);
     player.headObj.rotation = new Vector3(player.rotation.x, player.rotation.y, player.rotation.z);
-    player.headObj.material = new StandardMaterial('mat_' + player.playerNumber, scene);
-    (player.headObj.material as StandardMaterial).emissiveColor = Color3.FromHexString(player.color);
+    player.headObj.material = new PBRMaterial('mat_' + player.playerNumber, scene);
+    (player.headObj.material as PBRMaterial).emissiveColor = Color3.FromHexString(player.color);
     player.headObj.material.alpha = 0.1;
 
     if (isPlayer) {
@@ -1162,6 +1175,36 @@ function addPlayer(player: Player, isPlayer: boolean) {
     player.paddle.position = new Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
     player.paddle.material = player.controllerR.material;
 
+    // add the score Mesh to the player
+    player.scoreMesh = MeshBuilder.CreatePlane(`player${player.playerNumber}_scoreMesh`, { size: 1 }, scene);
+    if (playerUsingVR) {
+        player.scoreMesh.position = new Vector3(player.contrPosR.x, player.contrPosR.y, -sceneStartInfos.playCubeSize.z / 2);
+    } else {
+        if (player.playerNumber == 1) {
+            player.scoreMesh.position = new Vector3(sceneStartInfos.playCubeSize.x / 2, sceneStartInfos.playCubeSize.y / 2, 0);
+        } else if (player.playerNumber == 2) {
+            player.scoreMesh.position = new Vector3(-(sceneStartInfos.playCubeSize.x / 2), sceneStartInfos.playCubeSize.y / 2, 0);
+        } else if (player.playerNumber == 3) {
+            player.scoreMesh.position = new Vector3(0, sceneStartInfos.playCubeSize.y / 2, (sceneStartInfos.playCubeSize.z / 2));
+        } else if (player.playerNumber == 4) {
+            player.scoreMesh.position = new Vector3(0, sceneStartInfos.playCubeSize.y / 2, -(sceneStartInfos.playCubeSize.z / 2));
+        }
+    }
+    player.scoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+
+    var playerScoreTex = GUI.AdvancedDynamicTexture.CreateForMesh(player.scoreMesh);
+    // Player Score
+    var scoreRect = new GUI.Rectangle();
+    scoreRect.thickness = 0;
+    playerScoreTex.addControl(scoreRect);
+    var scoreLabel = new GUI.TextBlock();
+    scoreLabel.fontFamily = "loadedFont";
+    scoreLabel.text = "0";
+    scoreLabel.color = player.color;
+    scoreLabel.fontSize = 100;
+    scoreRect.addControl(scoreLabel);
+    // add to guiElements
+    guiElements[`player${player.playerNumber}_scoreLabel`] = scoreLabel;
 
     player.headObj.isVisible = false;
     player.controllerL.isVisible = false;
@@ -1171,6 +1214,7 @@ function addPlayer(player: Player, isPlayer: boolean) {
     playerList[player.id].controllerR = player.controllerR;
     playerList[player.id].controllerL = player.controllerL;
     playerList[player.id].paddle = player.paddle;
+    playerList[player.id].scoreMesh = player.scoreMesh;
 }
 
 socket.on('ballBounce', (whichPlayer: number, isPaddle: boolean) => {
@@ -1207,26 +1251,27 @@ socket.on('playerDisconnected', (id) => {
         disconnectedPlayer.controllerR?.dispose();
         disconnectedPlayer.controllerL?.dispose();
         disconnectedPlayer.paddle?.dispose();
+        disconnectedPlayer.scoreMesh?.dispose();
 
         let playerWall = scene.getMeshByName(`player${disconnectedPlayer.playerNumber}Wall`) as Mesh;
         if (playerWall) {
             playerWall.isVisible = true;
         }
-        let playerScore = scene.getMeshByName(`player${disconnectedPlayer.playerNumber}ScoreMesh`) as Mesh;
-        if (playerScore) {
-            playerScore.isVisible = false;
+        // let playerScore = scene.getMeshByName(`player${disconnectedPlayer.playerNumber}ScoreMesh`) as Mesh;
+        // if (playerScore) {
+        //     playerScore.isVisible = false;
 
-            // player score back to normal position
-            if (disconnectedPlayer.playerNumber == 1) {
-                playerScore.position = new Vector3((sceneStartInfos.playCubeSize.x / 2), sceneStartInfos.playCubeSize.x / 2, 0);
-            } else if (disconnectedPlayer.playerNumber == 2) {
-                playerScore.position = new Vector3(-(sceneStartInfos.playCubeSize.x / 2), sceneStartInfos.playCubeSize.x / 2, 0);
-            } else if (disconnectedPlayer.playerNumber == 3) {
-                playerScore.position = new Vector3(0, sceneStartInfos.playCubeSize.x / 2, (sceneStartInfos.playCubeSize.z / 2));
-            } else if (disconnectedPlayer.playerNumber == 4) {
-                playerScore.position = new Vector3(0, sceneStartInfos.playCubeSize.x / 2, -(sceneStartInfos.playCubeSize.z / 2));
-            }
-        }
+        //     // player score back to normal position
+        //     if (disconnectedPlayer.playerNumber == 1) {
+        //         playerScore.position = new Vector3((sceneStartInfos.playCubeSize.x / 2), sceneStartInfos.playCubeSize.x / 2, 0);
+        //     } else if (disconnectedPlayer.playerNumber == 2) {
+        //         playerScore.position = new Vector3(-(sceneStartInfos.playCubeSize.x / 2), sceneStartInfos.playCubeSize.x / 2, 0);
+        //     } else if (disconnectedPlayer.playerNumber == 3) {
+        //         playerScore.position = new Vector3(0, sceneStartInfos.playCubeSize.x / 2, (sceneStartInfos.playCubeSize.z / 2));
+        //     } else if (disconnectedPlayer.playerNumber == 4) {
+        //         playerScore.position = new Vector3(0, sceneStartInfos.playCubeSize.x / 2, -(sceneStartInfos.playCubeSize.z / 2));
+        //     }
+        // }
 
         // set the availability of the start buttons according to the used startpositions on the server
         if (startButtons[disconnectedPlayer.playerNumber].classList.contains('unavailable')) {
