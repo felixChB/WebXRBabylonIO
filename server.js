@@ -11,11 +11,11 @@ import { start } from "repl";
 const port = process.env.PORT || 3000;
 
 ////////////// CHANGE THIS TO YOUR LOCAL IP ADDRESS ///////////////////
-const ipAdress = '192.168.178.156'; // for local network // Desktop
+// const ipAdress = '192.168.178.156'; // for local network // Desktop
 // const ipAdress = '192.168.1.163'; // for local network // Router
 
 // const ipAdress = '192.168.200.6'; //wlan fuwa
-//const ipAdress = '192.168.1.188'; // Router
+const ipAdress = '192.168.1.188'; // Router
 ///////////////////////////////////////////////////////////////////////
 
 const app = express();
@@ -82,8 +82,8 @@ let serverStartTime;
 
 // Game Variables
 const maxPlayers = 4;
-const playCubeSize = { x: 2.5, y: 2, z: 2.5 }; // the size of the player cube in meters
-const playerAreaDepth = 1.5; // the depth of the player area in the z direction in meters
+const playCubeSize = { x: 1.5, y: 2, z: 1.5 }; // the size of the player cube in meters
+const playerAreaDepth = 1; // the depth of the player area in the z direction in meters
 const ballStartSpeed = 0.02;
 const playerPaddleSize = { h: 0.2, w: 0.4 }; // the size of the player plane in meters
 const ballStartColor = '#ffffff';
@@ -257,7 +257,6 @@ setInterval(function () {
         // Always bounce the ball off the top and bottom
         if (ball.position.y + ball.size > playCubeSize.y || ball.position.y - ball.size < 0) {
             ball.velocity.y *= -1;  // Reverse Y velocity
-            //changeBallColor();
         }
 
         // Bounce the ball of the wall if there is no player
@@ -265,6 +264,12 @@ setInterval(function () {
             if (ball.position.x + ball.size > playCubeSize.x / 2) {
                 ball.velocity.x *= -1;  // Reverse X velocity
                 ballBounce(1, false);
+                // Object.keys(playerList).forEach((key) => {
+                //     if (playerList[key].playerNumber == 1) {
+                //         playerList[key].score += 1;
+                //         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
+                //     }
+                // });
             }
         }
         if (playerStartInfos[2].used == false) {
@@ -314,8 +319,8 @@ setInterval(function () {
                     clampedPaddlePos.z - playerPaddleSize.w / 2 <= ball.position.z + ball.size && ball.position.z - ball.size <= clampedPaddlePos.z + playerPaddleSize.w / 2 &&
                     clampedPaddlePos.y - playerPaddleSize.h / 2 <= ball.position.y + ball.size && ball.position.y - ball.size <= clampedPaddlePos.y + playerPaddleSize.h / 2) {
                     if (ball.velocity.x >= 0) {
-                        ball.velocity.x *= -1;  // Reverse X velocity
-                        // calculateBallBounce(clampedPaddlePos, playerList[key].playerNumber);
+                        // ball.velocity.x *= -1;  // Reverse X velocity
+                        calculateBallBounce(clampedPaddlePos, playerList[key].playerNumber);
 
                         playerList[key].score += 1;
                         ballBounce(1, true);
@@ -506,9 +511,9 @@ function startClientGame(newPlayer, socket) {
     });
 
     // Test color change for connection
-    socket.on('clicked', (playerColor) => {
-        changeBallColor(playerColor);
-    });
+    // socket.on('clicked', (playerColor) => {
+    //     changeBallColor(playerColor);
+    // });
 
     socket.on('testClick', (id) => {
         playerList[id].score += 1;
@@ -516,16 +521,11 @@ function startClientGame(newPlayer, socket) {
     });
 };
 
-function changeBallColor(playerColor) {
-    // if (activeColor == color1) {
-    //     activeColor = color2;
-    // } else {
-    //     activeColor = color1;
-    // }
-    activeColor = playerColor;
+// function changeBallColor(playerColor) {
+//     activeColor = playerColor;
 
-    io.emit('colorChanged', activeColor);
-}
+//     io.emit('colorChanged', activeColor);
+// }
 
 function getRandomNumber(min, max) {
     const num = Math.random() * (max - min) + min;
@@ -542,7 +542,7 @@ function resetGame() {
     ball.velocity = getNormalizedVector({ x: getRandomNumber(0.5, 2), y: getRandomNumber(0.5, 1), z: getRandomNumber(0.5, 2) });
     ball.speed = ballStartSpeed;
     ball.color = ballStartColor;
-    changeBallColor(ballStartColor);
+    // changeBallColor(ballStartColor);
 }
 
 function calculateBallBounce(contrRPos, playerNumber) {
@@ -629,7 +629,7 @@ function calculateBallBounce(contrRPos, playerNumber) {
 
 function ballBounce(playerNumber, isPaddle) {
     if (isPaddle == true) {
-        changeBallColor(playerStartInfos[playerNumber].color);
+        // changeBallColor(playerStartInfos[playerNumber].color);
         // make the Ball faster, if the ball hits a paddle
         ball.speed += 0.0001;
     }

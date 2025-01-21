@@ -107,11 +107,11 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
         mainTextureFixedSize: 1024,
         blurKernelSize: 64,
     });
-    gl.intensity = 0.8;
+    gl.intensity = 0.5;
 
     // Meshes --------------------------------------------------------------------------------------
 
-    let edgeWidth = 0.2;
+    let edgeWidth = 0.3;
 
     var ballSphere = MeshBuilder.CreateSphere('ballSphere', { diameter: 2, segments: 32 }, scene);
     ballSphere.position = new Vector3(ballStartPos.x, ballStartPos.y, ballStartPos.z);
@@ -301,18 +301,23 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
 
     // Materials --------------------------------------------------------------------------------------
 
-    var wireframeTexture = new Texture('./assets/figma_grid_thin_white.png', scene);
+    var wireframeTexture = new Texture('./assets/figma_grid_wireframe_white.png', scene);
     wireframeTexture.uScale = 1;
     wireframeTexture.vScale = 1;
+    wireframeTexture.hasAlpha = true;
     // const simpleGridTexture = new Texture('./assets/figma_grid_wireframe_blue.png', scene);
 
     var wireframeMat = new StandardMaterial('wireframeMat', scene);
     wireframeMat.roughness = 1;
     wireframeMat.diffuseTexture = wireframeTexture;
-    wireframeMat.emissiveTexture = wireframeTexture;
     wireframeMat.diffuseTexture.hasAlpha = true;
+    wireframeMat.emissiveTexture = wireframeTexture;
+    wireframeMat.emissiveTexture.hasAlpha = true;
     wireframeMat.useAlphaFromDiffuseTexture = true;
     wireframeMat.backFaceCulling = false;
+    wireframeMat.emissiveColor = Color3.Red();
+    wireframeMat.diffuseColor = Color3.FromHexString('#ffffff');
+    wireframeMat.alpha = 0.5;
 
     var playBoxMat = new StandardMaterial('playBoxMat', scene);
     playBoxMat.diffuseColor = Color3.FromHexString('#ffffff');
@@ -323,9 +328,6 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     ballMaterial.emissiveColor = Color3.FromHexString(ballColor);
     ballMaterial.metallic = 0;
     ballMaterial.emissiveIntensity = 10;
-
-    var staticBlocksMat = new StandardMaterial('staticBlocksMat', scene);
-    staticBlocksMat.diffuseColor = Color3.FromHexString('#f7b705');
 
     var playerStartMat = new PBRMaterial('playerStartMat', scene);
     playerStartMat.albedoColor = Color3.FromHexString('#2b2b2b');
@@ -353,9 +355,11 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
         let playerWall = scene.getMeshByName(`player${i}Wall`) as Mesh;
         if (playerGround) {
             playerGround.material = playerStartMat;
+            // playerGround.material = wireframeMat;
         }
         if (playerWall) {
             playerWall.material = playerWallMat;
+            // playerWall.material = wireframeMat;
         }
     }
 
@@ -852,29 +856,29 @@ socket.on('startClientGame', (newSocketPlayer) => {
                     let squeezeComponent = motionController.getComponent(xrIDs[1]);//xr-standard-squeeze
                     squeezeComponent.onButtonStateChangedObservable.add(() => {
                         if (squeezeComponent.pressed) {
-                            socket.emit('clicked', playerList[playerID].color);
+                            // socket.emit('clicked', playerList[playerID].color);
                         }
                     });
 
                     let thumbstickComponent = motionController.getComponent(xrIDs[2]);//xr-standard-thumbstick
                     thumbstickComponent.onButtonStateChangedObservable.add(() => {
                         if (thumbstickComponent.pressed) {
-                            socket.emit('clicked', playerList[playerID].color);
-                            debugTestclick();
+                            // socket.emit('clicked', playerList[playerID].color);
+                            // debugTestclick();
                         }
                     });
 
                     let xbuttonComponent = motionController.getComponent(xrIDs[3]);//x-button
                     xbuttonComponent.onButtonStateChangedObservable.add(() => {
                         if (xbuttonComponent.pressed) {
-                            socket.emit('clicked', playerList[playerID].color);
+                            // socket.emit('clicked', playerList[playerID].color);
                         }
                     });
 
                     let ybuttonComponent = motionController.getComponent(xrIDs[4]);//y-button
                     ybuttonComponent.onButtonStateChangedObservable.add(() => {
                         if (ybuttonComponent.pressed) {
-                            socket.emit('clicked', playerList[playerID].color);
+                            // socket.emit('clicked', playerList[playerID].color);
                         }
                     });
                 }
@@ -895,29 +899,29 @@ socket.on('startClientGame', (newSocketPlayer) => {
                     let squeezeComponent = motionController.getComponent(xrIDs[1]);//xr-standard-squeeze
                     squeezeComponent.onButtonStateChangedObservable.add(() => {
                         if (squeezeComponent.pressed) {
-                            socket.emit('clicked', playerList[playerID].color);
+                            // socket.emit('clicked', playerList[playerID].color);
                         }
                     });
 
                     let thumbstickComponent = motionController.getComponent(xrIDs[2]);//xr-standard-thumbstick
                     thumbstickComponent.onButtonStateChangedObservable.add(() => {
                         if (thumbstickComponent.pressed) {
-                            socket.emit('clicked', playerList[playerID].color);
-                            debugTestclick();
+                            // socket.emit('clicked', playerList[playerID].color);
+                            // debugTestclick();
                         }
                     });
 
                     let abuttonComponent = motionController.getComponent(xrIDs[3]);//a-button
                     abuttonComponent.onButtonStateChangedObservable.add(() => {
                         if (abuttonComponent.pressed) {
-                            socket.emit('clicked', playerList[playerID].color);
+                            // socket.emit('clicked', playerList[playerID].color);
                         }
                     });
 
                     let bbuttonComponent = motionController.getComponent(xrIDs[4]);//b-button
                     bbuttonComponent.onButtonStateChangedObservable.add(() => {
                         if (bbuttonComponent.pressed) {
-                            socket.emit('clicked', playerList[playerID].color);
+                            // socket.emit('clicked', playerList[playerID].color);
                         }
                     });
                 }
@@ -1167,31 +1171,31 @@ function addPlayer(player: Player, isPlayer: boolean) {
     playerList[player.id].paddle = player.paddle;
 }
 
-// socket.on('ballBounce', (whichPlayer: number, isPaddle: boolean) => {
+socket.on('ballBounce', (whichPlayer: number, isPaddle: boolean) => {
 
-//     Object.keys(playerList).forEach((id) => {
-//         if (playerList[id].playerNumber == whichPlayer) {
-//             if (isPaddle) {
+    Object.keys(playerList).forEach((id) => {
+        if (playerList[id].playerNumber == whichPlayer) {
+            if (isPaddle) {
 
-//                 (playerList[id].paddle?.material as StandardMaterial).emissiveColor = Color3.White();
-//                 //(playerList[id].paddle?.material as StandardMaterial).emissiveColor = darkenColor3(Color3.FromHexString(playerList[id].color), 1.5);
-//                 setTimeout(function () {
-//                     (playerList[id].paddle?.material as StandardMaterial).emissiveColor = Color3.FromHexString(playerList[id].color);
-//                 }, 150);
-//             }
-//         }
-//     });
+                (playerList[id].paddle?.material as StandardMaterial).emissiveColor = Color3.White();
+                //(playerList[id].paddle?.material as StandardMaterial).emissiveColor = darkenColor3(Color3.FromHexString(playerList[id].color), 1.5);
+                setTimeout(function () {
+                    (playerList[id].paddle?.material as StandardMaterial).emissiveColor = Color3.FromHexString(playerList[id].color);
+                }, 150);
+            }
+        }
+    });
 
-//     (scene.getMeshByName(`player${whichPlayer}Wall`) as Mesh).material;
+    (scene.getMeshByName(`player${whichPlayer}Wall`) as Mesh).material;
 
-//     if (!isPaddle) {
+    if (!isPaddle) {
 
-//         (scene.getMeshByName(`player${whichPlayer}Wall`) as Mesh).material = scene.getMaterialByName('wallBounceMat') as StandardMaterial;
-//         setTimeout(function () {
-//             (scene.getMeshByName(`player${whichPlayer}Wall`) as Mesh).material = scene.getMaterialByName('playerWallMat') as StandardMaterial;
-//         }, 150);
-//     }
-// });
+        (scene.getMeshByName(`player${whichPlayer}Wall`) as Mesh).material = scene.getMaterialByName('wallBounceMat') as StandardMaterial;
+        setTimeout(function () {
+            (scene.getMeshByName(`player${whichPlayer}Wall`) as Mesh).material = scene.getMaterialByName('playerWallMat') as StandardMaterial;
+        }, 150);
+    }
+});
 
 socket.on('playerDisconnected', (id) => {
     const disconnectedPlayer = playerList[id];
@@ -1260,31 +1264,26 @@ window.addEventListener('keydown', function (event) {
     }
 });
 
-document.addEventListener('click', () => {
-    if (playerUsingVR) {
-        socket.emit('clicked', playerList[playerID].color);
-    }
-});
+// document.addEventListener('click', () => {
+//     if (playerUsingVR) {
+//         socket.emit('clicked', playerList[playerID].color);
+//     }
+// });
 
-socket.on('colorChanged', (color) => {
+// socket.on('colorChanged', (color) => {
 
-    console.log('Color Changed to: ', color);
-    // change color of the sphere
-    // let ballMaterial = scene.getMaterialByName('ballMaterial') as PBRMaterial;
-    // ballMaterial.emissiveColor = Color3.FromHexString(color);
+//     // console.log('Color Changed to: ', color);
+//     // change color of the sphere
+//     let ballMaterial = scene.getMaterialByName('ballMaterial') as PBRMaterial;
+//     ballMaterial.emissiveColor = Color3.FromHexString(color);
 
-    // let ballParticleSystem = scene.getParticleSystemById('ballParticles');
-    // if (ballParticleSystem) {
-    //     ballParticleSystem.color1 = Color4.FromHexString(color);
-    //     ballParticleSystem.color2 = darkenColor4(Color4.FromHexString(color), 0.5);
-    // }
-});
+// });
 
-function debugTestclick() {
-    socket.emit('testClick', playerID);
-    console.log('XRCam Rotation Quat: ', xrCamera?.rotationQuaternion);
-    console.log('XRCam Rotation: ', xrCamera?.rotationQuaternion.toEulerAngles());
-}
+// function debugTestclick() {
+//     socket.emit('testClick', playerID);
+//     console.log('XRCam Rotation Quat: ', xrCamera?.rotationQuaternion);
+//     console.log('XRCam Rotation: ', xrCamera?.rotationQuaternion.toEulerAngles());
+// }
 
 ////////////////////////// END TESTING GROUND //////////////////////////////            
 
