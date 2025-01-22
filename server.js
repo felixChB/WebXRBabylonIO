@@ -254,8 +254,13 @@ setInterval(function () {
 
         // Bounce off walls --------------------------------------------------------------------------------------
         // Always bounce the ball off the top and bottom
-        if (ball.position.y + ball.size > playCubeSize.y || ball.position.y - ball.size < 0) {
+        if (ball.position.y + ball.size > playCubeSize.y) {
             ball.velocity.y *= -1;  // Reverse Y velocity
+            ballBounce(5, false);
+        }
+        if (ball.position.y - ball.size < 0) {
+            ball.velocity.y *= -1;  // Reverse Y velocity
+            ballBounce(6, false);
         }
 
         // Bounce the ball of the wall if there is no player
