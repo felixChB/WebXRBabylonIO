@@ -1166,6 +1166,7 @@ function addPlayer(player: Player, isPlayer: boolean) {
     (player.headObj.material as PBRMaterial).emissiveColor = Color3.FromHexString(player.color);
     player.headObj.material.alpha = 0.2;
     (player.headObj.material as PBRMaterial).disableLighting = true;
+    player.headObj.material.backFaceCulling = false;
 
     if (isPlayer) {
         player.headObj.isVisible = false;
