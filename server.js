@@ -254,18 +254,18 @@ setInterval(function () {
 
         // Bounce off walls --------------------------------------------------------------------------------------
         // Always bounce the ball off the top and bottom
-        if (ball.position.y + ball.size > playCubeSize.y) {
+        if (ball.position.y + ball.size >= playCubeSize.y) {
             ball.velocity.y *= -1;  // Reverse Y velocity
             ballBounce(5, false);
         }
-        if (ball.position.y - ball.size < 0) {
+        if (ball.position.y - ball.size <= 0) {
             ball.velocity.y *= -1;  // Reverse Y velocity
             ballBounce(6, false);
         }
 
         // Bounce the ball of the wall if there is no player
         if (playerStartInfos[1].used == false) {
-            if (ball.position.x + ball.size > playCubeSize.x / 2) {
+            if (ball.position.x + ball.size >= playCubeSize.x / 2) {
                 ball.velocity.x *= -1;  // Reverse X velocity
                 ballBounce(1, false);
                 // Object.keys(playerList).forEach((key) => {
@@ -277,19 +277,19 @@ setInterval(function () {
             }
         }
         if (playerStartInfos[2].used == false) {
-            if (ball.position.x - ball.size < -playCubeSize.x / 2) {
+            if (ball.position.x - ball.size <= -playCubeSize.x / 2) {
                 ball.velocity.x *= -1;  // Reverse X velocity
                 ballBounce(2, false);
             }
         }
         if (playerStartInfos[3].used == false) {
-            if (ball.position.z + ball.size > playCubeSize.z / 2) {
+            if (ball.position.z + ball.size >= playCubeSize.z / 2) {
                 ball.velocity.z *= -1;  // Reverse Z velocity
                 ballBounce(3, false);
             }
         }
         if (playerStartInfos[4].used == false) {
-            if (ball.position.z - ball.size < -playCubeSize.z / 2) {
+            if (ball.position.z - ball.size <= -playCubeSize.z / 2) {
                 ball.velocity.z *= -1;  // Reverse Z velocity
                 ballBounce(4, false);
             }
@@ -575,7 +575,7 @@ function calculateBallBounce(contrRPos, playerNumber) {
     // constant speed (should always be 1)
     const velocitySpeedCheck = Math.sqrt(ball.velocity.x ** 2 + ball.velocity.y ** 2 + ball.velocity.z ** 2);
     const velocitySpeed = 1;
-    // console.log('velocitySpeedCheck: ' + velocitySpeedCheck);
+    console.log('velocitySpeedCheck: ' + velocitySpeedCheck);
 
     let impactZ, impactX;
     let bounceAngleZ, bounceAngleX;
@@ -600,9 +600,9 @@ function calculateBallBounce(contrRPos, playerNumber) {
         ballBounceVelocity.z = velocitySpeed * Math.sin(bounceAngleZ);
 
         if (playerNumber == 1) { // negative x direction for player 1
-            ballBounceVelocity.x = -Math.sqrt(Math.max(0.01, velocitySpeed ** 2 - ballBounceVelocity.z ** 2 - ballBounceVelocity.y ** 2)); // Adjust depth velocity to maintain speed
+            ballBounceVelocity.x = -Math.sqrt(Math.max(0.09, velocitySpeed ** 2 - ballBounceVelocity.z ** 2 - ballBounceVelocity.y ** 2)); // Adjust depth velocity to maintain speed
         } else if (playerNumber == 2) { // positive x direction for player 2
-            ballBounceVelocity.x = Math.sqrt(Math.max(0.01, velocitySpeed ** 2 - ballBounceVelocity.z ** 2 - ballBounceVelocity.y ** 2)); // Adjust depth velocity to maintain speed
+            ballBounceVelocity.x = Math.sqrt(Math.max(0.09, velocitySpeed ** 2 - ballBounceVelocity.z ** 2 - ballBounceVelocity.y ** 2)); // Adjust depth velocity to maintain speed
         }
     } else if (playerNumber == 3 || playerNumber == 4) {
         impactX = 2 * (((ball.position.x - contrRPos.x) - ballPaddleMinDistW) / (ballPaddleMaxDistW - ballPaddleMinDistW)) - 1;  // [-1, 1]
@@ -613,28 +613,31 @@ function calculateBallBounce(contrRPos, playerNumber) {
         ballBounceVelocity.x = velocitySpeed * Math.sin(bounceAngleX);
 
         if (playerNumber == 3) { // negative z direction for player 3
-            ballBounceVelocity.z = -Math.sqrt(Math.max(0.01, velocitySpeed ** 2 - ballBounceVelocity.x ** 2 - ballBounceVelocity.y ** 2)); // Adjust depth velocity to maintain speed
+            ballBounceVelocity.z = -Math.sqrt(Math.max(0.09, velocitySpeed ** 2 - ballBounceVelocity.x ** 2 - ballBounceVelocity.y ** 2)); // Adjust depth velocity to maintain speed
         } else if (playerNumber == 4) { // positive z direction for player 4
-            ballBounceVelocity.z = Math.sqrt(Math.max(0.01, velocitySpeed ** 2 - ballBounceVelocity.x ** 2 - ballBounceVelocity.y ** 2)); // Adjust depth velocity to maintain speed
+            ballBounceVelocity.z = Math.sqrt(Math.max(0.09, velocitySpeed ** 2 - ballBounceVelocity.x ** 2 - ballBounceVelocity.y ** 2)); // Adjust depth velocity to maintain speed
         }
     }
     // the fix with the Math.max(0.01, ...) is needed because sometimes the velocity is negative and the sqrt function can't handle negative values
     // so the velocity is set to 0.01 to avoid the error
     // this will affect the balls speed a little bit, but it is not noticeable and will fix itself after a view bounces
 
-    // if (playerNumber == 1) { // negative z direction for player 3
-    //     ballBounceVelocity.x *= -1; 
-    // } else if (playerNumber == 2) { // positive z direction for player 4
-    //     ballBounceVelocity.x *= -1; 
-    // } else if (playerNumber == 3) { // negative z direction for player 3
-    //     ballBounceVelocity.z *= -1; 
-    // } else if (playerNumber == 4) { // positive z direction for player 4
-    //     ballBounceVelocity.z *= -1; 
-    // }
+    let inOutBounce, middleVector;
+    if (playerNumber == 1 || playerNumber == 2) { // negative z direction for player 1 and 2
+        inOutBounce = ball.velocity.x * -1;
+        middleVector = { x: (ballBounceVelocity.x + inOutBounce), y: (ballBounceVelocity.y + ball.velocity.y), z: (ballBounceVelocity.z + ball.velocity.z) };
+    } else if (playerNumber == 3 || playerNumber == 4) { // negative z direction for player 3 and 4
+        inOutBounce = ball.velocity.z * -1;
+        middleVector = { x: (ballBounceVelocity.x + ball.velocity.x), y: (ballBounceVelocity.y + ball.velocity.y), z: (ballBounceVelocity.z + inOutBounce) };
+    }
 
     // take the middle vector between the normal bounce and the paddle bounce
     //let middleVector = { x: (ballBounceVelocity.x + ball.velocity.x), y: (ballBounceVelocity.y + ball.velocity.y), z: (ballBounceVelocity.z + ball.velocity.z) };
-    //ballBounceVelocity = getNormalizedVector(middleVector);
+    ballBounceVelocity = getNormalizedVector(middleVector);
+
+    console.log('Velocity X: ', ballBounceVelocity.x);
+
+    // ballBounceVelocity = getNormalizedVector(ballBounceVelocity);
 
     ball.velocity = ballBounceVelocity;
 }
