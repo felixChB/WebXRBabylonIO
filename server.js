@@ -11,11 +11,11 @@ import { start } from "repl";
 const port = process.env.PORT || 3000;
 
 ////////////// CHANGE THIS TO YOUR LOCAL IP ADDRESS ///////////////////
-// const ipAdress = '192.168.178.156'; // for local network // Desktop
+const ipAdress = '192.168.178.156'; // for local network // Desktop
 // const ipAdress = '192.168.1.163'; // for local network // Router
 
 // const ipAdress = '192.168.200.6'; //wlan fuwa
-const ipAdress = '192.168.1.188'; // Router
+// const ipAdress = '192.168.1.188'; // Router
 ///////////////////////////////////////////////////////////////////////
 
 const app = express();
@@ -39,10 +39,6 @@ app.get('/', (req, res) => {
 });
 
 app.use(express.static('.'));
-
-export class PlayerData {
-
-}
 
 export class Player {
     constructor(id, startData) {
@@ -80,16 +76,16 @@ let serverStartTime;
 // Game Variables
 const maxPlayers = 4;
 const playCubeSize = { x: 1.5, y: 2, z: 1.5 }; // the size of the player cube in meters
+const playCubeElevation = 0; // the elevation of the player cube in meters
 const playerAreaDepth = 1; // the depth of the player area in the z direction in meters
-const ballStartSpeed = 0.02;
 const playerPaddleSize = { h: 0.2, w: 0.4 }; // the size of the player plane in meters
-// const playerPaddleSize = { h: 0.8, w: 1.4 }; // the size of the player plane in meters
+const ballStartSpeed = 0.02;
 const ballStartColor = '#1f53ff';
 
 let activeColor = ballStartColor;
 
 let ball = {
-    position: { x: 0, y: playCubeSize.y / 2, z: 0 },
+    position: { x: 0, y: (playCubeSize.y / 2) - playCubeElevation, z: 0 },
     velocity: getNormalizedVector({ x: getRandomNumber(0.5, 2), y: getRandomNumber(0.5, 1), z: getRandomNumber(0.5, 2) }),
     speed: ballStartSpeed,
     size: 0.03,
@@ -98,11 +94,12 @@ let ball = {
 
 let sceneStartinfos = {
     playCubeSize: playCubeSize,
+    playCubeElevation: playCubeElevation,
     playerAreaDepth: playerAreaDepth,
+    playerPaddleSize: playerPaddleSize,
     ballSize: ball.size,
     ballStartPos: ball.position,
-    ballColor: ball.color,
-    playerPaddleSize: playerPaddleSize
+    ballColor: ball.color
 }
 
 let playgroundDistance = 1; // the distance from the player area to the wall in meters
@@ -260,8 +257,8 @@ setInterval(function () {
             ball.velocity.y *= -1;  // Reverse Y velocity
             ballBounce(5, false);
         }
-        if (ball.position.y - ball.size <= 0) {
-            ball.position.y = 0 + ball.size;
+        if (ball.position.y - ball.size <= playCubeElevation) {
+            ball.position.y = playCubeElevation + ball.size;
             ball.velocity.y *= -1;  // Reverse Y velocity
             ballBounce(6, false);
         }
@@ -304,8 +301,8 @@ setInterval(function () {
                 let paddleY, paddleZ;
                 if (playerList[key].contrPosR.y + playerPaddleSize.h / 2 > playCubeSize.y) {
                     paddleY = playCubeSize.y - playerPaddleSize.h / 2;
-                } else if (playerList[key].contrPosR.y - playerPaddleSize.h / 2 < 0) {
-                    paddleY = 0 + playerPaddleSize.h / 2;
+                } else if (playerList[key].contrPosR.y - playerPaddleSize.h / 2 < playCubeElevation) {
+                    paddleY = playCubeElevation + playerPaddleSize.h / 2;
                 } else {
                     paddleY = playerList[key].contrPosR.y;
                 }
@@ -337,8 +334,8 @@ setInterval(function () {
                 let paddleY, paddleZ;
                 if (playerList[key].contrPosR.y + playerPaddleSize.h / 2 > playCubeSize.y) {
                     paddleY = playCubeSize.y - playerPaddleSize.h / 2;
-                } else if (playerList[key].contrPosR.y - playerPaddleSize.h / 2 < 0) {
-                    paddleY = 0 + playerPaddleSize.h / 2;
+                } else if (playerList[key].contrPosR.y - playerPaddleSize.h / 2 < playCubeElevation) {
+                    paddleY = playCubeElevation + playerPaddleSize.h / 2;
                 } else {
                     paddleY = playerList[key].contrPosR.y;
                 }
@@ -369,8 +366,8 @@ setInterval(function () {
                 let paddleY, paddleX;
                 if (playerList[key].contrPosR.y + playerPaddleSize.h / 2 > playCubeSize.y) {
                     paddleY = playCubeSize.y - playerPaddleSize.h / 2;
-                } else if (playerList[key].contrPosR.y - playerPaddleSize.h / 2 < 0) {
-                    paddleY = 0 + playerPaddleSize.h / 2;
+                } else if (playerList[key].contrPosR.y - playerPaddleSize.h / 2 < playCubeElevation) {
+                    paddleY = playCubeElevation + playerPaddleSize.h / 2;
                 } else {
                     paddleY = playerList[key].contrPosR.y;
                 }
@@ -401,8 +398,8 @@ setInterval(function () {
                 let paddleY, paddleX;
                 if (playerList[key].contrPosR.y + playerPaddleSize.h / 2 > playCubeSize.y) {
                     paddleY = playCubeSize.y - playerPaddleSize.h / 2;
-                } else if (playerList[key].contrPosR.y - playerPaddleSize.h / 2 < 0) {
-                    paddleY = 0 + playerPaddleSize.h / 2;
+                } else if (playerList[key].contrPosR.y - playerPaddleSize.h / 2 < playCubeElevation) {
+                    paddleY = playCubeElevation + playerPaddleSize.h / 2;
                 } else {
                     paddleY = playerList[key].contrPosR.y;
                 }
@@ -480,8 +477,7 @@ setInterval(function () {
         }
     } else {
         // reset the ball if no player is in the game
-        if (ball.position.x != 0 && ball.position.y != playCubeSize.y / 2 && ball.position.z != 0) {
-            ball.position = { x: 0, y: playCubeSize.y / 2, z: 0 };
+        if (ball.position.x != 0 && ball.position.y != (playCubeSize.y / 2) - playCubeElevation && ball.position.z != 0) {
             resetGame();
         }
     }
@@ -550,7 +546,7 @@ function getNormalizedVector(vector) {
 }
 
 function resetGame() {
-    ball.position = { x: 0, y: playCubeSize.y / 2, z: 0 };
+    ball.position = { x: 0, y: (playCubeSize.y / 2) - playCubeElevation, z: 0 };
     ball.velocity = getNormalizedVector({ x: getRandomNumber(0.5, 2), y: getRandomNumber(0.5, 1), z: getRandomNumber(0.5, 2) });
     ball.speed = ballStartSpeed;
     ball.color = ballStartColor;

@@ -70,6 +70,7 @@ const scene = new Scene(engine);
 function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { [key: number]: PlayerStartInfo }) {
 
     let playCubeSize = sceneStartInfos.playCubeSize;
+    let playCubeElevation = sceneStartInfos.playCubeElevation;
     let playerAreaDepth = sceneStartInfos.playerAreaDepth;
     let ballSize = sceneStartInfos.ballSize;
     let ballStartPos = sceneStartInfos.ballStartPos;
@@ -83,7 +84,8 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
 
     const camera = new FreeCamera('Camera', new Vector3(0, 5, 0), scene);
     camera.rotation = new Vector3(Math.PI / 2, Math.PI, Math.PI / 4);
-    camera.detachControl();
+    //camera.detachControl();
+    camera.attachControl(true);
 
     scene.activeCamera = camera;
 
@@ -126,11 +128,18 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     var ground = MeshBuilder.CreateGround('ground', { width: 60, height: 60 }, scene);
 
     var playBox = MeshBuilder.CreateBox('playBox', { size: 1 }, scene);
-    playBox.position = new Vector3(0, playCubeSize.y / 2, 0);
-    playBox.scaling = new Vector3(playCubeSize.x, playCubeSize.y, playCubeSize.z);
+    playBox.position = new Vector3(0, (playCubeSize.y / 2) - playCubeElevation, 0);
+    playBox.scaling = new Vector3(playCubeSize.x, playCubeSize.y - playCubeElevation, playCubeSize.z);
     playBox.enableEdgesRendering();
     playBox.edgesWidth = edgeWidth;
     playBox.edgesColor = new Color4(1, 1, 1, 1);
+
+    var testBox = MeshBuilder.CreateBox('testBox', { size: 1 }, scene);
+    testBox.position = new Vector3(0, (playCubeSize.y / 2), 0);
+    testBox.scaling = new Vector3(playCubeSize.x, playCubeSize.y, playCubeSize.z);
+    testBox.enableEdgesRendering();
+    testBox.edgesWidth = edgeWidth;
+    testBox.edgesColor = new Color4(1, 0, 1, 1);
 
     // playBox.isVisible = false;
 
@@ -189,87 +198,10 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     topWall.scaling = new Vector3(playCubeSize.x, 0.01, playCubeSize.z);
 
     var bottomWall = MeshBuilder.CreateBox('player6Wall', { size: 1 }, scene);
-    bottomWall.position = new Vector3(0, 0, 0);
+    bottomWall.position = new Vector3(0, playCubeElevation, 0);
     bottomWall.scaling = new Vector3(playCubeSize.x, 0.01, playCubeSize.z);
 
-    // plane meshes for the player scores
-    // var player1ScoreMesh = MeshBuilder.CreatePlane("player1ScoreMesh", { size: 1 }, scene);
-    // player1ScoreMesh.position = new Vector3((playCubeSize.x / 2), playCubeSize.y / 2, 0);
-    // player1ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
-
-    // var player2ScoreMesh = MeshBuilder.CreatePlane('player2ScoreMesh', { size: 1 }, scene);
-    // player2ScoreMesh.position = new Vector3(-(playCubeSize.x / 2), playCubeSize.y / 2, 0);
-    // player2ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
-
-    // var player3ScoreMesh = MeshBuilder.CreatePlane('player3ScoreMesh', { size: 1 }, scene);
-    // player3ScoreMesh.position = new Vector3(0, playCubeSize.y / 2, (playCubeSize.z / 2));
-    // player3ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
-
-    // var player4ScoreMesh = MeshBuilder.CreatePlane('player4ScoreMesh', { size: 1 }, scene);
-    // player4ScoreMesh.position = new Vector3(0, playCubeSize.y / 2, -(playCubeSize.z / 2));
-    // player4ScoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
-
     // GUI --------------------------------------------------------------------------------------
-
-    // var player1ScoreTex = GUI.AdvancedDynamicTexture.CreateForMesh(player1ScoreMesh);
-    // var player2ScoreTex = GUI.AdvancedDynamicTexture.CreateForMesh(player2ScoreMesh);
-    // var player3ScoreTex = GUI.AdvancedDynamicTexture.CreateForMesh(player3ScoreMesh);
-    // var player4ScoreTex = GUI.AdvancedDynamicTexture.CreateForMesh(player4ScoreMesh);
-
-    // // Fullscreen UI (maybe for own score)
-    // // var advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
-
-    // // Player 1 Score
-    // var score1Rect = new GUI.Rectangle();
-    // score1Rect.thickness = 0;
-    // player1ScoreTex.addControl(score1Rect);
-    // var score1Label = new GUI.TextBlock();
-    // score1Label.fontFamily = "loadedFont";
-    // score1Label.text = "0";
-    // score1Label.color = playerStartInfos[1].color;
-    // score1Label.fontSize = 128;
-    // score1Rect.addControl(score1Label);
-    // // add to guiElements
-    // //guiElements["score1Label"] = score1Label;
-
-    // // Player 2 Score
-    // var score2Rect = new GUI.Rectangle();
-    // score2Rect.thickness = 0;
-    // player2ScoreTex.addControl(score2Rect);
-    // var score2Label = new GUI.TextBlock();
-    // score2Label.fontFamily = "loadedFont";
-    // score2Label.text = "0";
-    // score2Label.color = playerStartInfos[2].color;
-    // score2Label.fontSize = 128;
-    // score2Rect.addControl(score2Label);
-    // // add to guiElements
-    // //guiElements["score2Label"] = score2Label;
-
-    // // Player 3 Score
-    // var score3Rect = new GUI.Rectangle();
-    // score3Rect.thickness = 0;
-    // player3ScoreTex.addControl(score3Rect);
-    // var score3Label = new GUI.TextBlock();
-    // score3Label.fontFamily = "loadedFont";
-    // score3Label.text = "0";
-    // score3Label.color = playerStartInfos[3].color;
-    // score3Label.fontSize = 128;
-    // score3Rect.addControl(score3Label);
-    // // add to guiElements
-    // //guiElements["score3Label"] = score3Label;
-
-    // // Player 4 Score
-    // var score4Rect = new GUI.Rectangle();
-    // score4Rect.thickness = 0;
-    // player4ScoreTex.addControl(score4Rect);
-    // var score4Label = new GUI.TextBlock();
-    // score4Label.fontFamily = "loadedFont";
-    // score4Label.text = "0";
-    // score4Label.color = playerStartInfos[4].color;
-    // score4Label.fontSize = 128;
-    // score4Rect.addControl(score4Label);
-    // // add to guiElements
-    // //guiElements["score4Label"] = score4Label;
 
     // Particle System --------------------------------------------------------------------------------------
 
@@ -327,6 +259,8 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     playBoxMat.alpha = 0.1;
     playBoxMat.specularColor = new Color3(0, 0, 0);
 
+    testBox.material = wireframeMat;
+
     var ballMaterial = new PBRMaterial('ballMaterial', scene);
     ballMaterial.emissiveColor = Color3.FromHexString(ballColor);
     ballMaterial.metallic = 0.0;
@@ -376,18 +310,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     bottomWall.material = playerWallMat;
 
     ground.isVisible = false;
-
-    // ssr = new SSRRenderingPipeline(
-    //     "ssr", // The name of the pipeline
-    //     scene, // The scene to which the pipeline belongs
-    //     [scene.activeCamera], // The list of cameras to attach the pipeline to
-    //     false, // Whether or not to use the geometry buffer renderer (default: false, use the pre-pass renderer)
-    //     Constants.TEXTURETYPE_UNSIGNED_BYTE, // The texture type used by the SSR effect (default: TEXTURETYPE_UNSIGNED_BYTE)
-    // );
-    // ssr.samples = 16; // The number of samples used to calculate the reflections (default: 16)
 }
-
-// var allLineMesh: LinesMesh;
 
 ////////////////////////////// END CREATE BABYLON SCENE ETC. //////////////////////////////
 
@@ -401,11 +324,12 @@ interface PlayerStartInfo {
 
 interface SceneStartInfos {
     playCubeSize: { x: number, y: number, z: number },
+    playCubeElevation: number,
     playerAreaDepth: number,
+    playerPaddleSize: { w: number, h: number },
     ballSize: number,
     ballStartPos: { x: number, y: number, z: number },
     ballColor: string,
-    playerPaddleSize: { w: number, h: number }
 }
 
 interface PlayerData {
