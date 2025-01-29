@@ -571,7 +571,7 @@ function calculateBallBounce(contrRPos, playerNumber) {
     // constant speed (should always be 1)
     const velocitySpeedCheck = Math.sqrt(ball.velocity.x ** 2 + ball.velocity.y ** 2 + ball.velocity.z ** 2);
     const velocitySpeed = 1;
-    console.log('velocitySpeedCheck: ' + velocitySpeedCheck);
+    // console.log('velocitySpeedCheck: ' + velocitySpeedCheck);
 
     let impactZ, impactX;
     let bounceAngleZ, bounceAngleX;
@@ -633,7 +633,7 @@ function calculateBallBounce(contrRPos, playerNumber) {
     //let middleVector = { x: (ballBounceVelocity.x + ball.velocity.x), y: (ballBounceVelocity.y + ball.velocity.y), z: (ballBounceVelocity.z + ball.velocity.z) };
     ballBounceVelocity = getNormalizedVector(middleVector);
 
-    console.log('Velocity X: ', ballBounceVelocity.x);
+    // console.log('Velocity X: ', ballBounceVelocity.x);
 
     // ballBounceVelocity = getNormalizedVector(ballBounceVelocity);
 
