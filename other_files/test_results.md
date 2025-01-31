@@ -1,6 +1,33 @@
-## Test 1
+## Test 1 (Co-Design und First-Testing)
 
-## Test 2
+### Probleme
+
+#### Startschwierigkeiten
+- Wlan-Verbindung war nicht direkt hergestellt
+    - aber auch später immer wieder rausgeflogen mit Pico 4
+- Da noch mehrere Tabs offen waren, anfangs kompliziert den Richtigen zu finden
+- Vive XR Elite wurde nicht erkannt
+    - Controller- und Headset-Bewegung konnten von Babylonjs nicht abgegriffen werden
+- Spielfeldgröße war nicht richtig eingestellt
+    - Nutzer sind zu weit mittig gestartet und konnten sich auf die Füße treten
+
+#### Allgemein
+- Babylonjs versucht immernoch das Controller Standard-Mesh zu laden
+    - keine Problem, da es dann einfachn icht angezeigt wirde
+    - gefixt durch doNotLoadControllerMesh: true
+- mit der Hand verlassen spieler schnell ausversehen VR (da Trigger mit zwei Fingern)
+- Nutzer kann als "Continue Player" ins Spiel starten, obwohl der Platz schon weg ist
+    - hat einen anderen Platz zugewiesen bekommen oder anzeige falsch
+- Beim Force-Reload der Seite bleibt die Meta Quest 3 in der Szene
+    - bei neuer Spielerauswahl spawnen Spieler weit weg in der Szene
+    - teilweise friert auch die gesamte Szene ein
+    - Gefixt: vor Neuladen wird die VR-Session beendet
+- leichte Kopfdrehung beim Zentrieren verschiebt direkt die gesamte Szene
+- Controller und Kopf ruckeln leicht
+    - ohne Funktion stört das aber noch nicht so
+
+
+## Test 2 (Werkschau)
 
 ### Probleme
 

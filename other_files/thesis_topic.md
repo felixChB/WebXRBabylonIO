@@ -22,10 +22,10 @@ Die Entwicklung für schnelle und iterative Tests.
 - Einstieg und Start, Ausstieg (auch kontinuierlich)
 - gegenseitige Präsenz (Avatare, Aktion, +Realität) (Kollision, Interaktion, Kommunikation)
 - Objekte gemeinsamer Interaktionen (kohärente Animation)
-+ Kohärenz der VR-Umgebung (inkl. Objekte) mit Wahrnehmung (keine Masse, keine Kollision)
-+ gemeinsame Umgebung
-+ körperliche Interaktion (Orientierung, Propriozeption)
-+ Interaktionen mit Objekten mittels Controller/Hand 
+- + Kohärenz der VR-Umgebung (inkl. Objekte) mit Wahrnehmung (keine Masse, keine Kollision)
+- + gemeinsame Umgebung
+- + körperliche Interaktion (Orientierung, Propriozeption)
+- + Interaktionen mit Objekten mittels Controller/Hand 
 
 ### Techniken und Werkzeuge
 
