@@ -512,7 +512,7 @@ function prepareGameData() {
         playerGameDataList[key] = new PlayerGameData(playerList[key]);
     });
 
-    console.log(playerGameDataList);
+    // console.log(playerGameDataList);
     return playerGameDataList;
 }
 

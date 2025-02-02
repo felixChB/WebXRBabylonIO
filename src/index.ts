@@ -989,7 +989,7 @@ socket.on('serverUpdate', (playerGameDataList, ballPosition) => {
             // set the new data from the server to the player
             playerList[id].setData(playerGameDataList[id]);
             // update the player object in the scene
-            playerList[id].updateObj();
+            // playerList[id].updateObj();
         }
     });
 
@@ -1314,11 +1314,11 @@ engine.runRenderLoop(function () {
         divFps.innerHTML = engine.getFps().toFixed() + ' fps';
     }
 
-    // Object.keys(playerList).forEach((id) => {
-    //     if (playerList[id]) {
-    //         playerList[id].updateObj();
-    //     }
-    // });
+    Object.keys(playerList).forEach((id) => {
+        if (playerList[id]) {
+            playerList[id].updateObj();
+        }
+    });
 
     // Direct controller movement
     // if (leftController && rightController) {
@@ -1332,24 +1332,6 @@ engine.runRenderLoop(function () {
 });
 
 ////////////////////////// END RENDER LOOP //////////////////////////////
-
-// function darkenColor3(color: Color3, factor: number): Color3 {
-//     // Darken the RGB components
-//     const darkR = Math.max(0, Math.min(1, color.r * factor));
-//     const darkG = Math.max(0, Math.min(1, color.g * factor));
-//     const darkB = Math.max(0, Math.min(1, color.b * factor));
-
-//     return new Color3(darkR, darkG, darkB);
-// }
-
-// function darkenColor4(color: Color4, factor: number): Color4 {
-//     // Darken the RGB components
-//     const darkR = Math.max(0, Math.min(1, color.r * factor));
-//     const darkG = Math.max(0, Math.min(1, color.g * factor));
-//     const darkB = Math.max(0, Math.min(1, color.b * factor));
-
-//     return new Color4(darkR, darkG, darkB, color.a);
-// }
 
 /////////////////////////// HTML CSS Stuff //////////////////////////////
 
