@@ -40,7 +40,19 @@ app.get('/', (req, res) => {
 
 app.use(express.static('.'));
 
-export class Player {
+class PlayerGameData {
+    constructor(playerData) {
+        this.id = playerData.id;
+        this.position = { x: playerData.position.x, y: playerData.position.y, z: playerData.position.z };
+        this.rotation = { x: playerData.rotation.x, y: playerData.rotation.y, z: playerData.rotation.z };
+        this.contrPosR = { x: playerData.contrPosR.x, y: playerData.contrPosR.y, z: playerData.contrPosR.z };
+        this.contrPosL = { x: playerData.contrPosL.x, y: playerData.contrPosL.y, z: playerData.contrPosL.z };
+        this.contrRotR = { x: playerData.contrRotR.x, y: playerData.contrRotR.y, z: playerData.contrRotR.z };
+        this.contrRotL = { x: playerData.contrRotL.x, y: playerData.contrRotL.y, z: playerData.contrRotL.z };
+    }
+}
+
+class Player {
     constructor(id, startData) {
         this.id = id;
         this.color = startData.color;
@@ -55,6 +67,7 @@ export class Player {
         this.contrRotL = { x: startData.rotation.x, y: startData.rotation.y, z: startData.rotation.z };
     }
 
+    // set data coming from the client
     setData(data) {
         this.position = data.position;
         this.rotation = data.rotation;
@@ -64,6 +77,7 @@ export class Player {
         this.contrRotL = data.contrRotL;
     }
 
+    // send the current player data to the client
     sendData() {
         io.emit('playerUpdate', this);
     }
@@ -72,6 +86,9 @@ export class Player {
 /////////////////////////////  VARIABLES  //////////////////////////////////
 // Server Variables
 let serverStartTime;
+
+// Store all connected players
+let playerList = {};
 
 // Game Variables
 const maxPlayers = 4;
@@ -138,9 +155,6 @@ let playerStartInfos = {
         used: false
     }
 }
-
-// Store all connected players
-let playerList = {};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -475,18 +489,32 @@ setInterval(function () {
             // make the ball always a litle bit faster
             ball.speed += 0.00001;
         }
+
+        // Sending the current game state to all players
+        // the necessary data of the players and the ball
+        io.emit('serverUpdate', prepareGameData(), ball.position);
+
     } else {
         // reset the ball if no player is in the game
         if (ball.position.x != 0 && ball.position.y != (playCubeSize.y / 2) - playCubeElevation && ball.position.z != 0) {
             resetGame();
         }
     }
-
-    // Send the updated player list to all clients
-    io.emit('serverUpdate', playerList, ball);
 }, 20);
 
 ///////////////////////// End Game loop and logic /////////////////////////////
+
+// prepare the player Data package for sending to the clients
+// only send the necessary data to the clients (postion, rotation, id)
+function prepareGameData() {
+    let playerGameDataList = {};
+    Object.keys(playerList).forEach((key) => {
+        playerGameDataList[key] = new PlayerGameData(playerList[key]);
+    });
+
+    console.log(playerGameDataList);
+    return playerGameDataList;
+}
 
 function scoreAfterMiss(oldScore) {
     let newScore = oldScore - 10;

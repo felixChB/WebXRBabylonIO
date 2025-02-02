@@ -4,11 +4,12 @@ import { /*ArcRotateCamera,*/ MeshBuilder, /*ShadowGenerator,*/ GlowLayer, Parti
 import { HemisphericLight, DirectionalLight, PointLight /*SSRRenderingPipeline, Constants*/ } from '@babylonjs/core';
 import { Mesh, StandardMaterial, Texture, Color3, Color4, Vector3, Quaternion, CubeTexture /*LinesMesh*/ } from '@babylonjs/core';
 import { WebXRDefaultExperience, WebXRInputSource } from '@babylonjs/core/XR';
-import { Inspector } from '@babylonjs/inspector';
-import * as GUI from '@babylonjs/gui'
+import * as GUI from '@babylonjs/gui';
 
 import '@babylonjs/core/Materials/Textures/Loaders'; // Required for EnvironmentHelper
 import '@babylonjs/loaders/glTF'; // Enable GLTF/GLB loader for loading controller models from WebXR Input registry
+
+import { Inspector } from '@babylonjs/inspector';
 
 const socket = io();
 
@@ -285,7 +286,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     wallBounceMat.metallic = 0.2;
     wallBounceMat.roughness = 0.5;
     wallBounceMat.backFaceCulling = false;
-    
+
 
     // Setting Materials
     ground.material = wireframeMat;
@@ -330,6 +331,17 @@ interface SceneStartInfos {
     ballSize: number,
     ballStartPos: { x: number, y: number, z: number },
     ballColor: string,
+}
+
+interface PlayerGameData {
+    id: string;
+    position: { x: number, y: number, z: number };
+    rotation: { x: number, y: number, z: number };
+    contrPosR: { x: number, y: number, z: number };
+    contrPosL: { x: number, y: number, z: number };
+    contrRotR: { x: number, y: number, z: number };
+    contrRotL: { x: number, y: number, z: number };
+    
 }
 
 interface PlayerData {
@@ -396,13 +408,13 @@ class Player implements PlayerData {
         this.paddleLight = paddleLight || null;
     }
 
-    setData(player: Player) {
-        this.position = { x: player.position.x, y: player.position.y, z: player.position.z };
-        this.rotation = { x: player.rotation.x, y: player.rotation.y, z: player.rotation.z };
-        this.contrPosR = { x: player.contrPosR.x, y: player.contrPosR.y, z: player.contrPosR.z };
-        this.contrPosL = { x: player.contrPosL.x, y: player.contrPosL.y, z: player.contrPosL.z };
-        this.contrRotR = { x: player.contrRotR.x, y: player.contrRotR.y, z: player.contrRotR.z };
-        this.contrRotL = { x: player.contrRotL.x, y: player.contrRotL.y, z: player.contrRotL.z };
+    setData(playerGameData: PlayerGameData) {
+        this.position = { x: playerGameData.position.x, y: playerGameData.position.y, z: playerGameData.position.z };
+        this.rotation = { x: playerGameData.rotation.x, y: playerGameData.rotation.y, z: playerGameData.rotation.z };
+        this.contrPosR = { x: playerGameData.contrPosR.x, y: playerGameData.contrPosR.y, z: playerGameData.contrPosR.z };
+        this.contrPosL = { x: playerGameData.contrPosL.x, y: playerGameData.contrPosL.y, z: playerGameData.contrPosL.z };
+        this.contrRotR = { x: playerGameData.contrRotR.x, y: playerGameData.contrRotR.y, z: playerGameData.contrRotR.z };
+        this.contrRotL = { x: playerGameData.contrRotL.x, y: playerGameData.contrRotL.y, z: playerGameData.contrRotL.z };
     }
 
     updateObj() {
@@ -971,25 +983,25 @@ socket.on('newPlayer', (newPlayer) => {
 });
 
 // update the players position and rotation from the server
-socket.on('serverUpdate', (players, ball) => {
-    Object.keys(players).forEach((id) => {
+socket.on('serverUpdate', (playerGameDataList, ballPosition) => {
+    Object.keys(playerGameDataList).forEach((id) => {
         if (playerList[id]) {
             // set the new data from the server to the player
-            playerList[id].setData(players[id]);
+            playerList[id].setData(playerGameDataList[id]);
             // update the player object in the scene
             playerList[id].updateObj();
         }
     });
 
-    updateBall(ball);
+    updateBall(ballPosition);
 });
 
-function updateBall(ball: { position: { x: number, y: number, z: number } }) {
+function updateBall(ballPosition: { x: number, y: number, z: number }) {
     let ballSphere = scene.getMeshByName('ballSphere') as Mesh;
-    ballSphere.position = new Vector3(ball.position.x, ball.position.y, ball.position.z);
+    ballSphere.position = new Vector3(ballPosition.x, ballPosition.y, ballPosition.z);
 
     let ballLight = scene.getLightByName('ballLight') as PointLight;
-    ballLight.position = new Vector3(ball.position.x, ball.position.y, ball.position.z);
+    ballLight.position = new Vector3(ballPosition.x, ballPosition.y, ballPosition.z);
 }
 
 // recieve a score update from the server
