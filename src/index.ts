@@ -583,6 +583,9 @@ window.addEventListener('resize', function () {
     // Create a WebXR experience
     xr = await scene.createDefaultXRExperienceAsync({
         floorMeshes: [scene.getMeshByName('ground') as Mesh],
+        // uiOptions: {
+        //     sessionMode: "immersive-vr",
+        // },
         inputOptions: {
             controllerOptions: {
                 // disableMotionControllerAnimation: true,
@@ -682,6 +685,10 @@ window.addEventListener('resize', function () {
 socket.on('connect', () => {
     socket.emit('clientStartTime', clientStartTime);
     // console.log('Previous Player Data: ', previousPlayer);
+});
+
+socket.on('ClientID', (id) => {
+    console.log('This Client ID: ', id);
 });
 
 socket.on('reload', () => {
@@ -1267,45 +1274,7 @@ socket.on('playerDisconnected', (id) => {
             defaultCamera.rotation = new Vector3(Math.PI / 2, Math.PI, Math.PI / 4);
         }
     }
-});
-
-///////////////////////////// TESTING GROUND ////////////////////////////
-
-window.addEventListener('keydown', function (event) {
-    // Check if the key combination is Ctrl + I
-    if (event.ctrlKey && event.key === 'i') {
-        if (Inspector.IsVisible) {
-            Inspector.Hide();
-        } else {
-            Inspector.Show(scene, {
-                embedMode: true,
-            });
-        }
-    }
-});
-
-// document.addEventListener('click', () => {
-//     if (playerUsingVR) {
-//         socket.emit('clicked', playerList[playerID].color);
-//     }
-// });
-
-// socket.on('colorChanged', (color) => {
-
-//     // console.log('Color Changed to: ', color);
-//     // change color of the sphere
-//     let ballMaterial = scene.getMaterialByName('ballMaterial') as PBRMaterial;
-//     ballMaterial.emissiveColor = Color3.FromHexString(color);
-
-// });
-
-// function debugTestclick() {
-//     socket.emit('testClick', playerID);
-//     console.log('XRCam Rotation Quat: ', xrCamera?.rotationQuaternion);
-//     console.log('XRCam Rotation: ', xrCamera?.rotationQuaternion.toEulerAngles());
-// }
-
-////////////////////////// END TESTING GROUND //////////////////////////////            
+});           
 
 ////////////////////////// RENDER LOOP //////////////////////////////
 // Register a render loop to repeatedly render the scene
@@ -1321,11 +1290,8 @@ engine.runRenderLoop(function () {
     });
 
     // Direct controller movement
-    // if (leftController && rightController) {
-    //     leftSphere.position = leftController.pointer.position;
-    //     rightSphere.position = rightController.pointer.position;
-    //     leftSphere.rotation = leftController.pointer.rotationQuaternion?.toEulerAngles() || new Vector3(0, 0, 0);
-    //     rightSphere.rotation = rightController.pointer.rotationQuaternion?.toEulerAngles() || new Vector3(0, 0, 0);
+    // if (playerList[playerID].controllerL && playerList[playerID].controllerR) {
+        
     // }
 
     scene.render();
@@ -1567,3 +1533,46 @@ function getLocalStorage() {
     }
 }
 /////////////////////////// END LOCAL STORAGE //////////////////////////////
+
+///////////////////////////// TESTING GROUND ////////////////////////////
+
+window.addEventListener('keydown', function (event) {
+    // Check if the key combination is Ctrl + I
+    if (event.ctrlKey && event.key === 'i') {
+        if (Inspector.IsVisible) {
+            Inspector.Hide();
+        } else {
+            Inspector.Show(scene, {
+                embedMode: true,
+            });
+        }
+    }
+});
+
+// document.addEventListener('click', () => {
+//     if (playerUsingVR) {
+//         socket.emit('clicked', playerList[playerID].color);
+//     }
+// });
+
+// socket.on('colorChanged', (color) => {
+
+//     // console.log('Color Changed to: ', color);
+//     // change color of the sphere
+//     let ballMaterial = scene.getMaterialByName('ballMaterial') as PBRMaterial;
+//     ballMaterial.emissiveColor = Color3.FromHexString(color);
+
+// });
+
+// function debugTestclick() {
+//     socket.emit('testClick', playerID);
+//     console.log('XRCam Rotation Quat: ', xrCamera?.rotationQuaternion);
+//     console.log('XRCam Rotation: ', xrCamera?.rotationQuaternion.toEulerAngles());
+// }
+
+socket.on('ping', (data) => {
+    const clientReceiveTime = Date.now();
+    socket.emit('pong', { serverSendTime: data.serverSendTime, clientReceiveTime, clientId: socket.id });
+});
+
+////////////////////////// END TESTING GROUND ////////////////////////////// 
