@@ -176,8 +176,7 @@ io.on('connection', (socket) => {
         const serverToClientLatency = clientReceiveTime - serverSendTime;
         const clientToServerLatency = serverReceiveTime - clientReceiveTime;
     
-        console.log(`Server to client latency for client ${data.clientId}: ${serverToClientLatency} ms`);
-        console.log(`Client to server latency for client ${data.clientId}: ${clientToServerLatency} ms`);
+        console.log(`${data.clientId}: Server -> Client: ${serverToClientLatency} ms | Client -> Server: ${clientToServerLatency} ms, Roundtrip: ${serverToClientLatency + clientToServerLatency} ms`);
     });
     
     // Function to send a ping message to the client

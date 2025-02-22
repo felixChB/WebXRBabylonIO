@@ -15,3 +15,7 @@ Roundtime Warteraum: ~120ms
 
 Roundtime Spiel: ~6ms
 -> Roundtime schwankt meistes zwischen 4ms und 11ms. Deutlich geringer als im Warteraum. Spikes gehen trotzdem teilweise bi zu 250ms. Sind jedoch eher seltener.
+
+## Versuch 2
+
+Ping-Pong Message dieses mal mit Server to Client und Client to Server Zeit, um hier etwaige Unterschiede festzustellen. Außerdem werden bei spielenden Spielern die Spielerdaten mitgesendet, um Unterschiede bei der Message-Größe zu testen.
