@@ -2,7 +2,7 @@ import { io } from 'socket.io-client';
 import { /*Camera,*/ Engine, FreeCamera, /*PBRBaseMaterial,*/ PBRMaterial, Scene } from '@babylonjs/core';
 import { /*ArcRotateCamera,*/ MeshBuilder, /*ShadowGenerator,*/ GlowLayer, ParticleSystem, Animation } from '@babylonjs/core';
 import { HemisphericLight, DirectionalLight, PointLight /*SSRRenderingPipeline, Constants*/ } from '@babylonjs/core';
-import { Mesh, StandardMaterial, Texture, Color3, Color4, Vector3, Quaternion, CubeTexture /*LinesMesh*/ } from '@babylonjs/core';
+import { Mesh, StandardMaterial, Texture, Color3, Color4, Vector3, Quaternion, /*CubeTexture*/ /*LinesMesh*/ } from '@babylonjs/core';
 import { WebXRDefaultExperience, WebXRInputSource } from '@babylonjs/core/XR';
 import * as GUI from '@babylonjs/gui';
 
@@ -114,8 +114,8 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     gl.intensity = 0.5;
 
 
-    var hdrTexture = new CubeTexture('./assets/abstract_blue.env', scene);
-    scene.createDefaultSkybox(hdrTexture, true, 10000);
+    // var hdrTexture = new CubeTexture('./assets/abstract_blue.env', scene);
+    // scene.createDefaultSkybox(hdrTexture, true, 10000);
 
     // Meshes --------------------------------------------------------------------------------------
 
@@ -569,6 +569,7 @@ class Player implements PlayerData {
                 contrPosL: contrPosL,
                 contrRotR: contrRotR,
                 contrRotL: contrRotL,
+                clientSendTime: Date.now()
             });
         }
     }
@@ -629,7 +630,7 @@ window.addEventListener('resize', function () {
     xr.teleportation.detach();
     xr.pointerSelection.detach();
 
-    const hasImmersiveVR = await xr.baseExperience.sessionManager.isSessionSupportedAsync('immersive-vr');
+    const hasImmersiveVR = await xr.baseExperience.sessionManager.isSessionSupportedAsync('immersive-ar');
 
     if (hasImmersiveVR) {
 
@@ -806,7 +807,7 @@ socket.on('startClientGame', (newSocketPlayer) => {
     // }
 
     // Start VR Session for the client
-    xr.baseExperience.enterXRAsync('immersive-vr', 'local-floor').then(() => {
+    xr.baseExperience.enterXRAsync('immersive-ar', 'local-floor').then(() => {
         console.log('Starting VR');
 
         // Create a box for each controller
@@ -990,7 +991,7 @@ socket.on('newPlayer', (newPlayer) => {
 });
 
 // update the players position and rotation from the server
-socket.on('serverUpdate', (playerGameDataList, ballPosition) => {
+socket.on('serverUpdate', (playerGameDataList, ballPosition, serverSendTime) => {
     Object.keys(playerGameDataList).forEach((id) => {
         if (playerList[id]) {
             // set the new data from the server to the player
@@ -1001,6 +1002,8 @@ socket.on('serverUpdate', (playerGameDataList, ballPosition) => {
     });
 
     updateBall(ballPosition);
+
+    socket.emit('ServerPong', serverSendTime);
 });
 
 function updateBall(ballPosition: { x: number, y: number, z: number }) {
@@ -1572,7 +1575,15 @@ window.addEventListener('keydown', function (event) {
 
 socket.on('ping', (data) => {
     const clientReceiveTime = Date.now();
+    console.log('Ping received: ', data);
     socket.emit('pong', { serverSendTime: data.serverSendTime, clientReceiveTime, clientId: socket.id });
 });
 
+socket.on('clientPong', (serverClientSendTime) => {
+    const clientSendTime = serverClientSendTime;
+    const clientReceiveTime = Date.now();
+    const clientRoundTripTime = clientReceiveTime - clientSendTime;
+    console.log('Client Round Trip Time: ', clientRoundTripTime);
+    socket.emit('clientRoundTripTime', clientRoundTripTime, socket.id);
+});
 ////////////////////////// END TESTING GROUND ////////////////////////////// 

@@ -11,10 +11,9 @@ import { start } from "repl";
 const port = process.env.PORT || 3000;
 
 ////////////// CHANGE THIS TO YOUR LOCAL IP ADDRESS ///////////////////
-// const ipAdress = '192.168.178.156'; // for local network // Desktop
-// const ipAdress = '192.168.1.163'; // for local network // Router
-
-// const ipAdress = '192.168.200.6'; //wlan fuwa
+//const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
+//const ipAdress = '192.168.178.35'; // Desktop zuhause // WLAN
+//const ipAdress = '192.168.1.163'; // for local network // Router
 const ipAdress = '192.168.1.188'; // Router
 ///////////////////////////////////////////////////////////////////////
 
@@ -168,25 +167,42 @@ io.on('connection', (socket) => {
     socket.emit('ClientID', socket.id);
     connectedClientNumber++;
 
+    // Network Ping Pong Test //
+
     socket.on('pong', (data) => {
+        console.log("Pong received");
+        console.log("Pong received Data: " + data.serverSendTime + " | " + data.clientReceiveTime + " | " + data.clientId);
         const serverReceiveTime = Date.now();
         const serverSendTime = data.serverSendTime;
         const clientReceiveTime = data.clientReceiveTime;
-    
+
         const serverToClientLatency = clientReceiveTime - serverSendTime;
         const clientToServerLatency = serverReceiveTime - clientReceiveTime;
-    
+
         console.log(`${data.clientId}: Server -> Client: ${serverToClientLatency} ms | Client -> Server: ${clientToServerLatency} ms, Roundtrip: ${serverToClientLatency + clientToServerLatency} ms`);
     });
-    
+
+    socket.on('ServerPong', (clientServerSendTime) => {
+        const ServerSendTime = clientServerSendTime;
+        const ServerReceiveTime = Date.now();
+        const ServerRoundTripTime = ServerReceiveTime - ServerSendTime;
+        console.log('Server Round Trip Time: ', ServerRoundTripTime);
+    });
+
+    socket.on('clientRoundTripTime', (clientRoundTripTime, id) => {
+        console.log(`${id} RTT: ${clientRoundTripTime}`);
+    });
+
     // Function to send a ping message to the client
-    function sendPing() {
-        const serverSendTime = Date.now();
-        socket.emit('ping', { serverSendTime, clientId: socket.id });
-    }
-    
+    // function sendPing() {
+    //     const serverSendTime = Date.now();
+    //     socket.emit('ping', { serverSendTime, clientId: socket.id, ballPos: ball.position });
+    // }
+
     // Send a ping message every 5 seconds
-    const pingInterval = setInterval(sendPing, 500);
+    // const pingInterval = setInterval(sendPing, 500);
+
+    // End Network Ping Pong Test //
 
     socket.on('clientStartTime', (clientStartTime) => {
         if (clientStartTime < serverStartTime) {
@@ -255,7 +271,7 @@ io.on('connection', (socket) => {
 
     // Handle player disconnection
     socket.on('disconnect', () => {
-        clearInterval(pingInterval);
+        //clearInterval(pingInterval);
         connectedClientNumber--;
 
         if (socket.id in playerList) {
@@ -283,254 +299,254 @@ httpsServer.listen(port, ipAdress, () => {
 ///////////////////////// Game loop and logic /////////////////////////////
 // if (connectedClientNumber > 0) {
 //    console.log('Game loop started.');
-    setInterval(function () {
+setInterval(function () {
 
-        // if there are players in the game
-        if (Object.keys(playerList).length > 0) {
-            // Update the ball position
-            ball.position.x += ball.velocity.x * ball.speed;
-            ball.position.y += ball.velocity.y * ball.speed;
-            ball.position.z += ball.velocity.z * ball.speed;
+    // if there are players in the game
+    if (Object.keys(playerList).length > 0) {
+        // Update the ball position
+        ball.position.x += ball.velocity.x * ball.speed;
+        ball.position.y += ball.velocity.y * ball.speed;
+        ball.position.z += ball.velocity.z * ball.speed;
 
-            // if (ball.position.x < playCubeSize.x / 2 || ball.position.x > -playCubeSize.x / 2 || ball.position.z < playCubeSize.z / 2 || ball.position.z > -playCubeSize.z / 2) {
+        // if (ball.position.x < playCubeSize.x / 2 || ball.position.x > -playCubeSize.x / 2 || ball.position.z < playCubeSize.z / 2 || ball.position.z > -playCubeSize.z / 2) {
 
-            // Bounce off walls --------------------------------------------------------------------------------------
-            // Always bounce the ball off the top and bottom
-            if (ball.position.y + ball.size >= playCubeSize.y) {
-                ball.position.y = playCubeSize.y - ball.size;
-                ball.velocity.y *= -1;  // Reverse Y velocity
-                ballBounce(5, false);
-            }
-            if (ball.position.y - ball.size <= playCubeElevation) {
-                ball.position.y = playCubeElevation + ball.size;
-                ball.velocity.y *= -1;  // Reverse Y velocity
-                ballBounce(6, false);
-            }
+        // Bounce off walls --------------------------------------------------------------------------------------
+        // Always bounce the ball off the top and bottom
+        if (ball.position.y + ball.size >= playCubeSize.y) {
+            ball.position.y = playCubeSize.y - ball.size;
+            ball.velocity.y *= -1;  // Reverse Y velocity
+            ballBounce(5, false);
+        }
+        if (ball.position.y - ball.size <= playCubeElevation) {
+            ball.position.y = playCubeElevation + ball.size;
+            ball.velocity.y *= -1;  // Reverse Y velocity
+            ballBounce(6, false);
+        }
 
-            // Bounce the ball of the wall if there is no player
-            if (playerStartInfos[1].used == false) {
-                if (ball.position.x + ball.size >= playCubeSize.x / 2) {
-                    ball.position.x = playCubeSize.x / 2 - ball.size;
-                    ball.velocity.x *= -1;  // Reverse X velocity
-                    ballBounce(1, false);
-                }
-            }
-            if (playerStartInfos[2].used == false) {
-                if (ball.position.x - ball.size <= -playCubeSize.x / 2) {
-                    ball.position.x = -playCubeSize.x / 2 + ball.size;
-                    ball.velocity.x *= -1;  // Reverse X velocity
-                    ballBounce(2, false);
-                }
-            }
-            if (playerStartInfos[3].used == false) {
-                if (ball.position.z + ball.size >= playCubeSize.z / 2) {
-                    ball.position.z = playCubeSize.z / 2 - ball.size;
-                    ball.velocity.z *= -1;  // Reverse Z velocity
-                    ballBounce(3, false);
-                }
-            }
-            if (playerStartInfos[4].used == false) {
-                if (ball.position.z - ball.size <= -playCubeSize.z / 2) {
-                    ball.position.z = -playCubeSize.z / 2 + ball.size;
-                    ball.velocity.z *= -1;  // Reverse Z velocity
-                    ballBounce(4, false);
-                }
-            }
-
-            // Bounce off paddles --------------------------------------------------------------------------------------
-            // Check for collision with player paddles
-            Object.keys(playerList).forEach((key) => {
-                if (playerList[key].playerNumber == 1) {
-                    // clamp the paddle position to the play area
-                    let paddleY, paddleZ;
-                    if (playerList[key].contrPosR.y + playerPaddleSize.h / 2 > playCubeSize.y) {
-                        paddleY = playCubeSize.y - playerPaddleSize.h / 2;
-                    } else if (playerList[key].contrPosR.y - playerPaddleSize.h / 2 < playCubeElevation) {
-                        paddleY = playCubeElevation + playerPaddleSize.h / 2;
-                    } else {
-                        paddleY = playerList[key].contrPosR.y;
-                    }
-                    if (playerList[key].contrPosR.z + playerPaddleSize.w / 2 > playCubeSize.z / 2) {
-                        paddleZ = playCubeSize.z / 2 - playerPaddleSize.w / 2;
-                    } else if (playerList[key].contrPosR.z - playerPaddleSize.w / 2 < -playCubeSize.z / 2) {
-                        paddleZ = -playCubeSize.z / 2 + playerPaddleSize.w / 2;
-                    } else {
-                        paddleZ = playerList[key].contrPosR.z;
-                    }
-                    // clamped paddle position to use for the collision and bounce calculation
-                    let clampedPaddlePos = { x: playCubeSize.x / 2, y: paddleY, z: paddleZ };
-
-                    if (ball.position.x + ball.size >= playCubeSize.x / 2 && ball.position.x < playCubeSize.x / 2 + ball.size &&
-                        clampedPaddlePos.z - playerPaddleSize.w / 2 <= ball.position.z + ball.size && ball.position.z - ball.size <= clampedPaddlePos.z + playerPaddleSize.w / 2 &&
-                        clampedPaddlePos.y - playerPaddleSize.h / 2 <= ball.position.y + ball.size && ball.position.y - ball.size <= clampedPaddlePos.y + playerPaddleSize.h / 2) {
-                        if (ball.velocity.x >= 0) {
-                            // ball.velocity.x *= -1;  // Reverse X velocity
-                            calculateBallBounce(clampedPaddlePos, playerList[key].playerNumber);
-
-                            playerList[key].score += 1;
-                            ballBounce(1, true);
-                            io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
-                        }
-                    }
-
-                } else if (playerList[key].playerNumber == 2) {
-                    // clamp the paddle position to the play area
-                    let paddleY, paddleZ;
-                    if (playerList[key].contrPosR.y + playerPaddleSize.h / 2 > playCubeSize.y) {
-                        paddleY = playCubeSize.y - playerPaddleSize.h / 2;
-                    } else if (playerList[key].contrPosR.y - playerPaddleSize.h / 2 < playCubeElevation) {
-                        paddleY = playCubeElevation + playerPaddleSize.h / 2;
-                    } else {
-                        paddleY = playerList[key].contrPosR.y;
-                    }
-                    if (playerList[key].contrPosR.z + playerPaddleSize.w / 2 > playCubeSize.z / 2) {
-                        paddleZ = playCubeSize.z / 2 - playerPaddleSize.w / 2;
-                    } else if (playerList[key].contrPosR.z - playerPaddleSize.w / 2 < -playCubeSize.z / 2) {
-                        paddleZ = -playCubeSize.z / 2 + playerPaddleSize.w / 2;
-                    } else {
-                        paddleZ = playerList[key].contrPosR.z;
-                    }
-                    // clamped paddle position to use for the collision and bounce calculation
-                    let clampedPaddlePos = { x: -playCubeSize.x / 2, y: paddleY, z: paddleZ };
-
-                    if (ball.position.x - ball.size <= -playCubeSize.x / 2 && ball.position.x > -playCubeSize.x / 2 - ball.size &&
-                        clampedPaddlePos.z - playerPaddleSize.w / 2 <= ball.position.z + ball.size && ball.position.z - ball.size <= clampedPaddlePos.z + playerPaddleSize.w / 2 &&
-                        clampedPaddlePos.y - playerPaddleSize.h / 2 <= ball.position.y + ball.size && ball.position.y - ball.size <= clampedPaddlePos.y + playerPaddleSize.h / 2) {
-                        if (ball.velocity.x < 0) {
-                            // ball.velocity.x *= -1;  // Reverse X velocity
-                            calculateBallBounce(clampedPaddlePos, playerList[key].playerNumber);
-
-                            playerList[key].score += 1;
-                            ballBounce(2, true);
-                            io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
-                        }
-                    }
-                } else if (playerList[key].playerNumber == 3) {
-                    // clamp the paddle position to the play area
-                    let paddleY, paddleX;
-                    if (playerList[key].contrPosR.y + playerPaddleSize.h / 2 > playCubeSize.y) {
-                        paddleY = playCubeSize.y - playerPaddleSize.h / 2;
-                    } else if (playerList[key].contrPosR.y - playerPaddleSize.h / 2 < playCubeElevation) {
-                        paddleY = playCubeElevation + playerPaddleSize.h / 2;
-                    } else {
-                        paddleY = playerList[key].contrPosR.y;
-                    }
-                    if (playerList[key].contrPosR.x + playerPaddleSize.w / 2 > playCubeSize.x / 2) {
-                        paddleX = playCubeSize.x / 2 - playerPaddleSize.w / 2;
-                    } else if (playerList[key].contrPosR.x - playerPaddleSize.w / 2 < -playCubeSize.x / 2) {
-                        paddleX = -playCubeSize.x / 2 + playerPaddleSize.w / 2;
-                    } else {
-                        paddleX = playerList[key].contrPosR.x;
-                    }
-                    // clamped paddle position to use for the collision and bounce calculation
-                    let clampedPaddlePos = { x: paddleX, y: paddleY, z: playCubeSize.z / 2 };
-
-                    if (ball.position.z + ball.size >= playCubeSize.z / 2 && ball.position.z < playCubeSize.x / 2 + ball.size &&
-                        clampedPaddlePos.x - playerPaddleSize.w / 2 < ball.position.x + ball.size && ball.position.x - ball.size < clampedPaddlePos.x + playerPaddleSize.w / 2 &&
-                        clampedPaddlePos.y - playerPaddleSize.h / 2 < ball.position.y + ball.size && ball.position.y - ball.size < clampedPaddlePos.y + playerPaddleSize.h / 2) {
-                        if (ball.velocity.z >= 0) {
-                            // ball.velocity.z *= -1;  // Reverse Z velocity
-                            calculateBallBounce(clampedPaddlePos, playerList[key].playerNumber);
-
-                            playerList[key].score += 1;
-                            ballBounce(3, true);
-                            io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
-                        }
-                    }
-                } else if (playerList[key].playerNumber == 4) {
-                    // clamp the paddle position to the play area
-                    let paddleY, paddleX;
-                    if (playerList[key].contrPosR.y + playerPaddleSize.h / 2 > playCubeSize.y) {
-                        paddleY = playCubeSize.y - playerPaddleSize.h / 2;
-                    } else if (playerList[key].contrPosR.y - playerPaddleSize.h / 2 < playCubeElevation) {
-                        paddleY = playCubeElevation + playerPaddleSize.h / 2;
-                    } else {
-                        paddleY = playerList[key].contrPosR.y;
-                    }
-                    if (playerList[key].contrPosR.x + playerPaddleSize.w / 2 > playCubeSize.x / 2) {
-                        paddleX = playCubeSize.x / 2 - playerPaddleSize.w / 2;
-                    } else if (playerList[key].contrPosR.x - playerPaddleSize.w / 2 < -playCubeSize.x / 2) {
-                        paddleX = -playCubeSize.x / 2 + playerPaddleSize.w / 2;
-                    } else {
-                        paddleX = playerList[key].contrPosR.x;
-                    }
-                    // clamped paddle position to use for the collision and bounce calculation
-                    let clampedPaddlePos = { x: paddleX, y: paddleY, z: -playCubeSize.z / 2 };
-
-                    if (ball.position.z - ball.size <= -playCubeSize.z / 2 && ball.position.z > -playCubeSize.x / 2 - ball.size &&
-                        clampedPaddlePos.x - playerPaddleSize.w / 2 < ball.position.x + ball.size && ball.position.x - ball.size < clampedPaddlePos.x + playerPaddleSize.w / 2 &&
-                        clampedPaddlePos.y - playerPaddleSize.h / 2 < ball.position.y + ball.size && ball.position.y - ball.size < clampedPaddlePos.y + playerPaddleSize.h / 2) {
-                        if (ball.velocity.z < 0) {
-                            // ball.velocity.z *= -1;  // Reverse Z velocity
-                            calculateBallBounce(clampedPaddlePos, playerList[key].playerNumber);
-
-                            playerList[key].score += 1;
-                            ballBounce(4, true);
-                            io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
-                        }
-                    }
-                }
-            });
-            // value for the out of bounds check
-            let outOfBoundsValue = 0.3;
-
-            // reset the ball if out of bounds
-            if (ball.position.x > playCubeSize.x / 2 + outOfBoundsValue || ball.position.x < -playCubeSize.x / 2 - outOfBoundsValue ||
-                ball.position.z > playCubeSize.z / 2 + outOfBoundsValue || ball.position.z < -playCubeSize.z / 2 - outOfBoundsValue) {
-
-
-                // Reset Player points on miss --------------------------------------------------------------------------------------
-                if (ball.position.x > playCubeSize.x / 2 + outOfBoundsValue) {
-                    // player 1 missed
-                    Object.keys(playerList).forEach((key) => {
-                        if (playerList[key].playerNumber == 1) {
-                            playerList[key].score = scoreAfterMiss(playerList[key].score);
-                            io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
-                        }
-                    });
-                } else if (ball.position.x < -playCubeSize.x / 2 - outOfBoundsValue) {
-                    // player 2 missed
-                    Object.keys(playerList).forEach((key) => {
-                        if (playerList[key].playerNumber == 2) {
-                            playerList[key].score = scoreAfterMiss(playerList[key].score);
-                            io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
-                        }
-                    });
-                } else if (ball.position.z > playCubeSize.z / 2 + outOfBoundsValue) {
-                    // player 3 missed
-                    Object.keys(playerList).forEach((key) => {
-                        if (playerList[key].playerNumber == 3) {
-                            playerList[key].score = scoreAfterMiss(playerList[key].score);
-                            io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
-                        }
-                    });
-                } else if (ball.position.z < -playCubeSize.z / 2 - outOfBoundsValue) {
-                    // player 4 missed
-                    Object.keys(playerList).forEach((key) => {
-                        if (playerList[key].playerNumber == 4) {
-                            playerList[key].score = scoreAfterMiss(playerList[key].score);
-                            io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
-                        }
-                    });
-                }
-                // Reset the ball
-                resetGame();
-            } else {
-                // make the ball always a litle bit faster
-                ball.speed += 0.00001;
-            }
-
-            // Sending the current game state to all players
-            // the necessary data of the players and the ball
-            io.emit('serverUpdate', prepareGameData(), ball.position);
-
-        } else {
-            // reset the ball if no player is in the game
-            if (ball.position.x != 0 && ball.position.y != (playCubeSize.y / 2) - playCubeElevation && ball.position.z != 0) {
-                resetGame();
+        // Bounce the ball of the wall if there is no player
+        if (playerStartInfos[1].used == false) {
+            if (ball.position.x + ball.size >= playCubeSize.x / 2) {
+                ball.position.x = playCubeSize.x / 2 - ball.size;
+                ball.velocity.x *= -1;  // Reverse X velocity
+                ballBounce(1, false);
             }
         }
-    }, 20);
+        if (playerStartInfos[2].used == false) {
+            if (ball.position.x - ball.size <= -playCubeSize.x / 2) {
+                ball.position.x = -playCubeSize.x / 2 + ball.size;
+                ball.velocity.x *= -1;  // Reverse X velocity
+                ballBounce(2, false);
+            }
+        }
+        if (playerStartInfos[3].used == false) {
+            if (ball.position.z + ball.size >= playCubeSize.z / 2) {
+                ball.position.z = playCubeSize.z / 2 - ball.size;
+                ball.velocity.z *= -1;  // Reverse Z velocity
+                ballBounce(3, false);
+            }
+        }
+        if (playerStartInfos[4].used == false) {
+            if (ball.position.z - ball.size <= -playCubeSize.z / 2) {
+                ball.position.z = -playCubeSize.z / 2 + ball.size;
+                ball.velocity.z *= -1;  // Reverse Z velocity
+                ballBounce(4, false);
+            }
+        }
+
+        // Bounce off paddles --------------------------------------------------------------------------------------
+        // Check for collision with player paddles
+        Object.keys(playerList).forEach((key) => {
+            if (playerList[key].playerNumber == 1) {
+                // clamp the paddle position to the play area
+                let paddleY, paddleZ;
+                if (playerList[key].contrPosR.y + playerPaddleSize.h / 2 > playCubeSize.y) {
+                    paddleY = playCubeSize.y - playerPaddleSize.h / 2;
+                } else if (playerList[key].contrPosR.y - playerPaddleSize.h / 2 < playCubeElevation) {
+                    paddleY = playCubeElevation + playerPaddleSize.h / 2;
+                } else {
+                    paddleY = playerList[key].contrPosR.y;
+                }
+                if (playerList[key].contrPosR.z + playerPaddleSize.w / 2 > playCubeSize.z / 2) {
+                    paddleZ = playCubeSize.z / 2 - playerPaddleSize.w / 2;
+                } else if (playerList[key].contrPosR.z - playerPaddleSize.w / 2 < -playCubeSize.z / 2) {
+                    paddleZ = -playCubeSize.z / 2 + playerPaddleSize.w / 2;
+                } else {
+                    paddleZ = playerList[key].contrPosR.z;
+                }
+                // clamped paddle position to use for the collision and bounce calculation
+                let clampedPaddlePos = { x: playCubeSize.x / 2, y: paddleY, z: paddleZ };
+
+                if (ball.position.x + ball.size >= playCubeSize.x / 2 && ball.position.x < playCubeSize.x / 2 + ball.size &&
+                    clampedPaddlePos.z - playerPaddleSize.w / 2 <= ball.position.z + ball.size && ball.position.z - ball.size <= clampedPaddlePos.z + playerPaddleSize.w / 2 &&
+                    clampedPaddlePos.y - playerPaddleSize.h / 2 <= ball.position.y + ball.size && ball.position.y - ball.size <= clampedPaddlePos.y + playerPaddleSize.h / 2) {
+                    if (ball.velocity.x >= 0) {
+                        // ball.velocity.x *= -1;  // Reverse X velocity
+                        calculateBallBounce(clampedPaddlePos, playerList[key].playerNumber);
+
+                        playerList[key].score += 1;
+                        ballBounce(1, true);
+                        io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
+                    }
+                }
+
+            } else if (playerList[key].playerNumber == 2) {
+                // clamp the paddle position to the play area
+                let paddleY, paddleZ;
+                if (playerList[key].contrPosR.y + playerPaddleSize.h / 2 > playCubeSize.y) {
+                    paddleY = playCubeSize.y - playerPaddleSize.h / 2;
+                } else if (playerList[key].contrPosR.y - playerPaddleSize.h / 2 < playCubeElevation) {
+                    paddleY = playCubeElevation + playerPaddleSize.h / 2;
+                } else {
+                    paddleY = playerList[key].contrPosR.y;
+                }
+                if (playerList[key].contrPosR.z + playerPaddleSize.w / 2 > playCubeSize.z / 2) {
+                    paddleZ = playCubeSize.z / 2 - playerPaddleSize.w / 2;
+                } else if (playerList[key].contrPosR.z - playerPaddleSize.w / 2 < -playCubeSize.z / 2) {
+                    paddleZ = -playCubeSize.z / 2 + playerPaddleSize.w / 2;
+                } else {
+                    paddleZ = playerList[key].contrPosR.z;
+                }
+                // clamped paddle position to use for the collision and bounce calculation
+                let clampedPaddlePos = { x: -playCubeSize.x / 2, y: paddleY, z: paddleZ };
+
+                if (ball.position.x - ball.size <= -playCubeSize.x / 2 && ball.position.x > -playCubeSize.x / 2 - ball.size &&
+                    clampedPaddlePos.z - playerPaddleSize.w / 2 <= ball.position.z + ball.size && ball.position.z - ball.size <= clampedPaddlePos.z + playerPaddleSize.w / 2 &&
+                    clampedPaddlePos.y - playerPaddleSize.h / 2 <= ball.position.y + ball.size && ball.position.y - ball.size <= clampedPaddlePos.y + playerPaddleSize.h / 2) {
+                    if (ball.velocity.x < 0) {
+                        // ball.velocity.x *= -1;  // Reverse X velocity
+                        calculateBallBounce(clampedPaddlePos, playerList[key].playerNumber);
+
+                        playerList[key].score += 1;
+                        ballBounce(2, true);
+                        io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
+                    }
+                }
+            } else if (playerList[key].playerNumber == 3) {
+                // clamp the paddle position to the play area
+                let paddleY, paddleX;
+                if (playerList[key].contrPosR.y + playerPaddleSize.h / 2 > playCubeSize.y) {
+                    paddleY = playCubeSize.y - playerPaddleSize.h / 2;
+                } else if (playerList[key].contrPosR.y - playerPaddleSize.h / 2 < playCubeElevation) {
+                    paddleY = playCubeElevation + playerPaddleSize.h / 2;
+                } else {
+                    paddleY = playerList[key].contrPosR.y;
+                }
+                if (playerList[key].contrPosR.x + playerPaddleSize.w / 2 > playCubeSize.x / 2) {
+                    paddleX = playCubeSize.x / 2 - playerPaddleSize.w / 2;
+                } else if (playerList[key].contrPosR.x - playerPaddleSize.w / 2 < -playCubeSize.x / 2) {
+                    paddleX = -playCubeSize.x / 2 + playerPaddleSize.w / 2;
+                } else {
+                    paddleX = playerList[key].contrPosR.x;
+                }
+                // clamped paddle position to use for the collision and bounce calculation
+                let clampedPaddlePos = { x: paddleX, y: paddleY, z: playCubeSize.z / 2 };
+
+                if (ball.position.z + ball.size >= playCubeSize.z / 2 && ball.position.z < playCubeSize.x / 2 + ball.size &&
+                    clampedPaddlePos.x - playerPaddleSize.w / 2 < ball.position.x + ball.size && ball.position.x - ball.size < clampedPaddlePos.x + playerPaddleSize.w / 2 &&
+                    clampedPaddlePos.y - playerPaddleSize.h / 2 < ball.position.y + ball.size && ball.position.y - ball.size < clampedPaddlePos.y + playerPaddleSize.h / 2) {
+                    if (ball.velocity.z >= 0) {
+                        // ball.velocity.z *= -1;  // Reverse Z velocity
+                        calculateBallBounce(clampedPaddlePos, playerList[key].playerNumber);
+
+                        playerList[key].score += 1;
+                        ballBounce(3, true);
+                        io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
+                    }
+                }
+            } else if (playerList[key].playerNumber == 4) {
+                // clamp the paddle position to the play area
+                let paddleY, paddleX;
+                if (playerList[key].contrPosR.y + playerPaddleSize.h / 2 > playCubeSize.y) {
+                    paddleY = playCubeSize.y - playerPaddleSize.h / 2;
+                } else if (playerList[key].contrPosR.y - playerPaddleSize.h / 2 < playCubeElevation) {
+                    paddleY = playCubeElevation + playerPaddleSize.h / 2;
+                } else {
+                    paddleY = playerList[key].contrPosR.y;
+                }
+                if (playerList[key].contrPosR.x + playerPaddleSize.w / 2 > playCubeSize.x / 2) {
+                    paddleX = playCubeSize.x / 2 - playerPaddleSize.w / 2;
+                } else if (playerList[key].contrPosR.x - playerPaddleSize.w / 2 < -playCubeSize.x / 2) {
+                    paddleX = -playCubeSize.x / 2 + playerPaddleSize.w / 2;
+                } else {
+                    paddleX = playerList[key].contrPosR.x;
+                }
+                // clamped paddle position to use for the collision and bounce calculation
+                let clampedPaddlePos = { x: paddleX, y: paddleY, z: -playCubeSize.z / 2 };
+
+                if (ball.position.z - ball.size <= -playCubeSize.z / 2 && ball.position.z > -playCubeSize.x / 2 - ball.size &&
+                    clampedPaddlePos.x - playerPaddleSize.w / 2 < ball.position.x + ball.size && ball.position.x - ball.size < clampedPaddlePos.x + playerPaddleSize.w / 2 &&
+                    clampedPaddlePos.y - playerPaddleSize.h / 2 < ball.position.y + ball.size && ball.position.y - ball.size < clampedPaddlePos.y + playerPaddleSize.h / 2) {
+                    if (ball.velocity.z < 0) {
+                        // ball.velocity.z *= -1;  // Reverse Z velocity
+                        calculateBallBounce(clampedPaddlePos, playerList[key].playerNumber);
+
+                        playerList[key].score += 1;
+                        ballBounce(4, true);
+                        io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
+                    }
+                }
+            }
+        });
+        // value for the out of bounds check
+        let outOfBoundsValue = 0.3;
+
+        // reset the ball if out of bounds
+        if (ball.position.x > playCubeSize.x / 2 + outOfBoundsValue || ball.position.x < -playCubeSize.x / 2 - outOfBoundsValue ||
+            ball.position.z > playCubeSize.z / 2 + outOfBoundsValue || ball.position.z < -playCubeSize.z / 2 - outOfBoundsValue) {
+
+
+            // Reset Player points on miss --------------------------------------------------------------------------------------
+            if (ball.position.x > playCubeSize.x / 2 + outOfBoundsValue) {
+                // player 1 missed
+                Object.keys(playerList).forEach((key) => {
+                    if (playerList[key].playerNumber == 1) {
+                        playerList[key].score = scoreAfterMiss(playerList[key].score);
+                        io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
+                    }
+                });
+            } else if (ball.position.x < -playCubeSize.x / 2 - outOfBoundsValue) {
+                // player 2 missed
+                Object.keys(playerList).forEach((key) => {
+                    if (playerList[key].playerNumber == 2) {
+                        playerList[key].score = scoreAfterMiss(playerList[key].score);
+                        io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
+                    }
+                });
+            } else if (ball.position.z > playCubeSize.z / 2 + outOfBoundsValue) {
+                // player 3 missed
+                Object.keys(playerList).forEach((key) => {
+                    if (playerList[key].playerNumber == 3) {
+                        playerList[key].score = scoreAfterMiss(playerList[key].score);
+                        io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
+                    }
+                });
+            } else if (ball.position.z < -playCubeSize.z / 2 - outOfBoundsValue) {
+                // player 4 missed
+                Object.keys(playerList).forEach((key) => {
+                    if (playerList[key].playerNumber == 4) {
+                        playerList[key].score = scoreAfterMiss(playerList[key].score);
+                        io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
+                    }
+                });
+            }
+            // Reset the ball
+            resetGame();
+        } else {
+            // make the ball always a litle bit faster
+            ball.speed += 0.00001;
+        }
+
+        // Sending the current game state to all players
+        // the necessary data of the players and the ball
+        io.emit('serverUpdate', prepareGameData(), ball.position, Date.now());
+
+    } else {
+        // reset the ball if no player is in the game
+        if (ball.position.x != 0 && ball.position.y != (playCubeSize.y / 2) - playCubeElevation && ball.position.z != 0) {
+            resetGame();
+        }
+    }
+}, 20);
 // }
 
 ///////////////////////// End Game loop and logic /////////////////////////////
@@ -575,6 +591,7 @@ function startClientGame(newPlayer, socket) {
 
     socket.on('clientUpdate', (data) => {
         playerList[socket.id].setData(data);
+        socket.emit('clientPong', data.clientSendTime);
     });
 
     // Test color change for connection
