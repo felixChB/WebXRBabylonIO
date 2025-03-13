@@ -333,6 +333,11 @@ interface SceneStartInfos {
     ballColor: string,
 }
 
+// interface Ball {
+//     position: { x: number, y: number, z: number };
+//     counter: number;
+// }
+
 interface PlayerGameData {
     id: string;
     position: { x: number, y: number, z: number };
@@ -341,7 +346,6 @@ interface PlayerGameData {
     contrPosL: { x: number, y: number, z: number };
     contrRotR: { x: number, y: number, z: number };
     contrRotL: { x: number, y: number, z: number };
-    
 }
 
 interface PlayerData {
@@ -991,7 +995,7 @@ socket.on('newPlayer', (newPlayer) => {
 });
 
 // update the players position and rotation from the server
-socket.on('serverUpdate', (playerGameDataList, ballPosition, serverSendTime) => {
+socket.on('serverUpdate', (playerGameDataList, ballPosition, serverSendTime, serverUpdateCounter) => {
     Object.keys(playerGameDataList).forEach((id) => {
         if (playerList[id]) {
             // set the new data from the server to the player
@@ -1001,9 +1005,11 @@ socket.on('serverUpdate', (playerGameDataList, ballPosition, serverSendTime) => 
         }
     });
 
+    console.log('Server Update Counter: ', serverUpdateCounter);
+
     updateBall(ballPosition);
 
-    socket.emit('ServerPong', serverSendTime);
+    socket.emit('ServerPong', serverSendTime, socket.id);
 });
 
 function updateBall(ballPosition: { x: number, y: number, z: number }) {
@@ -1585,5 +1591,13 @@ socket.on('clientPong', (serverClientSendTime) => {
     const clientRoundTripTime = clientReceiveTime - clientSendTime;
     console.log('Client Round Trip Time: ', clientRoundTripTime);
     socket.emit('clientRoundTripTime', clientRoundTripTime, socket.id);
+});
+
+// add an event listener for the x key to end the node js process
+// this is only for testing purposes
+document.addEventListener('keydown', (event) => {
+    if(event.key === 'x') {
+        socket.emit('endServer');
+    }
 });
 ////////////////////////// END TESTING GROUND ////////////////////////////// 

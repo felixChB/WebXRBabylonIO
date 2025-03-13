@@ -1,5 +1,5 @@
 import express from "express";
-import { readFileSync } from "fs";
+import fs from "fs";
 import { createServer } from "https";
 // import { createServer } from "http";
 import { fileURLToPath } from 'node:url';
@@ -11,10 +11,10 @@ import { start } from "repl";
 const port = process.env.PORT || 3000;
 
 ////////////// CHANGE THIS TO YOUR LOCAL IP ADDRESS ///////////////////
-//const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
+const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
 //const ipAdress = '192.168.178.35'; // Desktop zuhause // WLAN
 //const ipAdress = '192.168.1.163'; // for local network // Router
-const ipAdress = '192.168.1.188'; // Router
+//const ipAdress = '192.168.1.188'; // Router
 ///////////////////////////////////////////////////////////////////////
 
 const app = express();
@@ -27,8 +27,8 @@ const keyPath = join(__dirname, 'sslcerts', 'selfsigned.key');
 const certPath = join(__dirname, 'sslcerts', 'selfsigned.cert');
 
 const httpsServer = createServer({
-    key: readFileSync(keyPath),
-    cert: readFileSync(certPath)
+    key: fs.readFileSync(keyPath),
+    cert: fs.readFileSync(certPath)
 }, app);
 
 const io = new Server(httpsServer, { /* options */ });
@@ -89,6 +89,9 @@ let connectedClientNumber = 0;
 /////////////////////////////  VARIABLES  //////////////////////////////////
 // Server Variables
 let serverStartTime;
+let serverUpdateCounter = 0;
+
+let latencyTestArray = [];
 
 // Store all connected players
 let playerList = {};
@@ -169,28 +172,34 @@ io.on('connection', (socket) => {
 
     // Network Ping Pong Test //
 
-    socket.on('pong', (data) => {
-        console.log("Pong received");
-        console.log("Pong received Data: " + data.serverSendTime + " | " + data.clientReceiveTime + " | " + data.clientId);
+    // socket.on('pong', (data) => {
+    //     console.log("Pong received");
+    //     console.log("Pong received Data: " + data.serverSendTime + " | " + data.clientReceiveTime + " | " + data.clientId);
+    //     const serverReceiveTime = Date.now();
+    //     const serverSendTime = data.serverSendTime;
+    //     const clientReceiveTime = data.clientReceiveTime;
+
+    //     const serverToClientLatency = clientReceiveTime - serverSendTime;
+    //     const clientToServerLatency = serverReceiveTime - clientReceiveTime;
+
+    //     console.log(`${data.clientId}: Server -> Client: ${serverToClientLatency} ms | Client -> Server: ${clientToServerLatency} ms, Roundtrip: ${serverToClientLatency + clientToServerLatency} ms`);
+    // });
+
+    socket.on('ServerPong', (clientServerSendTime, id) => {
+        const serverSendTime = clientServerSendTime;
         const serverReceiveTime = Date.now();
-        const serverSendTime = data.serverSendTime;
-        const clientReceiveTime = data.clientReceiveTime;
-
-        const serverToClientLatency = clientReceiveTime - serverSendTime;
-        const clientToServerLatency = serverReceiveTime - clientReceiveTime;
-
-        console.log(`${data.clientId}: Server -> Client: ${serverToClientLatency} ms | Client -> Server: ${clientToServerLatency} ms, Roundtrip: ${serverToClientLatency + clientToServerLatency} ms`);
-    });
-
-    socket.on('ServerPong', (clientServerSendTime) => {
-        const ServerSendTime = clientServerSendTime;
-        const ServerReceiveTime = Date.now();
-        const ServerRoundTripTime = ServerReceiveTime - ServerSendTime;
-        console.log('Server Round Trip Time: ', ServerRoundTripTime);
+        const serverRoundTripTime = serverReceiveTime - serverSendTime;
+        latencyTestArray.push(`${id} SRTT: ${serverRoundTripTime}`);
+        console.log(`${id} SRTT: ${serverRoundTripTime}`);
+        const content = `${id} SRTT: ${serverRoundTripTime}`;
+        fs.writeFile('/other_files/network_tests/test02.txt', content, { flag: 'a+' }, err => { });
     });
 
     socket.on('clientRoundTripTime', (clientRoundTripTime, id) => {
-        console.log(`${id} RTT: ${clientRoundTripTime}`);
+        latencyTestArray.push(`${id} CRTT: ${clientRoundTripTime}`);
+        console.log(`${id} CRTT: ${clientRoundTripTime}`);
+        const content = `${id} CRTT: ${clientRoundTripTime}`;
+        fs.writeFile('/other_files/network_tests/test02.txt', content, { flag: 'a+' }, err => { });
     });
 
     // Function to send a ping message to the client
@@ -286,6 +295,13 @@ io.on('connection', (socket) => {
 
         io.emit('playerDisconnected', socket.id);
         io.emit('scoreUpdate', socket.id, 0);
+    });
+
+    // End the Server when a player presses the x button (should be done by the operator)
+    socket.on('endServer', () => {
+        writeTestArrayToFile();
+        console.log('Server is shutting down.');
+        process.exit();
     });
 });
 
@@ -536,9 +552,13 @@ setInterval(function () {
             ball.speed += 0.00001;
         }
 
+        // add  the counter to the ball position
+        let ballPosCounter = { x: ball.position.x, y: ball.position.y, z: ball.position.z, counter: serverUpdateCounter };
+
         // Sending the current game state to all players
         // the necessary data of the players and the ball
-        io.emit('serverUpdate', prepareGameData(), ball.position, Date.now());
+        io.emit('serverUpdate', prepareGameData(), ball.position, Date.now(), serverUpdateCounter);
+        serverUpdateCounter++;
 
     } else {
         // reset the ball if no player is in the game
@@ -579,6 +599,7 @@ function startClientGame(newPlayer, socket) {
     socket.join('gameRoom');
 
     console.log(`Player ${newPlayer.id} started playing.`);
+    latencyTestArray.push(`Player ${newPlayer.id} started playing.`);
 
     // Add new player to the game
     playerList[newPlayer.id] = newPlayer;
@@ -723,4 +744,16 @@ function ballBounce(playerNumber, isPaddle) {
         ball.speed += 0.0001;
     }
     io.emit('ballBounce', playerNumber, isPaddle);
+}
+
+function writeTestArrayToFile() {
+    const arrayFilePath = join(__dirname, 'other_files', 'network_tests', 'test02.txt');
+    const content = latencyTestArray.join('\n');
+    fs.writeFileSync(arrayFilePath, content, { flag: 'a+' }, (err) => {
+        if (err) {
+            console.error('Error writing to file', err);
+        } else {
+            console.log('Latency test results written to file');
+        }
+    });
 }
