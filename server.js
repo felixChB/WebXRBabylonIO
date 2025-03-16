@@ -7,6 +7,7 @@ import { dirname, join } from 'node:path';
 import { Server } from "socket.io";
 import { SocketAddress } from "net";
 import { start } from "repl";
+import { constants } from "node:crypto";
 
 const port = process.env.PORT || 3000;
 
@@ -167,6 +168,7 @@ let playerStartInfos = {
 // Handle connections and logic
 io.on('connection', (socket) => {
     console.log(`Player connected: ${socket.id}`);
+    latencyTestArray.push(`Player connected: ${socket.id}`);
     socket.emit('ClientID', socket.id);
     connectedClientNumber++;
 
@@ -190,14 +192,14 @@ io.on('connection', (socket) => {
         const serverReceiveTime = Date.now();
         const serverRoundTripTime = serverReceiveTime - serverSendTime;
         latencyTestArray.push(`${id} SRTT: ${serverRoundTripTime}`);
-        console.log(`${id} SRTT: ${serverRoundTripTime}`);
+        // console.log(`${id} SRTT: ${serverRoundTripTime}`);
         const content = `${id} SRTT: ${serverRoundTripTime}`;
         fs.writeFile('/other_files/network_tests/test02.txt', content, { flag: 'a+' }, err => { });
     });
 
     socket.on('clientRoundTripTime', (clientRoundTripTime, id) => {
         latencyTestArray.push(`${id} CRTT: ${clientRoundTripTime}`);
-        console.log(`${id} CRTT: ${clientRoundTripTime}`);
+        // console.log(`${id} CRTT: ${clientRoundTripTime}`);
         const content = `${id} CRTT: ${clientRoundTripTime}`;
         fs.writeFile('/other_files/network_tests/test02.txt', content, { flag: 'a+' }, err => { });
     });
@@ -262,6 +264,7 @@ io.on('connection', (socket) => {
 
         if (socket.id in playerList) {
             console.log(`Player ${socket.id} left the Game.`);
+            latencyTestArray.push(`Player ${socket.id} left the Game.`);
 
             playerStartInfos[playerList[socket.id].playerNumber].used = false;
 
@@ -285,12 +288,14 @@ io.on('connection', (socket) => {
 
         if (socket.id in playerList) {
             console.log(`Player ${socket.id} disconnected from the game.`);
+            latencyTestArray.push(`Player ${socket.id} disconnected from the game.`);
 
             playerStartInfos[playerList[socket.id].playerNumber].used = false;
 
             delete playerList[socket.id];
         } else {
             console.log(`Player ${socket.id} disconnected from the waiting room.`);
+            latencyTestArray.push(`Player ${socket.id} disconnected from the waiting room.`);
         }
 
         io.emit('playerDisconnected', socket.id);
@@ -298,18 +303,22 @@ io.on('connection', (socket) => {
     });
 
     // End the Server when a player presses the x button (should be done by the operator)
-    socket.on('endServer', () => {
-        writeTestArrayToFile();
+    socket.on('endServer', (endType) => {
         console.log('Server is shutting down.');
-        process.exit();
+        latencyTestArray.push('Server is shutting down.');
+        if (endType != 'shutdown') {
+            writeTestArrayToFile(endType);
+        } else {
+            process.exit();
+        }
     });
 });
 
 httpsServer.listen(port, ipAdress, () => {
     // console.log('Server is listening on port https://localhost:' + port);        // for localhost network
     console.log('Server is listening on port https://' + ipAdress + ':' + port);    // for local ip network
+    latencyTestArray.push('Server is listening on port https://' + ipAdress + ':' + port);
     serverStartTime = Date.now();
-    // console.log('Server start time: ' + serverStartTime);
 });
 
 ///////////////////////// Game loop and logic /////////////////////////////
@@ -666,7 +675,7 @@ function calculateBallBounce(contrRPos, playerNumber) {
     const maxBounceAngleH = Math.PI / 3;
 
     // constant speed (should always be 1)
-    const velocitySpeedCheck = Math.sqrt(ball.velocity.x ** 2 + ball.velocity.y ** 2 + ball.velocity.z ** 2);
+    // const velocitySpeedCheck = Math.sqrt(ball.velocity.x ** 2 + ball.velocity.y ** 2 + ball.velocity.z ** 2);
     const velocitySpeed = 1;
     // console.log('velocitySpeedCheck: ' + velocitySpeedCheck);
 
@@ -746,14 +755,59 @@ function ballBounce(playerNumber, isPaddle) {
     io.emit('ballBounce', playerNumber, isPaddle);
 }
 
-function writeTestArrayToFile() {
-    const arrayFilePath = join(__dirname, 'other_files', 'network_tests', 'test02.txt');
-    const content = latencyTestArray.join('\n');
-    fs.writeFileSync(arrayFilePath, content, { flag: 'a+' }, (err) => {
+function writeTestArrayToFile(testType) {
+    console.log('Writing test results to file');
+
+    let testFolderPath = '';
+    let nextTestNumber = 0;
+    let maxTestNumber = 0;
+
+    if (testType == 'latency') {
+        testFolderPath = join(__dirname, 'other_files', 'performance_tests', 'latency_tests');
+    } else if (testType == 'network') {
+        testFolderPath = join(__dirname, 'other_files', 'performance_tests', 'network_tests');
+    }
+
+    fs.readdir(testFolderPath, (err, files) => {
         if (err) {
-            console.error('Error writing to file', err);
+            console.error('Error reading directory', err);
         } else {
-            console.log('Latency test results written to file');
+            console.log(files.length);
+
+            if (files.length == 0) {
+                nextTestNumber = 1;
+            } else {
+                files.forEach(file => {
+                    const regex = new RegExp(`${testType}_test(\\d+)`);
+                    const match = file.match(regex);
+                    if (match) {
+                        const testNumber = parseInt(match[1], 10);
+                        if (testNumber > maxTestNumber) {
+                            maxTestNumber = testNumber;
+                        }
+                    }
+                });
+            }
         }
+
+        nextTestNumber = maxTestNumber + 1;
+
+        console.log('Next Test Number:', nextTestNumber);
+
+        let currentDate = new Date();
+        const headerContent = `Performance Test_${nextTestNumber}\nTest Type: ${testType}\nDate: ${currentDate}\n\n`;
+
+        const arrayContent = latencyTestArray.join('\n');
+        const content = join(headerContent, arrayContent);
+
+        const testFilePath = join(testFolderPath, `${testType}_test${nextTestNumber}.txt`);
+        fs.writeFile(testFilePath, content, { flag: 'w' }, (err) => {
+            if (err) {
+                console.error('Error writing to file', err);
+            } else {
+                console.log(`${testType} test results written to file`);
+                process.exit();
+            }
+        });
     });
 }

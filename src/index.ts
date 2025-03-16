@@ -1283,7 +1283,7 @@ socket.on('playerDisconnected', (id) => {
             defaultCamera.rotation = new Vector3(Math.PI / 2, Math.PI, Math.PI / 4);
         }
     }
-});           
+});
 
 ////////////////////////// RENDER LOOP //////////////////////////////
 // Register a render loop to repeatedly render the scene
@@ -1300,7 +1300,7 @@ engine.runRenderLoop(function () {
 
     // Direct controller movement
     // if (playerList[playerID].controllerL && playerList[playerID].controllerR) {
-        
+
     // }
 
     scene.render();
@@ -1556,6 +1556,18 @@ window.addEventListener('keydown', function (event) {
             });
         }
     }
+
+    // add an event listener for ending the server und get the test results
+    // l: latency, n: network, x: end server without test results
+    if (event.key === 'x') {
+        socket.emit('endServer', 'shutdown');
+    }
+    if (event.key === 'l') {
+        socket.emit('endServer', 'latency');
+    }
+    if (event.key === 'n') {
+        socket.emit('endServer', 'network');
+    }
 });
 
 // document.addEventListener('click', () => {
@@ -1593,11 +1605,4 @@ socket.on('clientPong', (serverClientSendTime) => {
     socket.emit('clientRoundTripTime', clientRoundTripTime, socket.id);
 });
 
-// add an event listener for the x key to end the node js process
-// this is only for testing purposes
-document.addEventListener('keydown', (event) => {
-    if(event.key === 'x') {
-        socket.emit('endServer');
-    }
-});
 ////////////////////////// END TESTING GROUND ////////////////////////////// 
