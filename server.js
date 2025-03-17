@@ -772,7 +772,6 @@ function writeTestArrayToFile(testType) {
         if (err) {
             console.error('Error reading directory', err);
         } else {
-            console.log(files.length);
 
             if (files.length == 0) {
                 nextTestNumber = 1;
@@ -791,8 +790,6 @@ function writeTestArrayToFile(testType) {
         }
 
         nextTestNumber = maxTestNumber + 1;
-
-        console.log('Next Test Number:', nextTestNumber);
 
         let currentDate = new Date();
         const headerContent = `Performance Test_${nextTestNumber}\nTest Type: ${testType}\nDate: ${currentDate}\n\n`;

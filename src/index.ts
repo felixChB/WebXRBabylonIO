@@ -930,19 +930,6 @@ socket.on('startClientGame', (newSocketPlayer) => {
         if (playerWall) {
             playerWall.isVisible = false;
         }
-        // let playerScore = scene.getMeshByName(`player${playerList[playerID].playerNumber}ScoreMesh`) as Mesh;
-        // if (playerScore) {
-        //     playerScore.isVisible = true;
-        //     if (clientPlayer.playerNumber == 1) {
-        //         playerScore.position = new Vector3(sceneStartInfos.playCubeSize.x / 2, sceneStartInfos.playCubeSize.y - 0.1, sceneStartInfos.playCubeSize.z / 2 - 0.1);
-        //     } else if (clientPlayer.playerNumber == 2) {
-        //         playerScore.position = new Vector3(-(sceneStartInfos.playCubeSize.x / 2), sceneStartInfos.playCubeSize.y - 0.1, -(sceneStartInfos.playCubeSize.z / 2) + 0.1);
-        //     } else if (clientPlayer.playerNumber == 3) {
-        //         playerScore.position = new Vector3(-(sceneStartInfos.playCubeSize.x / 2) + 0.1, sceneStartInfos.playCubeSize.y - 0.1, sceneStartInfos.playCubeSize.z / 2);
-        //     } else if (clientPlayer.playerNumber == 4) {
-        //         playerScore.position = new Vector3((sceneStartInfos.playCubeSize.x / 2) - 0.1, sceneStartInfos.playCubeSize.y - 0.1, -(sceneStartInfos.playCubeSize.z / 2));
-        //     }
-        // }
 
         // Spawn yourself Entity
         addPlayer(playerList[playerID], true);
