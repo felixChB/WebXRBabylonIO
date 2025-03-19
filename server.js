@@ -289,6 +289,8 @@ io.on('connection', (socket) => {
         playerList[socket.id].isPlaying = false;
         playerList[socket.id].score = 0;
 
+        playerStartInfos[playerList[socket.id].playerNumber].used = false;
+
         io.emit('playerLeftGame', socket.id);
         io.emit('scoreUpdate', socket.id, 0);
     });

@@ -830,6 +830,9 @@ socket.on('currentState', (players: { [key: string]: Player }, ballColor: string
 
         // Spawn new player Entity
         addPlayer(playerList[id], false);
+        if (playerList[id].isPlaying) {
+            addPlayerGameUtils(playerList[id], false);
+        }
     });
 
     setPlayerAvailability(playerStartInfos);
@@ -867,40 +870,35 @@ socket.on('clientEntersAR', (newSocketPlayer) => {
                     let triggerComponent = motionController.getComponent(xrIDs[0]); //xr-standard-trigger
                     triggerComponent.onButtonStateChangedObservable.add(() => {
                         if (triggerComponent.pressed) {
-                            // socket.emit('clicked');
-                            // xr.baseExperience.exitXRAsync();
-                            if (playerList[playerID].isPlaying) {
-                                socket.emit('clientLeavesGame', playerList[playerID].playerNumber);
-                            }
+
                         }
                     });
 
                     let squeezeComponent = motionController.getComponent(xrIDs[1]);//xr-standard-squeeze
                     squeezeComponent.onButtonStateChangedObservable.add(() => {
                         if (squeezeComponent.pressed) {
-                            // socket.emit('clicked', playerList[playerID].color);
+
                         }
                     });
 
                     let thumbstickComponent = motionController.getComponent(xrIDs[2]);//xr-standard-thumbstick
                     thumbstickComponent.onButtonStateChangedObservable.add(() => {
                         if (thumbstickComponent.pressed) {
-                            // socket.emit('clicked', playerList[playerID].color);
-                            // debugTestclick();
+
                         }
                     });
 
                     let xbuttonComponent = motionController.getComponent(xrIDs[3]);//x-button
                     xbuttonComponent.onButtonStateChangedObservable.add(() => {
                         if (xbuttonComponent.pressed) {
-                            // socket.emit('clicked', playerList[playerID].color);
+
                         }
                     });
 
                     let ybuttonComponent = motionController.getComponent(xrIDs[4]);//y-button
                     ybuttonComponent.onButtonStateChangedObservable.add(() => {
                         if (ybuttonComponent.pressed) {
-                            // socket.emit('clicked', playerList[playerID].color);
+
                         }
                     });
                 }
@@ -913,8 +911,27 @@ socket.on('clientEntersAR', (newSocketPlayer) => {
                     let triggerComponent = motionController.getComponent(xrIDs[0]);//xr-standard-trigger
                     triggerComponent.onButtonStateChangedObservable.add(() => {
                         if (triggerComponent.pressed) {
-                            // socket.emit('clicked');
-                            // xr.baseExperience.exitXRAsync();
+
+                        }
+                    });
+
+                    let squeezeComponent = motionController.getComponent(xrIDs[1]);//xr-standard-squeeze
+                    squeezeComponent.onButtonStateChangedObservable.add(() => {
+                        if (squeezeComponent.pressed) {
+
+                        }
+                    });
+
+                    let thumbstickComponent = motionController.getComponent(xrIDs[2]);//xr-standard-thumbstick
+                    thumbstickComponent.onButtonStateChangedObservable.add(() => {
+                        if (thumbstickComponent.pressed) {
+
+                        }
+                    });
+
+                    let abuttonComponent = motionController.getComponent(xrIDs[3]);//a-button
+                    abuttonComponent.onButtonStateChangedObservable.add(() => {
+                        if (abuttonComponent.pressed) {
                             // !7
                             if (!playerList[playerID].isPlaying) {
                                 socket.emit('requestJoinGame', playerList[playerID].playerNumber);
@@ -922,32 +939,12 @@ socket.on('clientEntersAR', (newSocketPlayer) => {
                         }
                     });
 
-                    let squeezeComponent = motionController.getComponent(xrIDs[1]);//xr-standard-squeeze
-                    squeezeComponent.onButtonStateChangedObservable.add(() => {
-                        if (squeezeComponent.pressed) {
-                            // socket.emit('clicked', playerList[playerID].color);
-                        }
-                    });
-
-                    let thumbstickComponent = motionController.getComponent(xrIDs[2]);//xr-standard-thumbstick
-                    thumbstickComponent.onButtonStateChangedObservable.add(() => {
-                        if (thumbstickComponent.pressed) {
-                            // socket.emit('clicked', playerList[playerID].color);
-                            // debugTestclick();
-                        }
-                    });
-
-                    let abuttonComponent = motionController.getComponent(xrIDs[3]);//a-button
-                    abuttonComponent.onButtonStateChangedObservable.add(() => {
-                        if (abuttonComponent.pressed) {
-                            // socket.emit('clicked', playerList[playerID].color);
-                        }
-                    });
-
                     let bbuttonComponent = motionController.getComponent(xrIDs[4]);//b-button
                     bbuttonComponent.onButtonStateChangedObservable.add(() => {
                         if (bbuttonComponent.pressed) {
-                            // socket.emit('clicked', playerList[playerID].color);
+                            if (playerList[playerID].isPlaying) {
+                                socket.emit('clientLeavesGame', playerList[playerID].playerNumber);
+                            }
                         }
                     });
                 }
@@ -973,6 +970,11 @@ socket.on('clientEntersAR', (newSocketPlayer) => {
         if (xrCamera) {
             xrCamera.position = new Vector3(playerList[playerID].position.x, playerList[playerID].position.y, playerList[playerID].position.z);
             xrCamera.rotationQuaternion = Quaternion.FromEulerAngles(playerList[playerID].rotation.x, playerList[playerID].rotation.y, playerList[playerID].rotation.z);
+        }
+
+        let playerWall = scene.getMeshByName(`player${playerList[playerID].playerNumber}Wall`) as Mesh;
+        if (playerWall) {
+            playerWall.isVisible = false;
         }
     }).catch((err) => {
         console.error('Failed to enter VR', err);
@@ -1496,7 +1498,7 @@ function handleMouseOut(playerNumber: number, isPreButton: boolean = false) {
 
             // show the specific player wall again
             let playerWall = scene.getMeshByName(`player${playerNumber}Wall`) as Mesh;
-            if (playerWall && !playerUsingXR) {
+            if (playerWall /*&& !playerUsingXR*/) {
                 playerWall.isVisible = true;
             }
         }
