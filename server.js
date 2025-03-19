@@ -58,6 +58,7 @@ class Player {
         this.color = startData.color;
         this.playerNumber = startData.playerNumber;
         this.score = 0;
+        this.isPlaying = false;
         this.startPosition = { x: startData.position.x, y: startData.position.y, z: startData.position.z };
         this.position = { x: startData.position.x, y: startData.position.y, z: startData.position.z };
         this.rotation = { x: startData.rotation.x, y: startData.rotation.y, z: startData.rotation.z };
@@ -165,10 +166,12 @@ let playerStartInfos = {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// !1
 // Handle connections and logic
 io.on('connection', (socket) => {
     console.log(`Player connected: ${socket.id}`);
     latencyTestArray.push(`Player connected: ${socket.id}`);
+    // !2
     socket.emit('ClientID', socket.id);
     connectedClientNumber++;
 
@@ -215,6 +218,7 @@ io.on('connection', (socket) => {
 
     // End Network Ping Pong Test //
 
+    // !3
     socket.on('clientStartTime', (clientStartTime) => {
         if (clientStartTime < serverStartTime) {
             // console.log(`Client start time (${clientStartTime}) is lower than server start time (${serverStartTime}). Forcing reload.`);
@@ -230,34 +234,63 @@ io.on('connection', (socket) => {
     }
 
     socket.join('waitingRoom');
+    // !4
     socket.emit('joinedWaitingRoom');
-    socket.emit('timeForPreviousPlayers');
+    /*socket.emit('timeForPreviousPlayers');*/
 
+    // !5
     // Send the current state to the new player
     socket.emit('currentState', playerList, activeColor, playerStartInfos, sceneStartinfos);
 
-    socket.on('continueAsPreviousPlayer', (previousPlayerData) => {
+    // start as a previous player
+    /*socket.on('continueAsPreviousPlayer', (previousPlayerData) => {
         if (playerStartInfos[previousPlayerData.playerNumber].used == false) {
             playerStartInfos[previousPlayerData.playerNumber].used = true;
 
             const newPlayer = new Player(socket.id, previousPlayerData);
 
-            startClientGame(newPlayer, socket);
+            clientStartPlaying(newPlayer, socket);
+        } else {
+            socket.emit('startPosDenied');
+        }
+    });*/
+
+    // !6
+    socket.on('requestEnterAR', (startPlayerNum) => {
+        if (playerStartInfos[startPlayerNum].used == false) {
+
+            const newPlayer = new Player(socket.id, playerStartInfos[startPlayerNum]);
+
+            clientEntersAR(newPlayer, socket);
+
+            socket.on('clientUpdate', (data) => {
+                playerList[socket.id].setData(data);
+                socket.emit('clientPong', data.clientSendTime);
+            });
         } else {
             socket.emit('startPosDenied');
         }
     });
 
-    socket.on('requestGameStart', (startPlayerNum) => {
+    // !7
+    socket.on('requestJoinGame', (startPlayerNum) => {
+        console.log(`Player ${socket.id} requested to join the game as Player ${startPlayerNum}.`);
+        // kommt abfrage rein ob der spieler in seiner spielarea ist
         if (playerStartInfos[startPlayerNum].used == false) {
             playerStartInfos[startPlayerNum].used = true;
 
-            const newPlayer = new Player(socket.id, playerStartInfos[startPlayerNum]);
-
-            startClientGame(newPlayer, socket);
+            clientStartPlaying(socket, startPlayerNum);
         } else {
             socket.emit('startPosDenied');
         }
+    });
+
+    socket.on('clientLeavesGame', () => {
+        playerList[socket.id].isPlaying = false;
+        playerList[socket.id].score = 0;
+
+        io.emit('playerLeftGame', socket.id);
+        io.emit('scoreUpdate', socket.id, 0);
     });
 
     socket.on('playerEndVR', () => {
@@ -274,7 +307,7 @@ io.on('connection', (socket) => {
 
             socket.leave('gameRoom');
             socket.join('waitingRoom');
-            socket.emit('timeForPreviousPlayers');
+            /*socket.emit('timeForPreviousPlayers');*/
 
             io.emit('playerDisconnected', socket.id);
             io.emit('scoreUpdate', socket.id, 0);
@@ -326,8 +359,15 @@ httpsServer.listen(port, ipAdress, () => {
 //    console.log('Game loop started.');
 setInterval(function () {
 
+    let onePlayerPlaying = false;
+    Object.keys(playerList).forEach((key) => {
+        if (playerList[key].isPlaying == true) {
+            onePlayerPlaying = true;
+        }
+    });
+
     // if there are players in the game
-    if (Object.keys(playerList).length > 0) {
+    if (onePlayerPlaying) {
         // Update the ball position
         ball.position.x += ball.velocity.x * ball.speed;
         ball.position.y += ball.velocity.y * ball.speed;
@@ -564,16 +604,19 @@ setInterval(function () {
         // add  the counter to the ball position
         let ballPosCounter = { x: ball.position.x, y: ball.position.y, z: ball.position.z, counter: serverUpdateCounter };
 
-        // Sending the current game state to all players
-        // the necessary data of the players and the ball
-        io.emit('serverUpdate', prepareGameData(), ball.position, Date.now(), serverUpdateCounter);
-        serverUpdateCounter++;
-
     } else {
         // reset the ball if no player is in the game
         if (ball.position.x != 0 && ball.position.y != (playCubeSize.y / 2) - playCubeElevation && ball.position.z != 0) {
+            console.log('No Players in the Game, resetting Ball.');
             resetGame();
         }
+    }
+
+    // Sending the current game state to all players if there are players in XR (AR/VR)
+    // the necessary data of the players and the ball
+    if (Object.keys(playerList).length > 0) {
+        io.emit('serverUpdate', prepareGameData(), ball.position, Date.now(), serverUpdateCounter);
+        serverUpdateCounter++;
     }
 }, 20);
 // }
@@ -600,39 +643,47 @@ function scoreAfterMiss(oldScore) {
     return newScore;
 }
 
-// Start the game for the new player
-// can be called from a new player or an previous player
-function startClientGame(newPlayer, socket) {
-
+function clientEntersAR(newPlayer, socket) {
     socket.leave('waitingRoom');
     socket.join('gameRoom');
 
-    console.log(`Player ${newPlayer.id} started playing.`);
-    latencyTestArray.push(`Player ${newPlayer.id} started playing.`);
+    console.log(`Player ${newPlayer.id} entered AR.`);
+    latencyTestArray.push(`Player ${newPlayer.id} entered AR.`);
 
-    // Add new player to the game
+    // Add new player to the playerArray
     playerList[newPlayer.id] = newPlayer;
 
+    socket.emit('clientEntersAR', playerList[newPlayer.id]);
+
+    socket.to('waitingRoom').to('gameRoom').emit('newPlayer', playerList[newPlayer.id]);
+}
+
+// !7
+// Start the game for the new player
+// can be called from a new player or an previous player
+function clientStartPlaying(socket, playerNumber) {
+    console.log(`Player ${socket.id} started playing as Player ${playerNumber}.`);
+    latencyTestArray.push(`Player ${socket.id} started playing as Player ${playerNumber}.`);
+
+    // set the isPlaying flag to true
+    playerList[socket.id].isPlaying = true;
+
+    // !8
     // Start the Game on client side and send the player's information to the new player
-    socket.emit('startClientGame', playerList[newPlayer.id]);
+    socket.emit('clientStartPlaying');
 
     // Notify other players of the new player (waitingRoom and gameRoom)
-    socket.to('waitingRoom').to('gameRoom').emit('newPlayer', playerList[newPlayer.id]);
-
-    socket.on('clientUpdate', (data) => {
-        playerList[socket.id].setData(data);
-        socket.emit('clientPong', data.clientSendTime);
-    });
+    socket.to('waitingRoom').to('gameRoom').emit('playerStartPlaying', playerList[socket.id]);
 
     // Test color change for connection
     // socket.on('clicked', (playerColor) => {
     //     changeBallColor(playerColor);
     // });
 
-    socket.on('testClick', (id) => {
-        playerList[id].score += 1;
-        io.emit('scoreUpdate', id, playerList[id].score);
-    });
+    // socket.on('testClick', (id) => {
+    //     playerList[id].score += 1;
+    //     io.emit('scoreUpdate', id, playerList[id].score);
+    // });
 };
 
 // function changeBallColor(playerColor) {

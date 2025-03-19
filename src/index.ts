@@ -21,7 +21,7 @@ let clientStartTime = Date.now();
 
 let playerID: string;
 let clientPlayer: Player | null = null;
-let playerUsingVR: boolean = false;
+let playerUsingXR: boolean = false;
 // let clientStartPos: { x: number, y: number, z: number };
 
 let playerList: { [key: string]: Player } = {};
@@ -51,8 +51,6 @@ for (let i = 1; i <= 4; i++) {
     startButtons[i] = startbutton as HTMLButtonElement;
 }
 // const startPosButtons = document.querySelectorAll('.posSelection');
-
-console.log('Start Buttons: ', startButtons);
 
 // Create HTML Elements
 const canvas = document.createElement('canvas'); // Create a canvas element for rendering
@@ -287,6 +285,30 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     wallBounceMat.roughness = 0.5;
     wallBounceMat.backFaceCulling = false;
 
+    // creating the Materials for the players
+    var player1Mat = new PBRMaterial(`player1_mat`, scene);
+    player1Mat.emissiveColor = Color3.FromHexString(playerStartInfos[1].color);
+    player1Mat.alpha = 0.2;
+    player1Mat.disableLighting = true;
+    player1Mat.backFaceCulling = false;
+
+    var player2Mat = new PBRMaterial(`player2_mat`, scene);
+    player2Mat.emissiveColor = Color3.FromHexString(playerStartInfos[2].color);
+    player2Mat.alpha = 0.2;
+    player2Mat.disableLighting = true;
+    player2Mat.backFaceCulling = false;
+
+    var player3Mat = new PBRMaterial(`player3_mat`, scene);
+    player3Mat.emissiveColor = Color3.FromHexString(playerStartInfos[3].color);
+    player3Mat.alpha = 0.2;
+    player3Mat.disableLighting = true;
+    player3Mat.backFaceCulling = false;
+
+    var player4Mat = new PBRMaterial(`player4_mat`, scene);
+    player4Mat.emissiveColor = Color3.FromHexString(playerStartInfos[4].color);
+    player4Mat.alpha = 0.2;
+    player4Mat.disableLighting = true;
+    player4Mat.backFaceCulling = false;
 
     // Setting Materials
     ground.material = wireframeMat;
@@ -353,6 +375,7 @@ interface PlayerData {
     color: string;
     playerNumber: number;
     score: number;
+    isPlaying: boolean;
     position: { x: number, y: number, z: number };
     rotation: { x: number, y: number, z: number };
     contrPosR: { x: number, y: number, z: number };
@@ -380,6 +403,7 @@ class Player implements PlayerData {
     color: string;
     playerNumber: number;
     score: number;
+    isPlaying: boolean;
     position: { x: number, y: number, z: number };
     rotation: { x: number, y: number, z: number };
     contrPosR: { x: number, y: number, z: number };
@@ -398,6 +422,7 @@ class Player implements PlayerData {
         this.color = player.color;
         this.playerNumber = player.playerNumber;
         this.score = player.score;
+        this.isPlaying = player.isPlaying;
         this.position = { x: player.position.x, y: player.position.y, z: player.position.z };
         this.rotation = { x: player.rotation.x, y: player.rotation.y, z: player.rotation.z };
         this.contrPosR = { x: player.contrPosR.x, y: player.contrPosR.y, z: player.contrPosR.z };
@@ -453,7 +478,7 @@ class Player implements PlayerData {
                     paddleZ = this.contrPosR.z;
                 }
                 this.paddle.position = new Vector3(sceneStartInfos.playCubeSize.x / 2, paddleY, paddleZ);
-                if (this.scoreMesh && playerUsingVR) {
+                if (this.scoreMesh && playerUsingXR) {
                     this.scoreMesh.position = this.paddle.position;
                 }
                 if (this.paddleLight) {
@@ -477,7 +502,7 @@ class Player implements PlayerData {
                     paddleZ = this.contrPosR.z;
                 }
                 this.paddle.position = new Vector3(-sceneStartInfos.playCubeSize.x / 2, paddleY, paddleZ);
-                if (this.scoreMesh && playerUsingVR) {
+                if (this.scoreMesh && playerUsingXR) {
                     this.scoreMesh.position = this.paddle.position;
                 }
                 if (this.paddleLight) {
@@ -500,7 +525,7 @@ class Player implements PlayerData {
                     paddleX = this.contrPosR.x;
                 }
                 this.paddle.position = new Vector3(paddleX, paddleY, sceneStartInfos.playCubeSize.z / 2);
-                if (this.scoreMesh && playerUsingVR) {
+                if (this.scoreMesh && playerUsingXR) {
                     this.scoreMesh.position = this.paddle.position;
                 }
                 if (this.paddleLight) {
@@ -523,7 +548,7 @@ class Player implements PlayerData {
                     paddleX = this.contrPosR.x;
                 }
                 this.paddle.position = new Vector3(paddleX, paddleY, -sceneStartInfos.playCubeSize.z / 2);
-                if (this.scoreMesh && playerUsingVR) {
+                if (this.scoreMesh && playerUsingXR) {
                     this.scoreMesh.position = this.paddle.position;
                 }
                 if (this.paddleLight) {
@@ -627,7 +652,8 @@ window.addEventListener('resize', function () {
             // const htmlBtnId = (event.target as HTMLElement).id;
             // const btnPlayerNumber = Number(htmlBtnId.split('-')[]);
             // console.log(`Button with id ${htmlBtnId} clicked`);
-            socket.emit('requestGameStart', i);
+            socket.emit('requestEnterAR', i);
+            // socket.emit('requestJoinGame', i);
         });
     }
 
@@ -641,7 +667,7 @@ window.addEventListener('resize', function () {
         xr.baseExperience.sessionManager.onXRSessionInit.add(() => {
 
             xrCamera = xr.baseExperience.camera;
-            playerUsingVR = true;
+            playerUsingXR = true;
             scene.activeCamera = xrCamera;
             // ssr.addCamera(xrCamera);
         });
@@ -649,7 +675,7 @@ window.addEventListener('resize', function () {
         xr.baseExperience.sessionManager.onXRSessionEnded.add(() => {
             engine.resize();
             getLocalStorage();
-            playerUsingVR = false;
+            playerUsingXR = false;
             console.log('Player is leaving VR');
             socket.emit('playerEndVR');
             startScreen?.style.setProperty('display', 'flex');
@@ -665,7 +691,7 @@ window.addEventListener('resize', function () {
             // exit VR Session on ESC
             if (event.key === 'Escape') {
                 // console.log('Escape Key pressed');
-                if (playerUsingVR) {
+                if (playerUsingXR) {
                     xr.baseExperience.exitXRAsync();
                     // engine.resize();
                 }
@@ -675,7 +701,7 @@ window.addEventListener('resize', function () {
         setInterval(function () {
             // console.log('Interval Function');
             if (clientPlayer) {
-                if (playerUsingVR) {
+                if (playerUsingXR) {
                     if (xrCamera && leftController && rightController) {
                         // console.log('Sending Data to Server while VR');
                         clientPlayer.sendData(xrCamera, leftController, rightController);
@@ -686,23 +712,27 @@ window.addEventListener('resize', function () {
     }
 })();
 
+// !1
 // Send the client's start time to the server upon connection
 socket.on('connect', () => {
     socket.emit('clientStartTime', clientStartTime);
     // console.log('Previous Player Data: ', previousPlayer);
 });
 
+// !2
 socket.on('ClientID', (id) => {
     console.log('This Client ID: ', id);
 });
 
+// !3
 socket.on('reload', () => {
     console.log('Server requested reload');
     xr.baseExperience.exitXRAsync();
     window.location.reload();
 });
 
-socket.on('timeForPreviousPlayers', () => {
+// set the prevoius player to available
+/*socket.on('timeForPreviousPlayers', () => {
     if (previousPlayer != null) {
         let timeDiffPreviousPlayer = clientStartTime - previousPlayer.playerTime;
 
@@ -752,8 +782,9 @@ socket.on('timeForPreviousPlayers', () => {
     } else {
         console.log('No Previous Player found.');
     }
-});
+});*/
 
+// !4
 socket.on('joinedWaitingRoom', () => {
     console.log('You joined the waiting Room. Enter VR to join the Game.');
 
@@ -766,6 +797,7 @@ socket.on('startPosDenied', () => {
     console.log('Start Position denied. Select another one.');
 });
 
+// !5
 // get all current Player Information from the Server at the start
 // and spawning all current players except yourself
 socket.on('currentState', (players: { [key: string]: Player }, ballColor: string,
@@ -774,8 +806,11 @@ socket.on('currentState', (players: { [key: string]: Player }, ballColor: string
     sceneStartInfos = sceneStartInfosServer;
     playerStartInfos = playerStartInfosServer;
 
+    // Basic Stuff from the srever for the website and the scene
     // create the Basic babylonjs scene with the infos from the server
     createBasicScene(sceneStartInfos, playerStartInfos);
+    // set the start button color for the players
+    setStartButtonColor(playerStartInfos);
 
     let ballMaterial = scene.getMaterialByName('ballMaterial') as PBRMaterial;
     ballMaterial.emissiveColor = Color3.FromHexString(ballColor);
@@ -797,13 +832,11 @@ socket.on('currentState', (players: { [key: string]: Player }, ballColor: string
         addPlayer(playerList[id], false);
     });
 
-    setStartButtonColor(playerStartInfos);
     setPlayerAvailability(playerStartInfos);
 });
 
-// when the current player is already on the server and starts the game
-socket.on('startClientGame', (newSocketPlayer) => {
-
+// !6
+socket.on('clientEntersAR', (newSocketPlayer) => {
     startScreen?.style.setProperty('display', 'none');
 
     // if (divID) {
@@ -812,9 +845,9 @@ socket.on('startClientGame', (newSocketPlayer) => {
 
     // Start VR Session for the client
     xr.baseExperience.enterXRAsync('immersive-ar', 'local-floor').then(() => {
-        console.log('Starting VR');
+        console.log('Enter AR');
 
-        // Create a box for each controller
+        // look for controllers and add event listeners
         xr.input.onControllerAddedObservable.add((controller) => {
             controller.onMotionControllerInitObservable.add((motionController) => {
 
@@ -836,6 +869,9 @@ socket.on('startClientGame', (newSocketPlayer) => {
                         if (triggerComponent.pressed) {
                             // socket.emit('clicked');
                             // xr.baseExperience.exitXRAsync();
+                            if (playerList[playerID].isPlaying) {
+                                socket.emit('clientLeavesGame', playerList[playerID].playerNumber);
+                            }
                         }
                     });
 
@@ -879,6 +915,10 @@ socket.on('startClientGame', (newSocketPlayer) => {
                         if (triggerComponent.pressed) {
                             // socket.emit('clicked');
                             // xr.baseExperience.exitXRAsync();
+                            // !7
+                            if (!playerList[playerID].isPlaying) {
+                                socket.emit('requestJoinGame', playerList[playerID].playerNumber);
+                            }
                         }
                     });
 
@@ -926,11 +966,6 @@ socket.on('startClientGame', (newSocketPlayer) => {
         // add this socket player to the playerList
         playerList[playerID] = clientPlayer;
 
-        let playerWall = scene.getMeshByName(`player${playerList[playerID].playerNumber}Wall`) as Mesh;
-        if (playerWall) {
-            playerWall.isVisible = false;
-        }
-
         // Spawn yourself Entity
         addPlayer(playerList[playerID], true);
 
@@ -939,11 +974,25 @@ socket.on('startClientGame', (newSocketPlayer) => {
             xrCamera.position = new Vector3(playerList[playerID].position.x, playerList[playerID].position.y, playerList[playerID].position.z);
             xrCamera.rotationQuaternion = Quaternion.FromEulerAngles(playerList[playerID].rotation.x, playerList[playerID].rotation.y, playerList[playerID].rotation.z);
         }
-
-        updatePlayerScore(playerID, playerList[playerID].score);
     }).catch((err) => {
         console.error('Failed to enter VR', err);
     });
+});
+
+// !8
+// when the current player is already on the server and starts the game
+socket.on('clientStartPlaying', () => {
+    // console.log('You started playing');
+    playerList[playerID].isPlaying = true;
+
+    addPlayerGameUtils(playerList[playerID], true);
+
+    let playerWall = scene.getMeshByName(`player${playerList[playerID].playerNumber}Wall`) as Mesh;
+    if (playerWall) {
+        playerWall.isVisible = false;
+    }
+
+    updatePlayerScore(playerID, playerList[playerID].score);
 });
 
 // when the current player is already on the server and a new player joins
@@ -957,6 +1006,25 @@ socket.on('newPlayer', (newPlayer) => {
     // Spawn new player Entity
     addPlayer(playerList[newPlayer.id], false);
 
+    /*if (previousPlayer) {
+        if (previousPlayer.playerNumber == newPlayer.playerNumber) {
+            if (continueAsPreviousPlayer && continueAsPreviousPlayer.style.display != 'none' && !continueAsPreviousPlayer.classList.contains('unavailable')) {
+                continueAsPreviousPlayer.classList.add('unavailable');
+            }
+        }
+    }*/
+
+    // set the availability of the start buttons according to the used startpositions on the server
+    if (!startButtons[newPlayer.playerNumber].classList.contains('unavailable')) {
+        startButtons[newPlayer.playerNumber].classList.add('unavailable');
+    }
+});
+
+socket.on('playerStartPlaying', (newPlayer) => {
+    playerList[newPlayer.id].isPlaying = true;
+
+    addPlayerGameUtils(playerList[newPlayer.id], false);
+
     let playerWall = scene.getMeshByName(`player${playerList[newPlayer.id].playerNumber}Wall`) as Mesh;
     if (playerWall) {
         playerWall.isVisible = false;
@@ -965,18 +1033,6 @@ socket.on('newPlayer', (newPlayer) => {
     // if (playerScore) {
     //     playerScore.isVisible = true;
     // }
-
-    // set the availability of the start buttons according to the used startpositions on the server
-    if (!startButtons[newPlayer.playerNumber].classList.contains('unavailable')) {
-        startButtons[newPlayer.playerNumber].classList.add('unavailable');
-    }
-    if (previousPlayer) {
-        if (previousPlayer.playerNumber == newPlayer.playerNumber) {
-            if (continueAsPreviousPlayer && continueAsPreviousPlayer.style.display != 'none' && !continueAsPreviousPlayer.classList.contains('unavailable')) {
-                continueAsPreviousPlayer.classList.add('unavailable');
-            }
-        }
-    }
 
     updatePlayerScore(newPlayer.id, playerList[newPlayer.id].score);
 });
@@ -992,7 +1048,7 @@ socket.on('serverUpdate', (playerGameDataList, ballPosition, serverSendTime, ser
         }
     });
 
-    console.log('Server Update Counter: ', serverUpdateCounter);
+    // console.log('Server Update Counter: ', serverUpdateCounter);
 
     updateBall(ballPosition);
 
@@ -1095,29 +1151,31 @@ function addPlayer(player: Player, isPlayer: boolean) {
 
     let headScaling = 0.3;
     let controllerScaling = 0.1;
-    let paddleThickness = 0.01;
 
+    // add the players head
     player.headObj = MeshBuilder.CreateBox(`player${player.playerNumber}_head`, { size: 1 }, scene);
     player.headObj.scaling = new Vector3(headScaling, headScaling, headScaling);
     player.headObj.position = new Vector3(player.position.x, player.position.y, player.position.z);
     player.headObj.rotation = new Vector3(player.rotation.x, player.rotation.y, player.rotation.z);
-    player.headObj.material = new PBRMaterial(`player${player.playerNumber}_mat`, scene);
-    (player.headObj.material as PBRMaterial).emissiveColor = Color3.FromHexString(player.color);
-    player.headObj.material.alpha = 0.2;
-    (player.headObj.material as PBRMaterial).disableLighting = true;
-    player.headObj.material.backFaceCulling = false;
+    player.headObj.material = scene.getMaterialByName(`player${player.playerNumber}_mat`) as PBRMaterial;
+    // player.headObj.material = new PBRMaterial(`player${player.playerNumber}_mat`, scene);
+    // (player.headObj.material as PBRMaterial).emissiveColor = Color3.FromHexString(player.color);
+    // player.headObj.material.alpha = 0.2;
+    // (player.headObj.material as PBRMaterial).disableLighting = true;
+    // player.headObj.material.backFaceCulling = false;
 
+    // dont show the players head, if it is the player itself
     if (isPlayer) {
         player.headObj.isVisible = false;
     }
 
+    // add the players right and left controller
     player.controllerR = MeshBuilder.CreateBox(`player${player.playerNumber}_contrR`, { size: 1 });
     player.controllerR.scaling = new Vector3(controllerScaling, controllerScaling, controllerScaling);
     player.controllerR.position = new Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
     player.controllerR.rotation = new Vector3(player.contrRotR.x, player.contrRotR.y, player.contrRotR.z);
     player.controllerR.material = player.headObj.material;
     //(player.controllerR.material as StandardMaterial).emissiveColor = Color3.FromHexString(player.color);
-
     player.controllerL = MeshBuilder.CreateBox(`player${player.playerNumber}_contrL`, { size: 1 });
     player.controllerL.scaling = new Vector3(controllerScaling, controllerScaling, controllerScaling);
     player.controllerL.position = new Vector3(player.contrPosL.x, player.contrPosL.y, player.contrPosL.z);
@@ -1125,6 +1183,22 @@ function addPlayer(player: Player, isPlayer: boolean) {
     player.controllerL.material = player.headObj.material;
     //(player.controllerL.material as StandardMaterial).emissiveColor = Color3.FromHexString(player.color);
 
+    // player.headObj.isVisible = false;
+    // player.controllerL.isVisible = false;
+    // player.controllerR.isVisible = false;
+
+    playerList[player.id].headObj = player.headObj;
+    playerList[player.id].controllerR = player.controllerR;
+    playerList[player.id].controllerL = player.controllerL;
+}
+
+// spawn the stuff for playing for the player
+function addPlayerGameUtils(player: Player, isPlayer: boolean) {
+    console.log(`Spawning Player Game Utils of Player: ${player.id} as Player ${player.playerNumber}`);
+
+    let paddleThickness = 0.01;
+
+    // add the players paddle
     player.paddle = MeshBuilder.CreateBox(`player${player.playerNumber}_paddle`, { size: 1 });
     if (player.playerNumber == 1) {
         player.paddle.scaling = new Vector3(paddleThickness, sceneStartInfos.playerPaddleSize.h, sceneStartInfos.playerPaddleSize.w);
@@ -1140,11 +1214,16 @@ function addPlayer(player: Player, isPlayer: boolean) {
         player.paddle.position = new Vector3(player.contrPosR.x, player.contrPosR.y, -sceneStartInfos.playCubeSize.z / 2);
     }
     player.paddle.position = new Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
-    player.paddle.material = player.controllerR.material;
+    player.paddle.material = scene.getMaterialByName(`player${player.playerNumber}_mat`) as PBRMaterial;
+
+    // add a light to the paddle
+    player.paddleLight = new PointLight(`player${player.playerNumber}_paddelLight`, player.paddle.position, scene);
+    player.paddleLight.diffuse = Color3.FromHexString(player.color);
+    player.paddleLight.intensity = 1;
 
     // add the score Mesh to the player
     player.scoreMesh = MeshBuilder.CreatePlane(`player${player.playerNumber}_scoreMesh`, { size: 1 }, scene);
-    if (playerUsingVR) {
+    if (playerUsingXR) {
         player.scoreMesh.position = new Vector3(player.contrPosR.x, player.contrPosR.y, -sceneStartInfos.playCubeSize.z / 2);
     } else {
         if (player.playerNumber == 1) {
@@ -1177,32 +1256,22 @@ function addPlayer(player: Player, isPlayer: boolean) {
     // add to guiElements
     guiElements[`player${player.playerNumber}_scoreLabel`] = scoreLabel;
 
-    // player.headObj.isVisible = false;
-    // player.controllerL.isVisible = false;
-    // player.controllerR.isVisible = false;
-
-    player.paddleLight = new PointLight(`player${player.playerNumber}_paddelLight`, player.paddle.position, scene);
-    player.paddleLight.diffuse = Color3.FromHexString(player.color);
-    player.paddleLight.intensity = 1;
-
-    playerList[player.id].headObj = player.headObj;
-    playerList[player.id].controllerR = player.controllerR;
-    playerList[player.id].controllerL = player.controllerL;
     playerList[player.id].paddle = player.paddle;
-    playerList[player.id].scoreMesh = player.scoreMesh;
     playerList[player.id].paddleLight = player.paddleLight;
+    playerList[player.id].scoreMesh = player.scoreMesh;
 }
 
+// visual effect if the ball bounces on a paddle or wall
 socket.on('ballBounce', (whichPlayer: number, isPaddle: boolean) => {
 
     Object.keys(playerList).forEach((id) => {
         if (playerList[id].playerNumber == whichPlayer) {
             if (isPaddle) {
 
-                (playerList[id].paddle?.material as StandardMaterial).emissiveColor = Color3.White();
+                (playerList[id].paddle?.material as PBRMaterial).emissiveColor = Color3.White();
                 //(playerList[id].paddle?.material as StandardMaterial).emissiveColor = darkenColor3(Color3.FromHexString(playerList[id].color), 1.5);
                 setTimeout(function () {
-                    (playerList[id].paddle?.material as StandardMaterial).emissiveColor = Color3.FromHexString(playerList[id].color);
+                    (playerList[id].paddle?.material as PBRMaterial).emissiveColor = Color3.FromHexString(playerList[id].color);
                 }, 150);
             }
         }
@@ -1218,6 +1287,27 @@ socket.on('ballBounce', (whichPlayer: number, isPaddle: boolean) => {
     }
 });
 
+socket.on('playerLeftGame', (playerId) => {
+    playerList[playerId].isPlaying = false;
+    const leftPlayer = playerList[playerId];
+    if (leftPlayer) {
+        console.log(`Player ${leftPlayer.playerNumber} left the game.`);
+
+        let playerWall = scene.getMeshByName(`player${leftPlayer.playerNumber}Wall`) as Mesh;
+        if (playerWall) {
+            playerWall.isVisible = true;
+        }
+        let playerScore = scene.getMeshByName(`player${leftPlayer.playerNumber}ScoreMesh`) as Mesh;
+        if (playerScore) {
+            playerScore.isVisible = false;
+        }
+
+        leftPlayer.paddle?.dispose();
+        leftPlayer.paddleLight?.dispose();
+        leftPlayer.scoreMesh?.dispose();
+    }
+});
+
 socket.on('playerDisconnected', (id) => {
     const disconnectedPlayer = playerList[id];
     if (disconnectedPlayer) {
@@ -1226,28 +1316,28 @@ socket.on('playerDisconnected', (id) => {
         disconnectedPlayer.controllerR?.dispose();
         disconnectedPlayer.controllerL?.dispose();
         disconnectedPlayer.paddle?.dispose();
-        disconnectedPlayer.scoreMesh?.dispose();
         disconnectedPlayer.paddleLight?.dispose();
+        disconnectedPlayer.scoreMesh?.dispose();
 
         let playerWall = scene.getMeshByName(`player${disconnectedPlayer.playerNumber}Wall`) as Mesh;
         if (playerWall) {
             playerWall.isVisible = true;
         }
-        // let playerScore = scene.getMeshByName(`player${disconnectedPlayer.playerNumber}ScoreMesh`) as Mesh;
-        // if (playerScore) {
-        //     playerScore.isVisible = false;
+        let playerScore = scene.getMeshByName(`player${disconnectedPlayer.playerNumber}ScoreMesh`) as Mesh;
+        if (playerScore) {
+            playerScore.isVisible = false;
 
-        //     // player score back to normal position
-        //     if (disconnectedPlayer.playerNumber == 1) {
-        //         playerScore.position = new Vector3((sceneStartInfos.playCubeSize.x / 2), sceneStartInfos.playCubeSize.x / 2, 0);
-        //     } else if (disconnectedPlayer.playerNumber == 2) {
-        //         playerScore.position = new Vector3(-(sceneStartInfos.playCubeSize.x / 2), sceneStartInfos.playCubeSize.x / 2, 0);
-        //     } else if (disconnectedPlayer.playerNumber == 3) {
-        //         playerScore.position = new Vector3(0, sceneStartInfos.playCubeSize.x / 2, (sceneStartInfos.playCubeSize.z / 2));
-        //     } else if (disconnectedPlayer.playerNumber == 4) {
-        //         playerScore.position = new Vector3(0, sceneStartInfos.playCubeSize.x / 2, -(sceneStartInfos.playCubeSize.z / 2));
-        //     }
-        // }
+            // player score back to normal position
+            if (disconnectedPlayer.playerNumber == 1) {
+                playerScore.position = new Vector3((sceneStartInfos.playCubeSize.x / 2), sceneStartInfos.playCubeSize.x / 2, 0);
+            } else if (disconnectedPlayer.playerNumber == 2) {
+                playerScore.position = new Vector3(-(sceneStartInfos.playCubeSize.x / 2), sceneStartInfos.playCubeSize.x / 2, 0);
+            } else if (disconnectedPlayer.playerNumber == 3) {
+                playerScore.position = new Vector3(0, sceneStartInfos.playCubeSize.x / 2, (sceneStartInfos.playCubeSize.z / 2));
+            } else if (disconnectedPlayer.playerNumber == 4) {
+                playerScore.position = new Vector3(0, sceneStartInfos.playCubeSize.x / 2, -(sceneStartInfos.playCubeSize.z / 2));
+            }
+        }
 
         // set the availability of the start buttons according to the used startpositions on the server
         if (startButtons[disconnectedPlayer.playerNumber].classList.contains('unavailable')) {
@@ -1406,7 +1496,7 @@ function handleMouseOut(playerNumber: number, isPreButton: boolean = false) {
 
             // show the specific player wall again
             let playerWall = scene.getMeshByName(`player${playerNumber}Wall`) as Mesh;
-            if (playerWall && !playerUsingVR) {
+            if (playerWall && !playerUsingXR) {
                 playerWall.isVisible = true;
             }
         }
@@ -1558,7 +1648,7 @@ window.addEventListener('keydown', function (event) {
 });
 
 // document.addEventListener('click', () => {
-//     if (playerUsingVR) {
+//     if (playerUsingXR) {
 //         socket.emit('clicked', playerList[playerID].color);
 //     }
 // });
@@ -1580,7 +1670,7 @@ window.addEventListener('keydown', function (event) {
 
 socket.on('ping', (data) => {
     const clientReceiveTime = Date.now();
-    console.log('Ping received: ', data);
+    // console.log('Ping received: ', data);
     socket.emit('pong', { serverSendTime: data.serverSendTime, clientReceiveTime, clientId: socket.id });
 });
 
@@ -1588,7 +1678,7 @@ socket.on('clientPong', (serverClientSendTime) => {
     const clientSendTime = serverClientSendTime;
     const clientReceiveTime = Date.now();
     const clientRoundTripTime = clientReceiveTime - clientSendTime;
-    console.log('Client Round Trip Time: ', clientRoundTripTime);
+    // console.log('Client Round Trip Time: ', clientRoundTripTime);
     socket.emit('clientRoundTripTime', clientRoundTripTime, socket.id);
 });
 
