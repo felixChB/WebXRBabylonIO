@@ -470,8 +470,8 @@ class Player implements PlayerData {
                 let paddleY, paddleZ;
                 if (this.contrPosR.y + sceneStartInfos.playerPaddleSize.h / 2 > sceneStartInfos.playCubeSize.y) {
                     paddleY = sceneStartInfos.playCubeSize.y - sceneStartInfos.playerPaddleSize.h / 2;
-                } else if (this.contrPosR.y - sceneStartInfos.playerPaddleSize.h / 2 < 0) {
-                    paddleY = 0 + sceneStartInfos.playerPaddleSize.h / 2;
+                } else if (this.contrPosR.y - sceneStartInfos.playerPaddleSize.h / 2 < sceneStartInfos.playCubeElevation) {
+                    paddleY = sceneStartInfos.playCubeElevation + sceneStartInfos.playerPaddleSize.h / 2;
                 } else {
                     paddleY = this.contrPosR.y;
                 }
@@ -494,8 +494,8 @@ class Player implements PlayerData {
                 let paddleY, paddleZ;
                 if (this.contrPosR.y + sceneStartInfos.playerPaddleSize.h / 2 > sceneStartInfos.playCubeSize.y) {
                     paddleY = sceneStartInfos.playCubeSize.y - sceneStartInfos.playerPaddleSize.h / 2;
-                } else if (this.contrPosR.y - sceneStartInfos.playerPaddleSize.h / 2 < 0) {
-                    paddleY = 0 + sceneStartInfos.playerPaddleSize.h / 2;
+                } else if (this.contrPosR.y - sceneStartInfos.playerPaddleSize.h / 2 < sceneStartInfos.playCubeElevation) {
+                    paddleY = sceneStartInfos.playCubeElevation + sceneStartInfos.playerPaddleSize.h / 2;
                 } else {
                     paddleY = this.contrPosR.y;
                 }
@@ -517,8 +517,8 @@ class Player implements PlayerData {
                 let paddleY, paddleX;
                 if (this.contrPosR.y + sceneStartInfos.playerPaddleSize.h / 2 > sceneStartInfos.playCubeSize.y) {
                     paddleY = sceneStartInfos.playCubeSize.y - sceneStartInfos.playerPaddleSize.h / 2;
-                } else if (this.contrPosR.y - sceneStartInfos.playerPaddleSize.h / 2 < 0) {
-                    paddleY = 0 + sceneStartInfos.playerPaddleSize.h / 2;
+                } else if (this.contrPosR.y - sceneStartInfos.playerPaddleSize.h / 2 < sceneStartInfos.playCubeElevation) {
+                    paddleY = sceneStartInfos.playCubeElevation + sceneStartInfos.playerPaddleSize.h / 2;
                 } else {
                     paddleY = this.contrPosR.y;
                 }
@@ -540,8 +540,8 @@ class Player implements PlayerData {
                 let paddleY, paddleX;
                 if (this.contrPosR.y + sceneStartInfos.playerPaddleSize.h / 2 > sceneStartInfos.playCubeSize.y) {
                     paddleY = sceneStartInfos.playCubeSize.y - sceneStartInfos.playerPaddleSize.h / 2;
-                } else if (this.contrPosR.y - sceneStartInfos.playerPaddleSize.h / 2 < 0) {
-                    paddleY = 0 + sceneStartInfos.playerPaddleSize.h / 2;
+                } else if (this.contrPosR.y - sceneStartInfos.playerPaddleSize.h / 2 < sceneStartInfos.playCubeElevation) {
+                    paddleY = sceneStartInfos.playCubeElevation + sceneStartInfos.playerPaddleSize.h / 2;
                 } else {
                     paddleY = this.contrPosR.y;
                 }

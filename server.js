@@ -108,8 +108,27 @@ const playerAreaDistance = 0.5; // the distance from the player area to the wall
 const playerPaddleSize = { h: 0.2, w: 0.4 }; // the size of the player plane in meters
 const ballStartSpeed = 0.02;
 const ballStartColor = '#1f53ff';
-
 const midPointOfPlayCube = ((playCubeSize.y - playCubeElevation) / 2) + playCubeElevation;
+
+const position1PositiveAreaLimit = playCubeSize.z / 2;
+const position1NegativeAreaLimit = -playCubeSize.z / 2;
+const position1FontAreaLimit = playCubeSize.x / 2 + playerAreaDistance;
+const position1BackAreaLimit = playCubeSize.x / 2 + playerAreaDistance + playerAreaDepth;
+
+const position2PositiveAreaLimit = playCubeSize.z / 2;
+const position2NegativeAreaLimit = -playCubeSize.z / 2;
+const position2FontAreaLimit = -(playCubeSize.x / 2 + playerAreaDistance);
+const position2BackAreaLimit = -(playCubeSize.x / 2 + playerAreaDistance + playerAreaDepth);
+
+const position3PositiveAreaLimit = playCubeSize.x / 2;
+const position3NegativeAreaLimit = -playCubeSize.x / 2;
+const position3FontAreaLimit = playCubeSize.z / 2 + playerAreaDistance;
+const position3BackAreaLimit = playCubeSize.z / 2 + playerAreaDistance + playerAreaDepth;
+
+const position4PositiveAreaLimit = playCubeSize.x / 2;
+const position4NegativeAreaLimit = -playCubeSize.x / 2;
+const position4FontAreaLimit = -(playCubeSize.z / 2 + playerAreaDistance);
+const position4BackAreaLimit = -(playCubeSize.z / 2 + playerAreaDistance + playerAreaDepth);
 
 let activeColor = ballStartColor;
 
@@ -282,30 +301,7 @@ io.on('connection', (socket) => {
     // !7
     socket.on('requestJoinGame', (startPlayerNum) => {
 
-        const position1PositiveAreaLimit = playCubeSize.z / 2;
-        const position1NegativeAreaLimit = -playCubeSize.z / 2;
-        const position1FontAreaLimit = playCubeSize.x / 2 + playerAreaDistance;
-        const position1BackAreaLimit = playCubeSize.x / 2 + playerAreaDistance + playerAreaDepth;
         
-        const position2PositiveAreaLimit = playCubeSize.z / 2;
-        const position2NegativeAreaLimit = -playCubeSize.z / 2;
-        const position2FontAreaLimit = -(playCubeSize.x / 2 + playerAreaDistance);
-        const position2BackAreaLimit = -(playCubeSize.x / 2 + playerAreaDistance + playerAreaDepth);
-
-        const position3PositiveAreaLimit = playCubeSize.x / 2;
-        const position3NegativeAreaLimit = -playCubeSize.x / 2;
-        const position3FontAreaLimit = playCubeSize.z / 2 + playerAreaDistance;
-        const position3BackAreaLimit = playCubeSize.z / 2 + playerAreaDistance + playerAreaDepth;
-
-        const position4PositiveAreaLimit = playCubeSize.x / 2;
-        const position4NegativeAreaLimit = -playCubeSize.x / 2;
-        const position4FontAreaLimit = -(playCubeSize.z / 2 + playerAreaDistance);
-        const position4BackAreaLimit = -(playCubeSize.z / 2 + playerAreaDistance + playerAreaDepth);
-
-        if (playerList[socket.id].position.x < positiveAreaLimit && playerList[socket.id].position.x > negativeAreaLimit && playerList[socket.id].position.z < backAreaLimit && playerList[socket.id].position.z > frontAreaLimit) {
-            
-        }
-
 
         // kommt abfrage rein ob der spieler in seiner spielarea ist
         if (playerStartInfos[startPlayerNum].used == false) {
@@ -400,6 +396,14 @@ setInterval(function () {
         if (playerList[key].isPlaying == true) {
             onePlayerPlaying = true;
         }
+
+        //if (playerList[key].position.x < positiveAreaLimit && playerList[key].position.x > negativeAreaLimit && playerList[key].position.z < backAreaLimit && playerList[key].position.z > frontAreaLimit) {
+            
+            // jedem spieler objekt noch ein inPosition geben wo dann beschrieben wird in welcher area er ist
+            // 0 für wenn er in keiner ist
+            // darüber prüfen für den start und auch falls er die area zu lange verlässt
+            // auch kann über den start in der area die playerNumber gesetzt werden
+        //}
     });
 
     // if there are players in the game
