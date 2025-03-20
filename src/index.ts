@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
 import { /*Camera,*/ Engine, FreeCamera, /*PBRBaseMaterial,*/ PBRMaterial, Scene } from '@babylonjs/core';
-import { /*ArcRotateCamera,*/ MeshBuilder, /*ShadowGenerator,*/ GlowLayer, ParticleSystem, Animation } from '@babylonjs/core';
+import { /*ArcRotateCamera,*/ MeshBuilder, /*ShadowGenerator,*/ GlowLayer, /*ParticleSystem,*/ Animation } from '@babylonjs/core';
 import { HemisphericLight, DirectionalLight, PointLight /*SSRRenderingPipeline, Constants*/ } from '@babylonjs/core';
 import { Mesh, StandardMaterial, Texture, Color3, Color4, Vector3, Quaternion, /*CubeTexture*/ /*LinesMesh*/ } from '@babylonjs/core';
 import { WebXRDefaultExperience, WebXRInputSource } from '@babylonjs/core/XR';
@@ -68,12 +68,15 @@ const scene = new Scene(engine);
 
 function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { [key: number]: PlayerStartInfo }) {
 
-    let playCubeSize = sceneStartInfos.playCubeSize;
-    let playCubeElevation = sceneStartInfos.playCubeElevation;
-    let playerAreaDepth = sceneStartInfos.playerAreaDepth;
-    let ballSize = sceneStartInfos.ballSize;
-    let ballStartPos = sceneStartInfos.ballStartPos;
-    let ballColor = sceneStartInfos.ballColor;
+    const playCubeSize = sceneStartInfos.playCubeSize;
+    const playCubeElevation = sceneStartInfos.playCubeElevation;
+    const playerAreaDepth = sceneStartInfos.playerAreaDepth;
+    const ballSize = sceneStartInfos.ballSize;
+    const ballStartPos = sceneStartInfos.ballStartPos;
+    const ballColor = sceneStartInfos.ballColor;
+
+    const calculatedCubeHeight = playCubeSize.y - playCubeElevation;
+    const midPointOfPlayCube = ((playCubeSize.y - playCubeElevation) / 2) + playCubeElevation;
     // let playerPaddleSize = sceneStartInfos.playerPaddleSize;
 
     // Camera --------------------------------------------------------------------------------------
@@ -127,18 +130,18 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     var ground = MeshBuilder.CreateGround('ground', { width: 60, height: 60 }, scene);
 
     var playBox = MeshBuilder.CreateBox('playBox', { size: 1 }, scene);
-    playBox.position = new Vector3(0, (playCubeSize.y / 2) - playCubeElevation, 0);
-    playBox.scaling = new Vector3(playCubeSize.x, playCubeSize.y - playCubeElevation, playCubeSize.z);
+    playBox.position = new Vector3(0, midPointOfPlayCube, 0);
+    playBox.scaling = new Vector3(playCubeSize.x, calculatedCubeHeight, playCubeSize.z);
     playBox.enableEdgesRendering();
     playBox.edgesWidth = edgeWidth;
     playBox.edgesColor = new Color4(1, 1, 1, 1);
 
-    var testBox = MeshBuilder.CreateBox('testBox', { size: 1 }, scene);
-    testBox.position = new Vector3(0, (playCubeSize.y / 2), 0);
-    testBox.scaling = new Vector3(playCubeSize.x, playCubeSize.y, playCubeSize.z);
-    testBox.enableEdgesRendering();
-    testBox.edgesWidth = edgeWidth;
-    testBox.edgesColor = new Color4(1, 0, 1, 1);
+    // var testBox = MeshBuilder.CreateBox('testBox', { size: 1 }, scene);
+    // testBox.position = new Vector3(0, (playCubeSize.y / 2), 0);
+    // testBox.scaling = new Vector3(playCubeSize.x, playCubeSize.y, playCubeSize.z);
+    // testBox.enableEdgesRendering();
+    // testBox.edgesWidth = edgeWidth;
+    // testBox.edgesColor = new Color4(1, 0, 1, 1);
 
     // playBox.isVisible = false;
 
@@ -204,6 +207,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
 
     // Particle System --------------------------------------------------------------------------------------
 
+    /*
     var ballParticles = new ParticleSystem('ballParticles', 300, scene);
     ballParticles.particleTexture = new Texture('./assets/particleTexture.png', scene);
     ballParticles.emitter = ballSphere;
@@ -231,6 +235,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     ballParticles.updateSpeed = 0.005;
 
     //ballParticles.start();
+    */
 
 
     // Materials --------------------------------------------------------------------------------------
@@ -258,7 +263,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     playBoxMat.alpha = 0.1;
     playBoxMat.specularColor = new Color3(0, 0, 0);
 
-    testBox.material = wireframeMat;
+    //testBox.material = wireframeMat;
 
     var ballMaterial = new PBRMaterial('ballMaterial', scene);
     ballMaterial.emissiveColor = Color3.FromHexString(ballColor);

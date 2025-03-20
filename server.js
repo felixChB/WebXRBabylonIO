@@ -91,8 +91,9 @@ let connectedClientNumber = 0;
 /////////////////////////////  VARIABLES  //////////////////////////////////
 // Server Variables
 let serverStartTime;
-let serverUpdateCounter = 0;
 
+// Test Variables
+let serverUpdateCounter = 0;
 let latencyTestArray = [];
 
 // Store all connected players
@@ -100,17 +101,20 @@ let playerList = {};
 
 // Game Variables
 const maxPlayers = 4;
-const playCubeSize = { x: 1.5, y: 2, z: 1.5 }; // the size of the player cube in meters
-const playCubeElevation = 0; // the elevation of the player cube in meters
+const playCubeSize = { x: 1.5, y: 2, z: 1.5 }; // the size of the player cube in meters // the y value is the top of the cube
+const playCubeElevation = 0.2; // the elevation of the player cube in meters
 const playerAreaDepth = 1; // the depth of the player area in the z direction in meters
+const playerAreaDistance = 0; // the distance from the player area to the wall in meters
 const playerPaddleSize = { h: 0.2, w: 0.4 }; // the size of the player plane in meters
 const ballStartSpeed = 0.02;
 const ballStartColor = '#1f53ff';
 
+const midPointOfPlayCube = ((playCubeSize.y - playCubeElevation) / 2) + playCubeElevation;
+
 let activeColor = ballStartColor;
 
 let ball = {
-    position: { x: 0, y: (playCubeSize.y / 2) - playCubeElevation, z: 0 },
+    position: { x: 0, y: midPointOfPlayCube, z: 0 },
     velocity: getNormalizedVector({ x: getRandomNumber(0.5, 2), y: getRandomNumber(0.5, 1), z: getRandomNumber(0.5, 2) }),
     speed: ballStartSpeed,
     size: 0.03,
@@ -127,12 +131,10 @@ let sceneStartinfos = {
     ballColor: ball.color
 }
 
-let playgroundDistance = 1; // the distance from the player area to the wall in meters
-
 let playerStartInfos = {
     1: {
         playerNumber: 1,
-        position: { x: (playCubeSize.x / 2 + playerAreaDepth / 2 + playgroundDistance), y: 0, z: 0 },
+        position: { x: (playCubeSize.x / 2 + playerAreaDepth / 2 + playerAreaDistance), y: 0, z: 0 },
         rotation: { x: 0, y: -Math.PI / 2, z: 0 },
         color: '#00ffff', //CMY //Cyan
         // color: '#ff0000', //RGB
@@ -140,7 +142,7 @@ let playerStartInfos = {
     },
     2: {
         playerNumber: 2,
-        position: { x: -(playCubeSize.x / 2 + playerAreaDepth / 2 + playgroundDistance), y: 0, z: 0 },
+        position: { x: -(playCubeSize.x / 2 + playerAreaDepth / 2 + playerAreaDistance), y: 0, z: 0 },
         rotation: { x: 0, y: Math.PI / 2, z: 0 },
         color: '#ff00ff', //CMY //Magenta
         // color: '#00ff00', //RGB
@@ -148,7 +150,7 @@ let playerStartInfos = {
     },
     3: {
         playerNumber: 3,
-        position: { x: 0, y: 0, z: (playCubeSize.z / 2 + playerAreaDepth / 2 + playgroundDistance) },
+        position: { x: 0, y: 0, z: (playCubeSize.z / 2 + playerAreaDepth / 2 + playerAreaDistance) },
         rotation: { x: 0, y: Math.PI, z: 0 },
         color: '#ffff00', //CMY //Yellow
         // color: '#0000ff', //RGB
@@ -156,7 +158,7 @@ let playerStartInfos = {
     },
     4: {
         playerNumber: 4,
-        position: { x: 0, y: 0, z: -(playCubeSize.z / 2 + playerAreaDepth / 2 + playgroundDistance) },
+        position: { x: 0, y: 0, z: -(playCubeSize.z / 2 + playerAreaDepth / 2 + playerAreaDistance) },
         rotation: { x: 0, y: 0, z: 0 },
         color: '#1aa543', //CMY //Green
         // color: '#ffff00', //RGB
@@ -274,7 +276,9 @@ io.on('connection', (socket) => {
 
     // !7
     socket.on('requestJoinGame', (startPlayerNum) => {
-        console.log(`Player ${socket.id} requested to join the game as Player ${startPlayerNum}.`);
+
+        
+
         // kommt abfrage rein ob der spieler in seiner spielarea ist
         if (playerStartInfos[startPlayerNum].used == false) {
             playerStartInfos[startPlayerNum].used = true;
@@ -286,6 +290,8 @@ io.on('connection', (socket) => {
     });
 
     socket.on('clientLeavesGame', () => {
+        console.log(`Player ${socket.id} left the game.`);
+
         playerList[socket.id].isPlaying = false;
         playerList[socket.id].score = 0;
 
@@ -298,8 +304,8 @@ io.on('connection', (socket) => {
     socket.on('playerEndVR', () => {
 
         if (socket.id in playerList) {
-            console.log(`Player ${socket.id} left the Game.`);
-            latencyTestArray.push(`Player ${socket.id} left the Game.`);
+            console.log(`Player ${socket.id} left XR.`);
+            latencyTestArray.push(`Player ${socket.id} left XR.`);
 
             playerStartInfos[playerList[socket.id].playerNumber].used = false;
 
@@ -378,12 +384,14 @@ setInterval(function () {
         // if (ball.position.x < playCubeSize.x / 2 || ball.position.x > -playCubeSize.x / 2 || ball.position.z < playCubeSize.z / 2 || ball.position.z > -playCubeSize.z / 2) {
 
         // Bounce off walls --------------------------------------------------------------------------------------
-        // Always bounce the ball off the top and bottom
+        // Always bounce the ball off the top and bottom of the playCube
+        // top
         if (ball.position.y + ball.size >= playCubeSize.y) {
             ball.position.y = playCubeSize.y - ball.size;
             ball.velocity.y *= -1;  // Reverse Y velocity
             ballBounce(5, false);
         }
+        //bottom
         if (ball.position.y - ball.size <= playCubeElevation) {
             ball.position.y = playCubeElevation + ball.size;
             ball.velocity.y *= -1;  // Reverse Y velocity
@@ -555,7 +563,7 @@ setInterval(function () {
             }
         });
         // value for the out of bounds check
-        let outOfBoundsValue = 0.3;
+        const outOfBoundsValue = 0.3;
 
         // reset the ball if out of bounds
         if (ball.position.x > playCubeSize.x / 2 + outOfBoundsValue || ball.position.x < -playCubeSize.x / 2 - outOfBoundsValue ||
@@ -649,8 +657,8 @@ function clientEntersAR(newPlayer, socket) {
     socket.leave('waitingRoom');
     socket.join('gameRoom');
 
-    console.log(`Player ${newPlayer.id} entered AR.`);
-    latencyTestArray.push(`Player ${newPlayer.id} entered AR.`);
+    console.log(`Player ${newPlayer.id} entered AR on Position ${newPlayer.playerNumber}.`);
+    latencyTestArray.push(`Player ${newPlayer.id} entered AR on Position ${newPlayer.playerNumber}.`);
 
     // Add new player to the playerArray
     playerList[newPlayer.id] = newPlayer;
@@ -705,7 +713,7 @@ function getNormalizedVector(vector) {
 }
 
 function resetGame() {
-    ball.position = { x: 0, y: (playCubeSize.y / 2) - playCubeElevation, z: 0 };
+    ball.position = { x: 0, y: midPointOfPlayCube, z: 0 };
     ball.velocity = getNormalizedVector({ x: getRandomNumber(0.5, 2), y: getRandomNumber(0.5, 1), z: getRandomNumber(0.5, 2) });
     ball.speed = ballStartSpeed;
     ball.color = ballStartColor;
@@ -777,7 +785,7 @@ function calculateBallBounce(contrRPos, playerNumber) {
     // so the velocity is set to 0.01 to avoid the error
     // this will affect the balls speed a little bit, but it is not noticeable and will fix itself after a view bounces
 
-    let inOutStrength = 1.2;
+    const inOutStrength = 1.2;
 
     let inOutBounce, middleVector;
     if (playerNumber == 1 || playerNumber == 2) { // negative z direction for player 1 and 2
