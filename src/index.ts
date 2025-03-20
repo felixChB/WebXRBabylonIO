@@ -179,20 +179,20 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     player4Ground.edgesColor = Color4.FromHexString(playerStartInfos[4].color);
 
     var player1Wall = MeshBuilder.CreateBox('player1Wall', { size: 1 }, scene);
-    player1Wall.position = new Vector3(playCubeSize.x / 2 + 0, playCubeSize.y / 2, 0);
-    player1Wall.scaling = new Vector3(0.01, playCubeSize.y, playCubeSize.z);
+    player1Wall.position = new Vector3(playCubeSize.x / 2 + 0, midPointOfPlayCube, 0);
+    player1Wall.scaling = new Vector3(0.01, calculatedCubeHeight, playCubeSize.z);
 
     var player2Wall = MeshBuilder.CreateBox('player2Wall', { size: 1 }, scene);
-    player2Wall.position = new Vector3(-playCubeSize.x / 2 - 0, playCubeSize.y / 2, 0);
-    player2Wall.scaling = new Vector3(0.01, playCubeSize.y, playCubeSize.z);
+    player2Wall.position = new Vector3(-playCubeSize.x / 2 - 0, midPointOfPlayCube, 0);
+    player2Wall.scaling = new Vector3(0.01, calculatedCubeHeight, playCubeSize.z);
 
     var player3Wall = MeshBuilder.CreateBox('player3Wall', { size: 1 }, scene);
-    player3Wall.position = new Vector3(0, playCubeSize.y / 2, playCubeSize.z / 2 + 0);
-    player3Wall.scaling = new Vector3(playCubeSize.x, playCubeSize.y, 0.01);
+    player3Wall.position = new Vector3(0, midPointOfPlayCube, playCubeSize.z / 2 + 0);
+    player3Wall.scaling = new Vector3(playCubeSize.x, calculatedCubeHeight, 0.01);
 
     var player4Wall = MeshBuilder.CreateBox('player4Wall', { size: 1 }, scene);
-    player4Wall.position = new Vector3(0, playCubeSize.y / 2, -playCubeSize.z / 2 - 0);
-    player4Wall.scaling = new Vector3(playCubeSize.x, playCubeSize.y, 0.01);
+    player4Wall.position = new Vector3(0, midPointOfPlayCube, -playCubeSize.z / 2 - 0);
+    player4Wall.scaling = new Vector3(playCubeSize.x, calculatedCubeHeight, 0.01);
 
     // create walls for the top and the bottom of the playcube
     var topWall = MeshBuilder.CreateBox('player5Wall', { size: 1 }, scene);

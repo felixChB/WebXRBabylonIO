@@ -102,9 +102,9 @@ let playerList = {};
 // Game Variables
 const maxPlayers = 4;
 const playCubeSize = { x: 1.5, y: 2, z: 1.5 }; // the size of the player cube in meters // the y value is the top of the cube
-const playCubeElevation = 0.2; // the elevation of the player cube in meters
+const playCubeElevation = 0.5; // the elevation of the player cube in meters
 const playerAreaDepth = 1; // the depth of the player area in the z direction in meters
-const playerAreaDistance = 0; // the distance from the player area to the wall in meters
+const playerAreaDistance = 0.5; // the distance from the player area to the wall in meters
 const playerPaddleSize = { h: 0.2, w: 0.4 }; // the size of the player plane in meters
 const ballStartSpeed = 0.02;
 const ballStartColor = '#1f53ff';
