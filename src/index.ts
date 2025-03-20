@@ -896,7 +896,9 @@ socket.on('clientEntersAR', (newSocketPlayer) => {
                     let xbuttonComponent = motionController.getComponent(xrIDs[3]);//x-button
                     xbuttonComponent.onButtonStateChangedObservable.add(() => {
                         if (xbuttonComponent.pressed) {
-
+                            // for testing to report a lag
+                            console.log('Send Lag report');
+                            socket.emit('reportLag', Date.now());
                         }
                     });
 

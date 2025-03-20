@@ -218,6 +218,11 @@ io.on('connection', (socket) => {
     // Send a ping message every 5 seconds
     // const pingInterval = setInterval(sendPing, 500);
 
+    socket.on('reportLag', (timeOfLag) => {
+        console.log(`Player ${socket.id} reported lag at ${timeOfLag}`);
+        latencyTestArray.push(`Player ${socket.id} reported lag at ${timeOfLag}`);
+    });
+
     // End Network Ping Pong Test //
 
     // !3
@@ -277,7 +282,30 @@ io.on('connection', (socket) => {
     // !7
     socket.on('requestJoinGame', (startPlayerNum) => {
 
+        const position1PositiveAreaLimit = playCubeSize.z / 2;
+        const position1NegativeAreaLimit = -playCubeSize.z / 2;
+        const position1FontAreaLimit = playCubeSize.x / 2 + playerAreaDistance;
+        const position1BackAreaLimit = playCubeSize.x / 2 + playerAreaDistance + playerAreaDepth;
         
+        const position2PositiveAreaLimit = playCubeSize.z / 2;
+        const position2NegativeAreaLimit = -playCubeSize.z / 2;
+        const position2FontAreaLimit = -(playCubeSize.x / 2 + playerAreaDistance);
+        const position2BackAreaLimit = -(playCubeSize.x / 2 + playerAreaDistance + playerAreaDepth);
+
+        const position3PositiveAreaLimit = playCubeSize.x / 2;
+        const position3NegativeAreaLimit = -playCubeSize.x / 2;
+        const position3FontAreaLimit = playCubeSize.z / 2 + playerAreaDistance;
+        const position3BackAreaLimit = playCubeSize.z / 2 + playerAreaDistance + playerAreaDepth;
+
+        const position4PositiveAreaLimit = playCubeSize.x / 2;
+        const position4NegativeAreaLimit = -playCubeSize.x / 2;
+        const position4FontAreaLimit = -(playCubeSize.z / 2 + playerAreaDistance);
+        const position4BackAreaLimit = -(playCubeSize.z / 2 + playerAreaDistance + playerAreaDepth);
+
+        if (playerList[socket.id].position.x < positiveAreaLimit && playerList[socket.id].position.x > negativeAreaLimit && playerList[socket.id].position.z < backAreaLimit && playerList[socket.id].position.z > frontAreaLimit) {
+            
+        }
+
 
         // kommt abfrage rein ob der spieler in seiner spielarea ist
         if (playerStartInfos[startPlayerNum].used == false) {
