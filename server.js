@@ -8,6 +8,8 @@ import { Server } from "socket.io";
 import { SocketAddress } from "net";
 import { start } from "repl";
 import { constants } from "node:crypto";
+import e from "express";
+import { write } from "node:fs";
 
 const port = process.env.PORT || 3000;
 
@@ -95,6 +97,7 @@ let serverStartTime;
 // Test Variables
 let serverUpdateCounter = 0;
 let latencyTestArray = [];
+let networkTestArray = [];
 
 // Store all connected players
 let playerList = {};
@@ -191,7 +194,7 @@ let playerStartInfos = {
 // Handle connections and logic
 io.on('connection', (socket) => {
     console.log(`Player connected: ${socket.id}`);
-    latencyTestArray.push(`Player connected: ${socket.id}`);
+    networkTestArray.push(`Player connected: ${socket.id}`);
     // !2
     socket.emit('ClientID', socket.id);
     connectedClientNumber++;
@@ -211,21 +214,17 @@ io.on('connection', (socket) => {
     //     console.log(`${data.clientId}: Server -> Client: ${serverToClientLatency} ms | Client -> Server: ${clientToServerLatency} ms, Roundtrip: ${serverToClientLatency + clientToServerLatency} ms`);
     // });
 
-    socket.on('ServerPong', (clientServerSendTime, id) => {
+    socket.on('ServerPong', (clientServerSendTime, id, serverUpdateCounterPong) => {
         const serverSendTime = clientServerSendTime;
         const serverReceiveTime = Date.now();
         const serverRoundTripTime = serverReceiveTime - serverSendTime;
-        latencyTestArray.push(`${id} SRTT: ${serverRoundTripTime}`);
+        networkTestArray.push(`${id} SRTT: ${serverRoundTripTime}, ServUpCounter: ${serverUpdateCounterPong}`);
         // console.log(`${id} SRTT: ${serverRoundTripTime}`);
-        const content = `${id} SRTT: ${serverRoundTripTime}`;
-        fs.writeFile('/other_files/network_tests/test02.txt', content, { flag: 'a+' }, err => { });
     });
 
     socket.on('clientRoundTripTime', (clientRoundTripTime, id) => {
-        latencyTestArray.push(`${id} CRTT: ${clientRoundTripTime}`);
+        networkTestArray.push(`${id} CRTT: ${clientRoundTripTime}`);
         // console.log(`${id} CRTT: ${clientRoundTripTime}`);
-        const content = `${id} CRTT: ${clientRoundTripTime}`;
-        fs.writeFile('/other_files/network_tests/test02.txt', content, { flag: 'a+' }, err => { });
     });
 
     // Function to send a ping message to the client
@@ -239,7 +238,7 @@ io.on('connection', (socket) => {
 
     socket.on('reportLag', (timeOfLag) => {
         console.log(`Player ${socket.id} reported lag at ${timeOfLag}`);
-        latencyTestArray.push(`Player ${socket.id} reported lag at ${timeOfLag}`);
+        networkTestArray.push(`Player ${socket.id} reported lag at ${timeOfLag}`);
     });
 
     // End Network Ping Pong Test //
@@ -301,7 +300,7 @@ io.on('connection', (socket) => {
     // !7
     socket.on('requestJoinGame', (startPlayerNum) => {
 
-        
+
 
         // kommt abfrage rein ob der spieler in seiner spielarea ist
         if (playerStartInfos[startPlayerNum].used == false) {
@@ -329,7 +328,7 @@ io.on('connection', (socket) => {
 
         if (socket.id in playerList) {
             console.log(`Player ${socket.id} left XR.`);
-            latencyTestArray.push(`Player ${socket.id} left XR.`);
+            networkTestArray.push(`Player ${socket.id} left XR.`);
 
             playerStartInfos[playerList[socket.id].playerNumber].used = false;
 
@@ -353,14 +352,14 @@ io.on('connection', (socket) => {
 
         if (socket.id in playerList) {
             console.log(`Player ${socket.id} disconnected from the game.`);
-            latencyTestArray.push(`Player ${socket.id} disconnected from the game.`);
+            networkTestArray.push(`Player ${socket.id} disconnected from the game.`);
 
             playerStartInfos[playerList[socket.id].playerNumber].used = false;
 
             delete playerList[socket.id];
         } else {
             console.log(`Player ${socket.id} disconnected from the waiting room.`);
-            latencyTestArray.push(`Player ${socket.id} disconnected from the waiting room.`);
+            networkTestArray.push(`Player ${socket.id} disconnected from the waiting room.`);
         }
 
         io.emit('playerDisconnected', socket.id);
@@ -368,21 +367,28 @@ io.on('connection', (socket) => {
     });
 
     // End the Server when a player presses the x button (should be done by the operator)
-    socket.on('endServer', (endType) => {
-        console.log('Server is shutting down.');
-        latencyTestArray.push('Server is shutting down.');
-        if (endType != 'shutdown') {
-            writeTestArrayToFile(endType);
-        } else {
-            process.exit();
+    socket.on('collectingTests', (endType) => {
+        console.log('Collecting performance test data.');
+        networkTestArray.push('Collecting performance test data.');
+        if (endType == 'latency') {
+            io.emit('requestTestArray');
+        } else if (endType == 'network') {
+            writeTestArrayToFile('network', networkTestArray);
+        } else if (endType == 'all') {
+            io.emit('requestTestArray');
+            writeTestArrayToFile('network', networkTestArray);
         }
+    });
+
+    socket.on('sendTestArray', (testArray) => {
+        writeTestArrayToFile('latency', testArray, socket.id);
     });
 });
 
 httpsServer.listen(port, ipAdress, () => {
     // console.log('Server is listening on port https://localhost:' + port);        // for localhost network
     console.log('Server is listening on port https://' + ipAdress + ':' + port);    // for local ip network
-    latencyTestArray.push('Server is listening on port https://' + ipAdress + ':' + port);
+    networkTestArray.push('Server is listening on port https://' + ipAdress + ':' + port);
     serverStartTime = Date.now();
 });
 
@@ -397,13 +403,13 @@ setInterval(function () {
             onePlayerPlaying = true;
         }
 
-        //if (playerList[key].position.x < positiveAreaLimit && playerList[key].position.x > negativeAreaLimit && playerList[key].position.z < backAreaLimit && playerList[key].position.z > frontAreaLimit) {
-            
-            // jedem spieler objekt noch ein inPosition geben wo dann beschrieben wird in welcher area er ist
-            // 0 für wenn er in keiner ist
-            // darüber prüfen für den start und auch falls er die area zu lange verlässt
-            // auch kann über den start in der area die playerNumber gesetzt werden
-        //}
+
+
+        // jedem spieler objekt noch ein inPosition geben wo dann beschrieben wird in welcher area er ist
+        // 0 für wenn er in keiner ist
+        // darüber prüfen für den start und auch falls er die area zu lange verlässt
+        // auch kann über den start in der area die playerNumber gesetzt werden
+
     });
 
     // if there are players in the game
@@ -690,7 +696,7 @@ function clientEntersAR(newPlayer, socket) {
     socket.join('gameRoom');
 
     console.log(`Player ${newPlayer.id} entered AR on Position ${newPlayer.playerNumber}.`);
-    latencyTestArray.push(`Player ${newPlayer.id} entered AR on Position ${newPlayer.playerNumber}.`);
+    networkTestArray.push(`Player ${newPlayer.id} entered AR on Position ${newPlayer.playerNumber}.`);
 
     // Add new player to the playerArray
     playerList[newPlayer.id] = newPlayer;
@@ -705,7 +711,7 @@ function clientEntersAR(newPlayer, socket) {
 // can be called from a new player or an previous player
 function clientStartPlaying(socket, playerNumber) {
     console.log(`Player ${socket.id} started playing as Player ${playerNumber}.`);
-    latencyTestArray.push(`Player ${socket.id} started playing as Player ${playerNumber}.`);
+    networkTestArray.push(`Player ${socket.id} started playing as Player ${playerNumber}.`);
 
     // set the isPlaying flag to true
     playerList[socket.id].isPlaying = true;
@@ -848,8 +854,8 @@ function ballBounce(playerNumber, isPaddle) {
     io.emit('ballBounce', playerNumber, isPaddle);
 }
 
-function writeTestArrayToFile(testType) {
-    console.log('Writing test results to file');
+function writeTestArrayToFile(testType, testArray, socketId = '') {
+    // console.log('Writing test results to file');
 
     let testFolderPath = '';
     let nextTestNumber = 0;
@@ -861,6 +867,8 @@ function writeTestArrayToFile(testType) {
         testFolderPath = join(__dirname, 'other_files', 'performance_tests', 'network_tests');
     }
 
+    // check if the folder exists and count the files in it
+    // then create the next test file with the next number
     fs.readdir(testFolderPath, (err, files) => {
         if (err) {
             console.error('Error reading directory', err);
@@ -881,13 +889,17 @@ function writeTestArrayToFile(testType) {
                 });
             }
         }
-
         nextTestNumber = maxTestNumber + 1;
 
         let currentDate = new Date();
-        const headerContent = `Performance Test_${nextTestNumber}\nTest Type: ${testType}\nDate: ${currentDate}\n\n`;
 
-        const arrayContent = latencyTestArray.join('\n');
+        let headerContent = '';
+        if (testType == 'latency') {
+            headerContent = `Performance Test ${nextTestNumber}\nTest Type: ${testType}\nSocket ID: ${socketId}\nDate: ${currentDate}\n\n`;
+        } else if (testType == 'network') {
+            headerContent = `Performance Test_${nextTestNumber}\nTest Type: ${testType}\nDate: ${currentDate}\n\n`;
+        }
+        const arrayContent = testArray.join('\n');
         const content = join(headerContent, arrayContent);
 
         const testFilePath = join(testFolderPath, `${testType}_test${nextTestNumber}.txt`);
@@ -896,7 +908,7 @@ function writeTestArrayToFile(testType) {
                 console.error('Error writing to file', err);
             } else {
                 console.log(`${testType} test results written to file`);
-                process.exit();
+                // process.exit();
             }
         });
     });
