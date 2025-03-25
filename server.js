@@ -14,9 +14,9 @@ import { write } from "node:fs";
 const port = process.env.PORT || 3000;
 
 ////////////// CHANGE THIS TO YOUR LOCAL IP ADDRESS ///////////////////
-const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
+//const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
 //const ipAdress = '192.168.178.35'; // Desktop zuhause // WLAN
-//const ipAdress = '192.168.1.163'; // for local network // Router
+const ipAdress = '192.168.0.30'; // for local network // Router
 //const ipAdress = '192.168.1.188'; // Router
 ///////////////////////////////////////////////////////////////////////
 
@@ -58,9 +58,10 @@ class Player {
     constructor(id, startData) {
         this.id = id;
         this.color = startData.color;
-        this.playerNumber = startData.playerNumber;
+        this.playerNumber = 0;
         this.score = 0;
         this.isPlaying = false;
+        this.inPosition = 0;
         this.startPosition = { x: startData.position.x, y: startData.position.y, z: startData.position.z };
         this.position = { x: startData.position.x, y: startData.position.y, z: startData.position.z };
         this.rotation = { x: startData.rotation.x, y: startData.rotation.y, z: startData.rotation.z };
@@ -84,6 +85,13 @@ class Player {
     sendData() {
         io.emit('playerUpdate', this);
     }
+
+    changeInPosition(newPosition) {
+        if (this.inPosition != newPosition) {
+            this.inPosition = newPosition;
+            io.emit('inPosChange', this.id, this.inPosition);
+        }
+    }
 };
 
 //////////////////////////// Server Testing TCP /////////////////////////////
@@ -96,7 +104,6 @@ let serverStartTime;
 
 // Test Variables
 let serverUpdateCounter = 0;
-let latencyTestArray = [];
 let networkTestArray = [];
 
 // Store all connected players
@@ -293,22 +300,23 @@ io.on('connection', (socket) => {
                 socket.emit('clientPong', data.clientSendTime);
             });
         } else {
-            socket.emit('startPosDenied');
+            socket.emit('startPosDenied', 0);
         }
     });
 
     // !7
-    socket.on('requestJoinGame', (startPlayerNum) => {
+    socket.on('requestJoinGame', (requestPlayerInPos) => {
 
-
-
-        // kommt abfrage rein ob der spieler in seiner spielarea ist
-        if (playerStartInfos[startPlayerNum].used == false) {
-            playerStartInfos[startPlayerNum].used = true;
-
-            clientStartPlaying(socket, startPlayerNum);
+        if (requestPlayerInPos == 0) {
+            socket.emit('startPosDenied', 1);
         } else {
-            socket.emit('startPosDenied');
+            if (playerStartInfos[requestPlayerInPos].used == false) {
+                playerStartInfos[requestPlayerInPos].used = true;
+
+                clientStartPlaying(socket, requestPlayerInPos);
+            } else {
+                socket.emit('startPosDenied', 2);
+            }
         }
     });
 
@@ -403,7 +411,21 @@ setInterval(function () {
             onePlayerPlaying = true;
         }
 
-
+        if (playerList[key].position.x > position1FontAreaLimit && playerList[key].position.x < position1BackAreaLimit &&
+            playerList[key].position.z > position1NegativeAreaLimit && playerList[key].position.z < position1PositiveAreaLimit) {
+            playerList[key].changeInPosition(1);
+        } else if (playerList[key].position.x < position2FontAreaLimit && playerList[key].position.x > position2BackAreaLimit &&
+            playerList[key].position.z > position2NegativeAreaLimit && playerList[key].position.z < position2PositiveAreaLimit) {
+            playerList[key].changeInPosition(2);
+        } else if (playerList[key].position.z > position3FontAreaLimit && playerList[key].position.z < position3BackAreaLimit &&
+            playerList[key].position.x > position3NegativeAreaLimit && playerList[key].position.x < position3PositiveAreaLimit) {
+            playerList[key].changeInPosition(3);
+        } else if (playerList[key].position.z < position4FontAreaLimit && playerList[key].position.z > position4BackAreaLimit &&
+            playerList[key].position.x > position4NegativeAreaLimit && playerList[key].position.x < position4PositiveAreaLimit) {
+            playerList[key].changeInPosition(4);
+        } else {
+            playerList[key].changeInPosition(0);
+        }
 
         // jedem spieler objekt noch ein inPosition geben wo dann beschrieben wird in welcher area er ist
         // 0 für wenn er in keiner ist
@@ -714,14 +736,15 @@ function clientStartPlaying(socket, playerNumber) {
     networkTestArray.push(`Player ${socket.id} started playing as Player ${playerNumber}.`);
 
     // set the isPlaying flag to true
+    playerList[socket.id].playerNumber = playerNumber;
     playerList[socket.id].isPlaying = true;
 
     // !8
     // Start the Game on client side and send the player's information to the new player
-    socket.emit('clientStartPlaying');
+    socket.emit('clientStartPlaying', playerList[socket.id].playerNumber);
 
     // Notify other players of the new player (waitingRoom and gameRoom)
-    socket.to('waitingRoom').to('gameRoom').emit('playerStartPlaying', playerList[socket.id]);
+    socket.to('waitingRoom').to('gameRoom').emit('playerStartPlaying', socket.id, playerList[socket.id].playerNumber);
 
     // Test color change for connection
     // socket.on('clicked', (playerColor) => {

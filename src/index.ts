@@ -19,7 +19,7 @@ if (rotationQuaternion) {
 }
 let clientStartTime = Date.now();
 
-let playerID: string;
+let clientID: string;
 let clientPlayer: Player | null = null;
 let playerUsingXR: boolean = false;
 // let clientStartPos: { x: number, y: number, z: number };
@@ -41,7 +41,7 @@ const guiElements: { [key: string]: GUI.TextBlock } = {};
 
 // Get HTML Elements
 const divFps = document.getElementById('fps');
-// const divID = document.getElementById('playerID');
+// const divID = document.getElementById('clientID');
 const startScreen = document.getElementById('startScreen');
 const continueAsPreviousPlayer = document.getElementById('continueAsPreviousPlayer');
 const loadingScreen = document.getElementById('loadingScreen');
@@ -293,30 +293,57 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     wallBounceMat.roughness = 0.5;
     wallBounceMat.backFaceCulling = false;
 
+    // creating the player 0 Material if the player has no position yet
+    var player0Mat = new PBRMaterial(`player0_mat`, scene);
+    player0Mat.emissiveColor = Color3.FromHexString('#000000');
+    player0Mat.alpha = 0.2;
+    player0Mat.disableLighting = true;
+    player0Mat.backFaceCulling = false;
+
     // creating the Materials for the players
     var player1Mat = new PBRMaterial(`player1_mat`, scene);
     player1Mat.emissiveColor = Color3.FromHexString(playerStartInfos[1].color);
     player1Mat.alpha = 0.2;
     player1Mat.disableLighting = true;
     player1Mat.backFaceCulling = false;
+    var player1PaddleMat = new PBRMaterial(`player1_paddle_mat`, scene);
+    player1PaddleMat.emissiveColor = Color3.FromHexString(playerStartInfos[1].color);
+    player1PaddleMat.alpha = 0.2;
+    player1PaddleMat.disableLighting = true;
+    player1PaddleMat.backFaceCulling = false;
 
     var player2Mat = new PBRMaterial(`player2_mat`, scene);
     player2Mat.emissiveColor = Color3.FromHexString(playerStartInfos[2].color);
     player2Mat.alpha = 0.2;
     player2Mat.disableLighting = true;
     player2Mat.backFaceCulling = false;
+    var player2PaddleMat = new PBRMaterial(`player2_paddle_mat`, scene);
+    player2PaddleMat.emissiveColor = Color3.FromHexString(playerStartInfos[2].color);
+    player2PaddleMat.alpha = 0.2;
+    player2PaddleMat.disableLighting = true;
+    player2PaddleMat.backFaceCulling = false;
 
     var player3Mat = new PBRMaterial(`player3_mat`, scene);
     player3Mat.emissiveColor = Color3.FromHexString(playerStartInfos[3].color);
     player3Mat.alpha = 0.2;
     player3Mat.disableLighting = true;
     player3Mat.backFaceCulling = false;
+    var player3PaddleMat = new PBRMaterial(`player3_paddle_mat`, scene);
+    player3PaddleMat.emissiveColor = Color3.FromHexString(playerStartInfos[3].color);
+    player3PaddleMat.alpha = 0.2;
+    player3PaddleMat.disableLighting = true;
+    player3PaddleMat.backFaceCulling = false;
 
     var player4Mat = new PBRMaterial(`player4_mat`, scene);
     player4Mat.emissiveColor = Color3.FromHexString(playerStartInfos[4].color);
     player4Mat.alpha = 0.2;
     player4Mat.disableLighting = true;
     player4Mat.backFaceCulling = false;
+    var player4PaddleMat = new PBRMaterial(`player4_paddle_mat`, scene);
+    player4PaddleMat.emissiveColor = Color3.FromHexString(playerStartInfos[4].color);
+    player4PaddleMat.alpha = 0.2;
+    player4PaddleMat.disableLighting = true;
+    player4PaddleMat.backFaceCulling = false;
 
     // Setting Materials
     ground.material = wireframeMat;
@@ -384,6 +411,7 @@ interface PlayerData {
     playerNumber: number;
     score: number;
     isPlaying: boolean;
+    inPosition: number;
     position: { x: number, y: number, z: number };
     rotation: { x: number, y: number, z: number };
     contrPosR: { x: number, y: number, z: number };
@@ -412,6 +440,7 @@ class Player implements PlayerData {
     playerNumber: number;
     score: number;
     isPlaying: boolean;
+    inPosition: number;
     position: { x: number, y: number, z: number };
     rotation: { x: number, y: number, z: number };
     contrPosR: { x: number, y: number, z: number };
@@ -431,6 +460,7 @@ class Player implements PlayerData {
         this.playerNumber = player.playerNumber;
         this.score = player.score;
         this.isPlaying = player.isPlaying;
+        this.inPosition = player.inPosition;
         this.position = { x: player.position.x, y: player.position.y, z: player.position.z };
         this.rotation = { x: player.rotation.x, y: player.rotation.y, z: player.rotation.z };
         this.contrPosR = { x: player.contrPosR.x, y: player.contrPosR.y, z: player.contrPosR.z };
@@ -805,8 +835,14 @@ socket.on('joinedWaitingRoom', () => {
     }
 });
 
-socket.on('startPosDenied', () => {
-    console.log('Start Position denied. Select another one.');
+socket.on('startPosDenied', (errorCode) => {
+    if (errorCode == 0) {
+        console.log('AR Enter position denied. Position is alreay taken.');
+    } else if (errorCode == 1) {
+        console.log('Starting the Game denied. You are in no game position.');
+    } else if (errorCode == 2) {
+        console.log('Starting the Game denied. Position is alreay taken.');
+    }
 });
 
 // !5
@@ -957,8 +993,8 @@ socket.on('clientEntersAR', (newSocketPlayer) => {
                     abuttonComponent.onButtonStateChangedObservable.add(() => {
                         if (abuttonComponent.pressed) {
                             // !7
-                            if (!playerList[playerID].isPlaying) {
-                                socket.emit('requestJoinGame', playerList[playerID].playerNumber);
+                            if (!playerList[clientID].isPlaying) {
+                                socket.emit('requestJoinGame', playerList[clientID].inPosition);
                             }
                         }
                     });
@@ -966,8 +1002,8 @@ socket.on('clientEntersAR', (newSocketPlayer) => {
                     let bbuttonComponent = motionController.getComponent(xrIDs[4]);//b-button
                     bbuttonComponent.onButtonStateChangedObservable.add(() => {
                         if (bbuttonComponent.pressed) {
-                            if (playerList[playerID].isPlaying) {
-                                socket.emit('clientLeavesGame', playerList[playerID].playerNumber);
+                            if (playerList[clientID].isPlaying) {
+                                socket.emit('clientLeavesGame', playerList[clientID].playerNumber);
                             }
                         }
                     });
@@ -976,27 +1012,27 @@ socket.on('clientEntersAR', (newSocketPlayer) => {
         });
 
         // get the Connection ID of the Player
-        playerID = newSocketPlayer.id;
+        clientID = newSocketPlayer.id;
 
         // get the player of this socket
         clientPlayer = new Player(newSocketPlayer);
 
         // remove the previous player from the local storage
-        localStorage.removeItem('playerID');
+        localStorage.removeItem('clientID');
 
         // add this socket player to the playerList
-        playerList[playerID] = clientPlayer;
+        playerList[clientID] = clientPlayer;
 
         // Spawn yourself Entity
-        addPlayer(playerList[playerID], true);
+        addPlayer(playerList[clientID], true);
 
         // set the xrCamera position and rotation to the player position and rotation from the server
         if (xrCamera) {
-            xrCamera.position = new Vector3(playerList[playerID].position.x, playerList[playerID].position.y, playerList[playerID].position.z);
-            xrCamera.rotationQuaternion = Quaternion.FromEulerAngles(playerList[playerID].rotation.x, playerList[playerID].rotation.y, playerList[playerID].rotation.z);
+            xrCamera.position = new Vector3(playerList[clientID].position.x, playerList[clientID].position.y, playerList[clientID].position.z);
+            xrCamera.rotationQuaternion = Quaternion.FromEulerAngles(playerList[clientID].rotation.x, playerList[clientID].rotation.y, playerList[clientID].rotation.z);
         }
 
-        let playerWall = scene.getMeshByName(`player${playerList[playerID].playerNumber}Wall`) as Mesh;
+        let playerWall = scene.getMeshByName(`player${playerList[clientID].playerNumber}Wall`) as Mesh;
         if (playerWall) {
             playerWall.isVisible = false;
         }
@@ -1007,19 +1043,25 @@ socket.on('clientEntersAR', (newSocketPlayer) => {
 
 // !8
 // when the current player is already on the server and starts the game
-socket.on('clientStartPlaying', () => {
+socket.on('clientStartPlaying', (startPlayingNumber) => {
     latencyTestArray.push('Client started playing');
     // console.log('You started playing');
-    playerList[playerID].isPlaying = true;
+    playerList[clientID].isPlaying = true;
+    playerList[clientID].playerNumber = startPlayingNumber;
 
-    addPlayerGameUtils(playerList[playerID], true);
+    // set the material of the player to a player material
+    (playerList[clientID].headObj as Mesh).material = scene.getMaterialByName(`player${startPlayingNumber}_mat`) as PBRMaterial;
+    (playerList[clientID].controllerL as Mesh).material = scene.getMaterialByName(`player${startPlayingNumber}_mat`) as PBRMaterial;
+    (playerList[clientID].controllerR as Mesh).material = scene.getMaterialByName(`player${startPlayingNumber}_mat`) as PBRMaterial;
 
-    let playerWall = scene.getMeshByName(`player${playerList[playerID].playerNumber}Wall`) as Mesh;
+    addPlayerGameUtils(playerList[clientID], true);
+
+    let playerWall = scene.getMeshByName(`player${playerList[clientID].playerNumber}Wall`) as Mesh;
     if (playerWall) {
         playerWall.isVisible = false;
     }
 
-    updatePlayerScore(playerID, playerList[playerID].score);
+    updatePlayerScore(clientID, playerList[clientID].score);
 });
 
 // when the current player is already on the server and a new player joins
@@ -1048,14 +1090,20 @@ socket.on('newPlayer', (newPlayer) => {
     }
 });
 
-socket.on('playerStartPlaying', (newPlayer) => {
-    latencyTestArray.push('Player started playing: ' + newPlayer.id);
+socket.on('playerStartPlaying', (newPlayerId, startPlayingNumber) => {
+    latencyTestArray.push('Player started playing: ' + newPlayerId);
 
-    playerList[newPlayer.id].isPlaying = true;
+    playerList[newPlayerId].isPlaying = true;
+    playerList[newPlayerId].playerNumber = startPlayingNumber;
 
-    addPlayerGameUtils(playerList[newPlayer.id], false);
+    // set the material of the player to a player material
+    (playerList[clientID].headObj as Mesh).material = scene.getMaterialByName(`player${startPlayingNumber}_mat`) as PBRMaterial;
+    (playerList[clientID].controllerL as Mesh).material = scene.getMaterialByName(`player${startPlayingNumber}_mat`) as PBRMaterial;
+    (playerList[clientID].controllerR as Mesh).material = scene.getMaterialByName(`player${startPlayingNumber}_mat`) as PBRMaterial;
 
-    let playerWall = scene.getMeshByName(`player${playerList[newPlayer.id].playerNumber}Wall`) as Mesh;
+    addPlayerGameUtils(playerList[newPlayerId], false);
+
+    let playerWall = scene.getMeshByName(`player${playerList[newPlayerId].playerNumber}Wall`) as Mesh;
     if (playerWall) {
         playerWall.isVisible = false;
     }
@@ -1064,7 +1112,7 @@ socket.on('playerStartPlaying', (newPlayer) => {
     //     playerScore.isVisible = true;
     // }
 
-    updatePlayerScore(newPlayer.id, playerList[newPlayer.id].score);
+    updatePlayerScore(newPlayerId, playerList[newPlayerId].score);
 });
 
 // update the players position and rotation from the server
@@ -1086,14 +1134,6 @@ socket.on('serverUpdate', (playerGameDataList, ballPosition, serverSendTime, ser
     socket.emit('ServerPong', serverSendTime, socket.id, serverUpdateCounter);
 });
 
-function updateBall(ballPosition: { x: number, y: number, z: number }) {
-    let ballSphere = scene.getMeshByName('ballSphere') as Mesh;
-    ballSphere.position = new Vector3(ballPosition.x, ballPosition.y, ballPosition.z);
-
-    let ballLight = scene.getLightByName('ballLight') as PointLight;
-    ballLight.position = new Vector3(ballPosition.x, ballPosition.y, ballPosition.z);
-}
-
 // recieve a score update from the server
 socket.on('scoreUpdate', (scoredPlayerID, newScore) => {
     if (playerList[scoredPlayerID]) {
@@ -1102,6 +1142,21 @@ socket.on('scoreUpdate', (scoredPlayerID, newScore) => {
         updatePlayerScore(scoredPlayerID, newScore);
     }
 });
+
+socket.on('inPosChange', (playerId, newInPos) => {
+    console.log(`In Position Change for: ${playerId}, New Pos: ${newInPos}, Old Pos: ${playerList[playerId].inPosition}`);
+    if (playerList[playerId]) {
+        playerList[playerId].inPosition = newInPos;
+    }
+});
+
+function updateBall(ballPosition: { x: number, y: number, z: number }) {
+    let ballSphere = scene.getMeshByName('ballSphere') as Mesh;
+    ballSphere.position = new Vector3(ballPosition.x, ballPosition.y, ballPosition.z);
+
+    let ballLight = scene.getLightByName('ballLight') as PointLight;
+    ballLight.position = new Vector3(ballPosition.x, ballPosition.y, ballPosition.z);
+}
 
 // update the score gui element for the specific player
 function updatePlayerScore(scoredPlayerID: string, newScore: number) {
@@ -1189,11 +1244,6 @@ function addPlayer(player: Player, isPlayer: boolean) {
     player.headObj.position = new Vector3(player.position.x, player.position.y, player.position.z);
     player.headObj.rotation = new Vector3(player.rotation.x, player.rotation.y, player.rotation.z);
     player.headObj.material = scene.getMaterialByName(`player${player.playerNumber}_mat`) as PBRMaterial;
-    // player.headObj.material = new PBRMaterial(`player${player.playerNumber}_mat`, scene);
-    // (player.headObj.material as PBRMaterial).emissiveColor = Color3.FromHexString(player.color);
-    // player.headObj.material.alpha = 0.2;
-    // (player.headObj.material as PBRMaterial).disableLighting = true;
-    // player.headObj.material.backFaceCulling = false;
 
     // dont show the players head, if it is the player itself
     if (isPlayer) {
@@ -1245,7 +1295,7 @@ function addPlayerGameUtils(player: Player, isPlayer: boolean) {
         player.paddle.position = new Vector3(player.contrPosR.x, player.contrPosR.y, -sceneStartInfos.playCubeSize.z / 2);
     }
     player.paddle.position = new Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
-    player.paddle.material = scene.getMaterialByName(`player${player.playerNumber}_mat`) as PBRMaterial;
+    player.paddle.material = scene.getMaterialByName(`player${player.playerNumber}_paddle_mat`) as PBRMaterial;
 
     // add a light to the paddle
     player.paddleLight = new PointLight(`player${player.playerNumber}_paddelLight`, player.paddle.position, scene);
@@ -1386,7 +1436,7 @@ socket.on('playerDisconnected', (id) => {
 
         delete playerList[id];
 
-        if (id == playerID) {
+        if (id == clientID) {
             let defaultCamera = scene.getCameraByName('Camera') as FreeCamera;
             scene.activeCamera = defaultCamera;
             defaultCamera.position = new Vector3(0, 5, 0);
@@ -1401,7 +1451,6 @@ engine.runRenderLoop(function () {
     if (divFps) {
         divFps.innerHTML = engine.getFps().toFixed() + ' fps';
     }
-
     Object.keys(playerList).forEach((id) => {
         if (playerList[id]) {
             playerList[id].updateObj();
@@ -1409,7 +1458,7 @@ engine.runRenderLoop(function () {
     });
 
     // Direct controller movement
-    // if (playerList[playerID].controllerL && playerList[playerID].controllerR) {
+    // if (playerList[clientID].controllerL && playerList[clientID].controllerR) {
 
     // }
     if (serverUpdateCounter > 0) {
@@ -1567,21 +1616,21 @@ setInterval(function () {
 }, 1000);
 
 function setLocalStorage() {
-    if (playerList[playerID]) {
+    if (playerList[clientID]) {
         let safedPreviousPlayer = {
-            id: playerID,
-            color: playerList[playerID].color,
-            playerNumber: playerList[playerID].playerNumber,
-            score: playerList[playerID].score,
-            // position: playerList[playerID].position,
-            position: { x: playerList[playerID].position.x, y: 0, z: playerList[playerID].position.z }, // dont save the y position (xr adds the head hight automatically)
-            rotation: { x: 0, y: playerList[playerID].rotation.y, z: 0 },    //only save the y rotation
-            // rotation: playerList[playerID].rotation,
-            contrPosR: playerList[playerID].contrPosR,
-            contrPosL: playerList[playerID].contrPosL,
-            // contrRotR: playerList[playerID].contrRotR,
+            id: clientID,
+            color: playerList[clientID].color,
+            playerNumber: playerList[clientID].playerNumber,
+            score: playerList[clientID].score,
+            // position: playerList[clientID].position,
+            position: { x: playerList[clientID].position.x, y: 0, z: playerList[clientID].position.z }, // dont save the y position (xr adds the head hight automatically)
+            rotation: { x: 0, y: playerList[clientID].rotation.y, z: 0 },    //only save the y rotation
+            // rotation: playerList[clientID].rotation,
+            contrPosR: playerList[clientID].contrPosR,
+            contrPosL: playerList[clientID].contrPosL,
+            // contrRotR: playerList[clientID].contrRotR,
             contrRotR: { x: 0, y: 0, z: 0 },                                 //reset the controller rotation
-            // contrRotL: playerList[playerID].contrRotL,
+            // contrRotL: playerList[clientID].contrRotL,
             contrRotL: { x: 0, y: 0, z: 0 },                                 //reset the controller rotation
             playerTime: Date.now()
         };
@@ -1599,7 +1648,7 @@ function setLocalStorage() {
 function getLocalStorage() {
     if (typeof (Storage) !== "undefined") {
         // Code for localStorage/sessionStorage.
-        // localStorage.setItem('playerID', `${playerID}`);
+        // localStorage.setItem('clientID', `${clientID}`);
         if (localStorage.getItem('player') != null) {
             let parsedJsonPreviousPlayer = JSON.parse(localStorage.getItem('player') || '{}');
             previousPlayer = {
@@ -1695,7 +1744,7 @@ socket.on('requestTestArray', () => {
 
 // document.addEventListener('click', () => {
 //     if (playerUsingXR) {
-//         socket.emit('clicked', playerList[playerID].color);
+//         socket.emit('clicked', playerList[clientID].color);
 //     }
 // });
 
@@ -1709,7 +1758,7 @@ socket.on('requestTestArray', () => {
 // });
 
 // function debugTestclick() {
-//     socket.emit('testClick', playerID);
+//     socket.emit('testClick', clientID);
 //     console.log('XRCam Rotation Quat: ', xrCamera?.rotationQuaternion);
 //     console.log('XRCam Rotation: ', xrCamera?.rotationQuaternion.toEulerAngles());
 // }
