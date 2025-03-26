@@ -118,6 +118,7 @@ const playerAreaDistance = 0.5; // the distance from the player area to the wall
 const playerPaddleSize = { h: 0.2, w: 0.4 }; // the size of the player plane in meters
 const ballStartSpeed = 0.02;
 const ballStartColor = '#1f53ff';
+const calculatedCubeHeight = playCubeSize.y - playCubeElevation;
 const midPointOfPlayCube = ((playCubeSize.y - playCubeElevation) / 2) + playCubeElevation;
 
 const position1PositiveAreaLimit = playCubeSize.z / 2;
@@ -157,7 +158,9 @@ let sceneStartinfos = {
     playerPaddleSize: playerPaddleSize,
     ballSize: ball.size,
     ballStartPos: ball.position,
-    ballColor: ball.color
+    ballColor: ball.color,
+    calculatedCubeHeight: calculatedCubeHeight,
+    midPointOfPlayCube: midPointOfPlayCube,
 }
 
 let playerStartInfos = {
@@ -323,10 +326,13 @@ io.on('connection', (socket) => {
     socket.on('clientLeavesGame', () => {
         console.log(`Player ${socket.id} left the game.`);
 
+        if (playerList[socket.id].isPlaying) {
+            playerStartInfos[playerList[socket.id].playerNumber].used = false;
+        }
+
         playerList[socket.id].isPlaying = false;
         playerList[socket.id].score = 0;
-
-        playerStartInfos[playerList[socket.id].playerNumber].used = false;
+        playerList[socket.id].playerNumber = 0;
 
         io.emit('playerLeftGame', socket.id);
         io.emit('scoreUpdate', socket.id, 0);
@@ -338,7 +344,9 @@ io.on('connection', (socket) => {
             console.log(`Player ${socket.id} left XR.`);
             networkTestArray.push(`Player ${socket.id} left XR.`);
 
-            playerStartInfos[playerList[socket.id].playerNumber].used = false;
+            if (playerList[socket.id].isPlaying) {
+                playerStartInfos[playerList[socket.id].playerNumber].used = false;
+            }
 
             delete playerList[socket.id];
 
@@ -362,7 +370,9 @@ io.on('connection', (socket) => {
             console.log(`Player ${socket.id} disconnected from the game.`);
             networkTestArray.push(`Player ${socket.id} disconnected from the game.`);
 
-            playerStartInfos[playerList[socket.id].playerNumber].used = false;
+            if (playerList[socket.id].isPlaying) {
+                playerStartInfos[playerList[socket.id].playerNumber].used = false;
+            }
 
             delete playerList[socket.id];
         } else {
