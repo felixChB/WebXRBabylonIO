@@ -67,7 +67,7 @@
     - Probleme bei der Auswahl der Positionen da Knöpfe verwechselt werden
     - finden den Knopf für den Zeigefinger nicht
 - Spielerfeld
-    - Spielerfeld bzw. Abgrenzung im Siel wird oft nicht erkannt
+    - Spielerfeld bzw. Abgrenzung im Spiel wird oft nicht erkannt
     - erkenntlichere Barriere?
     - für manche zu nah und für manche zu weit weg vom SpielCube
 - ein Nutzer dachte er muss die Wand/das Paddle berühren

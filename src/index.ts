@@ -60,6 +60,7 @@ document.body.appendChild(canvas);
 // Test Variables
 let serverUpdateCounter = 0;
 let latencyTestArray: string[] = [];
+const updateCounterArray: number[] = [];
 
 ////////////////////////////// CREATE BABYLON SCENE ETC. //////////////////////////////
 
@@ -755,19 +756,19 @@ window.addEventListener('resize', function () {
 socket.on('connect', () => {
     socket.emit('clientStartTime', clientStartTime);
     // console.log('Previous Player Data: ', previousPlayer);
-    latencyTestArray.push('Client Connected');
+    latencyTestArray.push(`----------Client Connected----------`);
 });
 
 // !2
 socket.on('ClientID', (id) => {
     console.log('This Client ID: ', id);
-    latencyTestArray.push('This Client ID: ' + id);
+    latencyTestArray.push(`----------This Client ID: ${id} ----------`);
 });
 
 // !3
 socket.on('reload', () => {
     console.log('Server requested reload');
-    latencyTestArray.push('Server requested reload');
+    latencyTestArray.push(`----------Server requested reload----------`);
     xr.baseExperience.exitXRAsync();
     window.location.reload();
 });
@@ -827,8 +828,8 @@ socket.on('reload', () => {
 
 // !4
 socket.on('joinedWaitingRoom', () => {
-    console.log('You joined the waiting Room. Enter VR to join the Game.');
-    latencyTestArray.push('Client joined Waiting Room');
+    console.log(`You joined the waiting Room. Enter VR to join the Game.`);
+    latencyTestArray.push(`----------Client joined Waiting Room----------`);
 
     if (loadingScreen) {
         loadingScreen.style.display = 'none';
@@ -851,7 +852,7 @@ socket.on('startPosDenied', (errorCode) => {
 socket.on('currentState', (players: { [key: string]: Player }, ballColor: string,
     playerStartInfosServer: { [key: number]: PlayerStartInfo }, sceneStartInfosServer: SceneStartInfos) => {
 
-    latencyTestArray.push('Client received currentState');
+    latencyTestArray.push(`----------Client received currentState----------`);
 
     sceneStartInfos = sceneStartInfosServer;
     playerStartInfos = playerStartInfosServer;
@@ -890,7 +891,7 @@ socket.on('currentState', (players: { [key: string]: Player }, ballColor: string
 
 // !6
 socket.on('clientEntersAR', (newSocketPlayer) => {
-    latencyTestArray.push('Client enters AR');
+    latencyTestArray.push(`----------Client enters AR----------`);
 
     startScreen?.style.setProperty('display', 'none');
 
@@ -916,52 +917,6 @@ socket.on('clientEntersAR', (newSocketPlayer) => {
                 // let sphere: Mesh;
                 // let material: StandardMaterial;
 
-                if (motionController.handness === 'left') {
-
-                    leftController = controller;
-
-                    const xrIDs = motionController.getComponentIds();
-
-                    let triggerComponent = motionController.getComponent(xrIDs[0]); //xr-standard-trigger
-                    triggerComponent.onButtonStateChangedObservable.add(() => {
-                        if (triggerComponent.pressed) {
-
-                        }
-                    });
-
-                    let squeezeComponent = motionController.getComponent(xrIDs[1]);//xr-standard-squeeze
-                    squeezeComponent.onButtonStateChangedObservable.add(() => {
-                        if (squeezeComponent.pressed) {
-
-                        }
-                    });
-
-                    let thumbstickComponent = motionController.getComponent(xrIDs[2]);//xr-standard-thumbstick
-                    thumbstickComponent.onButtonStateChangedObservable.add(() => {
-                        if (thumbstickComponent.pressed) {
-
-                        }
-                    });
-
-                    let xbuttonComponent = motionController.getComponent(xrIDs[3]);//x-button
-                    xbuttonComponent.onButtonStateChangedObservable.add(() => {
-                        if (xbuttonComponent.pressed) {
-                            // for testing to report a lag
-                            console.log('Send Lag report');
-                            socket.emit('reportLag', Date.now());
-                            latencyTestArray.push('Report a Lag at Counter:' + serverUpdateCounter);
-                        }
-                    });
-
-                    let ybuttonComponent = motionController.getComponent(xrIDs[4]);//y-button
-                    ybuttonComponent.onButtonStateChangedObservable.add(() => {
-                        if (ybuttonComponent.pressed) {
-                            console.log('Send Lag report');
-                            socket.emit('reportLag', Date.now());
-                            latencyTestArray.push('Report a Lag at Counter:' + serverUpdateCounter);
-                        }
-                    });
-                }
                 if (motionController.handness === 'right') {
 
                     rightController = controller;
@@ -1008,6 +963,54 @@ socket.on('clientEntersAR', (newSocketPlayer) => {
                         }
                     });
                 }
+
+                if (motionController.handness === 'left') {
+
+                    leftController = controller;
+
+                    const xrIDs = motionController.getComponentIds();
+
+                    let triggerComponent = motionController.getComponent(xrIDs[0]); //xr-standard-trigger
+                    triggerComponent.onButtonStateChangedObservable.add(() => {
+                        if (triggerComponent.pressed) {
+
+                        }
+                    });
+
+                    let squeezeComponent = motionController.getComponent(xrIDs[1]);//xr-standard-squeeze
+                    squeezeComponent.onButtonStateChangedObservable.add(() => {
+                        if (squeezeComponent.pressed) {
+
+                        }
+                    });
+
+                    let thumbstickComponent = motionController.getComponent(xrIDs[2]);//xr-standard-thumbstick
+                    thumbstickComponent.onButtonStateChangedObservable.add(() => {
+                        if (thumbstickComponent.pressed) {
+
+                        }
+                    });
+
+                    let xbuttonComponent = motionController.getComponent(xrIDs[3]);//x-button
+                    xbuttonComponent.onButtonStateChangedObservable.add(() => {
+                        if (xbuttonComponent.pressed) {
+                            // for testing to report a lag
+                            console.log('Send Lag report');
+                            socket.emit('reportLag', serverUpdateCounter);
+                            latencyTestArray.push(`----------Report a Lag at or before Counter: ${serverUpdateCounter}----------`);
+                        }
+                    });
+
+                    let ybuttonComponent = motionController.getComponent(xrIDs[4]);//y-button
+                    ybuttonComponent.onButtonStateChangedObservable.add(() => {
+                        if (ybuttonComponent.pressed) {
+                            // for testing to report a lag
+                            console.log('Send Lag report');
+                            socket.emit('reportLag', serverUpdateCounter);
+                            latencyTestArray.push(`----------Report a Lag at or before Counter: ${serverUpdateCounter}----------`);
+                        }
+                    });
+                }
             })
         });
 
@@ -1044,7 +1047,7 @@ socket.on('clientEntersAR', (newSocketPlayer) => {
 // !8
 // when the current player is already on the server and starts the game
 socket.on('clientStartPlaying', (startPlayingNumber) => {
-    latencyTestArray.push('Client started playing');
+    latencyTestArray.push(`----------Client started playing----------`);
     // console.log('You started playing');
     playerList[clientID].isPlaying = true;
     playerList[clientID].playerNumber = startPlayingNumber;
@@ -1064,7 +1067,7 @@ socket.on('clientStartPlaying', (startPlayingNumber) => {
 
 // when the current player is already on the server and a new player joins
 socket.on('newPlayer', (newPlayer) => {
-    latencyTestArray.push('New Player joined: ' + newPlayer.id);
+    latencyTestArray.push(`----------New Player joined: ${newPlayer.id}----------`);
     // console log about new player joined
     console.log('New player joined: ', newPlayer.id);
 
@@ -1081,17 +1084,10 @@ socket.on('newPlayer', (newPlayer) => {
             }
         }
     }*/
-
-    // set the availability of the start buttons according to the used startpositions on the server
-    if (newPlayer.isPlaying) {
-        if (!startButtons[newPlayer.playerNumber].classList.contains('unavailable')) {
-            startButtons[newPlayer.playerNumber].classList.add('unavailable');
-        }
-    }
 });
 
 socket.on('playerStartPlaying', (newPlayerId, startPlayingNumber) => {
-    latencyTestArray.push('Player started playing: ' + newPlayerId + ' as ' + startPlayingNumber);
+    latencyTestArray.push(`----------Player started playing: ${newPlayerId} as ${startPlayingNumber}----------`);
     console.log('Player started playing: ', newPlayerId, ' as ', startPlayingNumber);
 
     playerList[newPlayerId].isPlaying = true;
@@ -1112,6 +1108,13 @@ socket.on('playerStartPlaying', (newPlayerId, startPlayingNumber) => {
     // }
 
     updatePlayerScore(newPlayerId, playerList[newPlayerId].score);
+
+    // set the availability of the start buttons according to the used startpositions on the server
+    if (newPlayerId.isPlaying) {
+        if (!startButtons[playerList[newPlayerId].playerNumber].classList.contains('unavailable')) {
+            startButtons[playerList[newPlayerId].playerNumber].classList.add('unavailable');
+        }
+    }
 });
 
 // update the players position and rotation from the server
@@ -1127,9 +1130,13 @@ socket.on('serverUpdate', (playerGameDataList, ballPosition, serverSendTime, ser
     // console.log('Server Update Counter: ', serverUpdateCounter);
 
     serverUpdateCounter = serverUpdateCounterServer;
+    // save the time when the client recieved the server update
+    // pair it with the server update counter to store the specific update with the recivied time
+    updateCounterArray[serverUpdateCounter] = performance.now();
 
     updateBall(ballPosition);
 
+    // send the pong back to the server to calculate the ServerRoundTrip Time
     socket.emit('ServerPong', serverSendTime, socket.id, serverUpdateCounter);
 });
 
@@ -1376,7 +1383,7 @@ socket.on('playerLeftGame', (playerId) => {
     const leftPlayer = playerList[playerId];
     if (leftPlayer) {
         console.log(`Player ${leftPlayer.playerNumber} left the game.`);
-        latencyTestArray.push(`Player ${leftPlayer.playerNumber} left the game.`);
+        latencyTestArray.push(`----------Player ${leftPlayer.playerNumber} left the game.----------`);
 
         let playerWall = scene.getMeshByName(`player${leftPlayer.playerNumber}Wall`) as Mesh;
         if (playerWall) {
@@ -1401,7 +1408,7 @@ socket.on('playerDisconnected', (id) => {
     const disconnectedPlayer = playerList[id];
     if (disconnectedPlayer) {
         console.log('Player disconnected: ', id);
-        latencyTestArray.push(`Player ${disconnectedPlayer.playerNumber} disconnected.`);
+        latencyTestArray.push(`----------Player ${disconnectedPlayer.playerNumber} disconnected.----------`);
         disconnectedPlayer.headObj?.dispose();
         disconnectedPlayer.controllerR?.dispose();
         disconnectedPlayer.controllerL?.dispose();
@@ -1470,9 +1477,15 @@ engine.runRenderLoop(function () {
     // if (playerList[clientID].controllerL && playerList[clientID].controllerR) {
 
     // }
+
+    const renderLoopTime = performance.now();
+    const deltaRenderLoopTime = renderLoopTime - updateCounterArray[serverUpdateCounter];
+    const roundedDRLT = Math.round(deltaRenderLoopTime * 100) / 100;
+
     if (serverUpdateCounter > 0) {
         // console.log('Server Update Counter: ', serverUpdateCounter);
-        latencyTestArray.push(`Server Update Counter: ${serverUpdateCounter}`);
+        // latencyTestArray.push(`Server Update Counter: ${serverUpdateCounter}`);
+        latencyTestArray.push(`SUC: ${serverUpdateCounter}, Delay: ${roundedDRLT}ms`);
     }
 
     scene.render();
@@ -1746,6 +1759,12 @@ window.addEventListener('keydown', function (event) {
 });
 
 socket.on('requestTestArray', () => {
+    for (let i = 0; i < updateCounterArray.length; i++) {
+        if (updateCounterArray[i] == undefined) {
+            latencyTestArray.push(`SUC: ${i}, ERROR: Serverupdate not recieved`);
+
+        }
+    }
     socket.emit('sendTestArray', latencyTestArray);
     console.log('Test Array sent to Server');
     // latencyTestArray = [];
@@ -1778,12 +1797,12 @@ socket.on('ping', (data) => {
     socket.emit('pong', { serverSendTime: data.serverSendTime, clientReceiveTime, clientId: socket.id });
 });
 
-socket.on('clientPong', (serverClientSendTime) => {
+/*socket.on('clientPong', (serverClientSendTime) => {
     const clientSendTime = serverClientSendTime;
     const clientReceiveTime = Date.now();
     const clientRoundTripTime = clientReceiveTime - clientSendTime;
     // console.log('Client Round Trip Time: ', clientRoundTripTime);
     socket.emit('clientRoundTripTime', clientRoundTripTime, socket.id);
-});
+});*/
 
 ////////////////////////// END TESTING GROUND ////////////////////////////// 

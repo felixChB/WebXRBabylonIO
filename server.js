@@ -14,9 +14,9 @@ import { write } from "node:fs";
 const port = process.env.PORT || 3000;
 
 ////////////// CHANGE THIS TO YOUR LOCAL IP ADDRESS ///////////////////
-//const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
+const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
 //const ipAdress = '192.168.178.35'; // Desktop zuhause // WLAN
-const ipAdress = '192.168.0.30'; // for local network // Router
+//const ipAdress = '192.168.0.30'; // for local network // Router
 //const ipAdress = '192.168.1.188'; // Router
 ///////////////////////////////////////////////////////////////////////
 
@@ -61,7 +61,7 @@ class Player {
         this.playerNumber = 0;
         this.score = 0;
         this.isPlaying = false;
-        this.inPosition = 0;
+        this.inPosition = startData.playerNumber;
         this.startPosition = { x: startData.position.x, y: startData.position.y, z: startData.position.z };
         this.position = { x: startData.position.x, y: startData.position.y, z: startData.position.z };
         this.rotation = { x: startData.rotation.x, y: startData.rotation.y, z: startData.rotation.z };
@@ -88,6 +88,7 @@ class Player {
 
     changeInPosition(newPosition) {
         if (this.inPosition != newPosition) {
+            console.log(`InPos change from ${this.inPosition} to ${newPosition}`);
             this.inPosition = newPosition;
             io.emit('inPosChange', this.id, this.inPosition);
         }
@@ -226,16 +227,18 @@ io.on('connection', (socket) => {
 
     socket.on('ServerPong', (clientServerSendTime, id, serverUpdateCounterPong) => {
         const serverSendTime = clientServerSendTime;
-        const serverReceiveTime = Date.now();
+        const serverReceiveTime = performance.now();
         const serverRoundTripTime = serverReceiveTime - serverSendTime;
-        networkTestArray.push(`${id} SRTT: ${serverRoundTripTime}, ServUpCounter: ${serverUpdateCounterPong}`);
+        const roundedSRTT = Math.round(serverRoundTripTime * 100) / 100;
+        // networkTestArray.push(`${id} SRTT: ${serverRoundTripTime}, ServUpCounter: ${serverUpdateCounterPong}`);
+        networkTestArray.push(`SUC: ${serverUpdateCounterPong}, SRTT: ${roundedSRTT}ms, client: ${id}`);
         // console.log(`${id} SRTT: ${serverRoundTripTime}`);
     });
 
-    socket.on('clientRoundTripTime', (clientRoundTripTime, id) => {
+    /*socket.on('clientRoundTripTime', (clientRoundTripTime, id) => {
         networkTestArray.push(`${id} CRTT: ${clientRoundTripTime}`);
         // console.log(`${id} CRTT: ${clientRoundTripTime}`);
-    });
+    });*/
 
     // Function to send a ping message to the client
     // function sendPing() {
@@ -246,9 +249,9 @@ io.on('connection', (socket) => {
     // Send a ping message every 5 seconds
     // const pingInterval = setInterval(sendPing, 500);
 
-    socket.on('reportLag', (timeOfLag) => {
-        console.log(`Player ${socket.id} reported lag at ${timeOfLag}`);
-        networkTestArray.push(`Player ${socket.id} reported lag at ${timeOfLag}`);
+    socket.on('reportLag', (counterAtLag) => {
+        console.log(`Player ${socket.id} reported lag at or before counter ${counterAtLag}`);
+        networkTestArray.push(`Player ${socket.id} reported lag at or before counter ${counterAtLag}`);
     });
 
     // End Network Ping Pong Test //
@@ -300,7 +303,7 @@ io.on('connection', (socket) => {
 
             socket.on('clientUpdate', (data) => {
                 playerList[socket.id].setData(data);
-                socket.emit('clientPong', data.clientSendTime);
+                // socket.emit('clientPong', data.clientSendTime);
             });
         } else {
             socket.emit('startPosDenied', 0);
@@ -695,7 +698,7 @@ setInterval(function () {
     // Sending the current game state to all players if there are players in XR (AR/VR)
     // the necessary data of the players and the ball
     if (Object.keys(playerList).length > 0) {
-        io.emit('serverUpdate', prepareGameData(), ball.position, Date.now(), serverUpdateCounter);
+        io.emit('serverUpdate', prepareGameData(), ball.position, performance.now(), serverUpdateCounter);
         serverUpdateCounter++;
     }
 }, 20);
