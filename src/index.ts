@@ -61,6 +61,7 @@ document.body.appendChild(canvas);
 let serverUpdateCounter = 0;
 let latencyTestArray: string[] = [];
 const updateCounterArray: number[] = [];
+const renderLoopTestArray: { suc: number; time: number }[] = [];
 
 ////////////////////////////// CREATE BABYLON SCENE ETC. //////////////////////////////
 
@@ -1480,12 +1481,13 @@ engine.runRenderLoop(function () {
 
     const renderLoopTime = performance.now();
     const deltaRenderLoopTime = renderLoopTime - updateCounterArray[serverUpdateCounter];
-    const roundedDRLT = Math.round(deltaRenderLoopTime * 100) / 100;
+    const roundedDRLT = Math.round(deltaRenderLoopTime);
 
     if (serverUpdateCounter > 0) {
         // console.log('Server Update Counter: ', serverUpdateCounter);
         // latencyTestArray.push(`Server Update Counter: ${serverUpdateCounter}`);
         latencyTestArray.push(`SUC: ${serverUpdateCounter}, Delay: ${roundedDRLT}ms`);
+        renderLoopTestArray.push({suc: serverUpdateCounter, time: roundedDRLT});
     }
 
     scene.render();
@@ -1762,10 +1764,9 @@ socket.on('requestTestArray', () => {
     for (let i = 0; i < updateCounterArray.length; i++) {
         if (updateCounterArray[i] == undefined) {
             latencyTestArray.push(`SUC: ${i}, ERROR: Serverupdate not recieved`);
-
         }
     }
-    socket.emit('sendTestArray', latencyTestArray);
+    socket.emit('sendTestArray', latencyTestArray, renderLoopTestArray);
     console.log('Test Array sent to Server');
     // latencyTestArray = [];
 });

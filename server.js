@@ -106,6 +106,7 @@ let serverStartTime;
 // Test Variables
 let serverUpdateCounter = 0;
 let networkTestArray = [];
+let networkTableArray = [];
 
 // Store all connected players
 let playerList = {};
@@ -229,9 +230,10 @@ io.on('connection', (socket) => {
         const serverSendTime = clientServerSendTime;
         const serverReceiveTime = performance.now();
         const serverRoundTripTime = serverReceiveTime - serverSendTime;
-        const roundedSRTT = Math.round(serverRoundTripTime * 100) / 100;
+        const roundedSRTT = Math.round(serverRoundTripTime);
         // networkTestArray.push(`${id} SRTT: ${serverRoundTripTime}, ServUpCounter: ${serverUpdateCounterPong}`);
         networkTestArray.push(`SUC: ${serverUpdateCounterPong}, SRTT: ${roundedSRTT}ms, client: ${id}`);
+        networkTableArray.push({ suc: serverUpdateCounterPong, time: roundedSRTT });
         // console.log(`${id} SRTT: ${serverRoundTripTime}`);
     });
 
@@ -395,14 +397,17 @@ io.on('connection', (socket) => {
             io.emit('requestTestArray');
         } else if (endType == 'network') {
             writeTestArrayToFile('network', networkTestArray);
+            writeArrayToTable('network', networkTableArray);
         } else if (endType == 'all') {
             io.emit('requestTestArray');
             writeTestArrayToFile('network', networkTestArray);
+            writeArrayToTable('network', networkTableArray);
         }
     });
 
-    socket.on('sendTestArray', (testArray) => {
+    socket.on('sendTestArray', (testArray, tableTestArray) => {
         writeTestArrayToFile('latency', testArray, socket.id);
+        writeArrayToTable('latency', tableTestArray, socket.id);
     });
 });
 
@@ -944,6 +949,70 @@ function writeTestArrayToFile(testType, testArray, socketId = '') {
                 console.error('Error writing to file', err);
             } else {
                 console.log(`${testType} test results written to file`);
+                // process.exit();
+            }
+        });
+    });
+}
+
+function writeArrayToTable(testType, testArray, socketId = '') {
+    // console.log('Writing test results to file');
+
+    if (!testArray || !Array.isArray(testArray)) {
+        console.log('serverUpdateData is not an array or is undefined');
+    }
+
+    // Prepare CSV content
+    let csvData = '';
+
+    let testFolderPath = '';
+    let nextTestNumber = 0;
+    let maxTestNumber = 0;
+
+    if (testType == 'latency') {
+        testFolderPath = join(__dirname, 'other_files', 'performance_tests', 'latency_tests');
+        csvData = 'SUC,RenderLoopDelay\n';
+    } else if (testType == 'network') {
+        testFolderPath = join(__dirname, 'other_files', 'performance_tests', 'network_tests');
+        csvData = 'SUC,SRTT\n';
+    }
+
+
+
+    // check if the folder exists and count the files in it
+    // then create the next test file with the next number
+    fs.readdir(testFolderPath, (err, files) => {
+        if (err) {
+            console.error('Error reading directory', err);
+        } else {
+
+            if (files.length == 0) {
+                nextTestNumber = 1;
+            } else {
+                files.forEach(file => {
+                    const regex = new RegExp(`${testType}_test(\\d+)`);
+                    const match = file.match(regex);
+                    if (match) {
+                        const testNumber = parseInt(match[1], 10);
+                        if (testNumber > maxTestNumber) {
+                            maxTestNumber = testNumber;
+                        }
+                    }
+                });
+            }
+        }
+        nextTestNumber = maxTestNumber + 1;
+
+        testArray.forEach(entry => {
+            csvData += `${entry.suc},${entry.time}\n`;
+        });
+
+        const testFilePath = join(testFolderPath, `${testType}_test${nextTestNumber}_table.csv`);
+        fs.writeFile(testFilePath, csvData, { flag: 'w' }, (err) => {
+            if (err) {
+                console.error('Error writing to file', err);
+            } else {
+                console.log(`${testType} test results written to table file`);
                 // process.exit();
             }
         });
