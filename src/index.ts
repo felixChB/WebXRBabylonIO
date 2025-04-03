@@ -40,7 +40,7 @@ let rightController: WebXRInputSource | null = null;
 const guiElements: { [key: string]: GUI.TextBlock } = {};
 
 // Get HTML Elements
-const divFps = document.getElementById('fps');
+// const divFps = document.getElementById('fps');
 // const divID = document.getElementById('clientID');
 const startScreen = document.getElementById('startScreen');
 const continueAsPreviousPlayer = document.getElementById('continueAsPreviousPlayer');
@@ -59,9 +59,14 @@ document.body.appendChild(canvas);
 
 // Test Variables
 let serverUpdateCounter = 0;
+let oldServerUpdateCounter = 0;
 let latencyTestArray: string[] = [];
 const updateCounterArray: number[] = [];
 const renderLoopTestArray: { suc: number; time: number }[] = [];
+
+let fpsOldTime = 0;
+let fpsNewTime = 0;
+const fpsArray: { suc: number; time: number }[] = [];
 
 ////////////////////////////// CREATE BABYLON SCENE ETC. //////////////////////////////
 
@@ -748,7 +753,7 @@ window.addEventListener('resize', function () {
                     }
                 }
             }
-        }, 20);
+        }, 10);
     }
 })();
 
@@ -941,7 +946,7 @@ socket.on('clientEntersAR', (newSocketPlayer) => {
                     let thumbstickComponent = motionController.getComponent(xrIDs[2]);//xr-standard-thumbstick
                     thumbstickComponent.onButtonStateChangedObservable.add(() => {
                         if (thumbstickComponent.pressed) {
-                            socket.emit('collectingTests', 'all');
+
                         }
                     });
 
@@ -988,7 +993,7 @@ socket.on('clientEntersAR', (newSocketPlayer) => {
                     let thumbstickComponent = motionController.getComponent(xrIDs[2]);//xr-standard-thumbstick
                     thumbstickComponent.onButtonStateChangedObservable.add(() => {
                         if (thumbstickComponent.pressed) {
-
+                            socket.emit('collectingTests', 'all');
                         }
                     });
 
@@ -1465,29 +1470,38 @@ socket.on('playerDisconnected', (id) => {
 ////////////////////////// RENDER LOOP //////////////////////////////
 // Register a render loop to repeatedly render the scene
 engine.runRenderLoop(function () {
-    if (divFps) {
-        divFps.innerHTML = engine.getFps().toFixed() + ' fps';
-    }
+    // if (divFps) {
+    //     divFps.innerHTML = engine.getFps().toFixed() + ' fps';
+    // }
     Object.keys(playerList).forEach((id) => {
         if (playerList[id]) {
             playerList[id].updateObj();
         }
     });
 
-    // Direct controller movement
-    // if (playerList[clientID].controllerL && playerList[clientID].controllerR) {
-
-    // }
-
-    const renderLoopTime = performance.now();
-    const deltaRenderLoopTime = renderLoopTime - updateCounterArray[serverUpdateCounter];
-    const roundedDRLT = Math.round(deltaRenderLoopTime);
-
     if (serverUpdateCounter > 0) {
-        // console.log('Server Update Counter: ', serverUpdateCounter);
-        // latencyTestArray.push(`Server Update Counter: ${serverUpdateCounter}`);
-        latencyTestArray.push(`SUC: ${serverUpdateCounter}, Delay: ${roundedDRLT}ms`);
-        renderLoopTestArray.push({suc: serverUpdateCounter, time: roundedDRLT});
+
+        // calculate the time difference between the client recieving the server update and teh client showing the update
+        // this is the time it takes for the client to process the server update and show it on the screen
+        if (oldServerUpdateCounter != serverUpdateCounter) {
+            const renderLoopTime = performance.now();
+            const deltaRenderLoopTime = renderLoopTime - updateCounterArray[serverUpdateCounter];
+            const roundedDRLT = Math.round(deltaRenderLoopTime);
+            
+            // console.log('Server Update Counter: ', serverUpdateCounter);
+            // latencyTestArray.push(`Server Update Counter: ${serverUpdateCounter}`);
+            latencyTestArray.push(`SUC: ${serverUpdateCounter}, Delay: ${roundedDRLT}ms`);
+            renderLoopTestArray.push({ suc: serverUpdateCounter, time: roundedDRLT });
+
+        }
+        oldServerUpdateCounter = serverUpdateCounter;
+
+        // calculate the fps
+        fpsNewTime = performance.now();
+        const fps = Math.round(fpsNewTime - fpsOldTime);
+        fpsArray.push({ suc: serverUpdateCounter, time: fps });
+
+        fpsOldTime = fpsNewTime;
     }
 
     scene.render();
@@ -1766,7 +1780,7 @@ socket.on('requestTestArray', () => {
             latencyTestArray.push(`SUC: ${i}, ERROR: Serverupdate not recieved`);
         }
     }
-    socket.emit('sendTestArray', latencyTestArray, renderLoopTestArray);
+    socket.emit('sendTestArray', latencyTestArray, renderLoopTestArray, fpsArray);
     console.log('Test Array sent to Server');
     // latencyTestArray = [];
 });
