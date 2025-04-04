@@ -753,7 +753,7 @@ window.addEventListener('resize', function () {
                     }
                 }
             }
-        }, 10);
+        }, 20);
     }
 })();
 
@@ -1156,7 +1156,7 @@ socket.on('scoreUpdate', (scoredPlayerID, newScore) => {
 });
 
 socket.on('inPosChange', (playerId, newInPos) => {
-    console.log(`In Position Change for: ${playerId}, New Pos: ${newInPos}, Old Pos: ${playerList[playerId].inPosition}`);
+    console.log(`${playerId}: InPos change from ${playerList[playerId].inPosition} to ${newInPos}`);
     if (playerList[playerId]) {
         playerList[playerId].inPosition = newInPos;
     }
@@ -1251,7 +1251,7 @@ function setPlayerAvailability(startPositions: { [key: number]: PlayerStartInfo 
 
 // Spawn Player Entity with the Connection ID
 function addPlayer(player: Player, isPlayer: boolean) {
-    console.log(`Spawning Player: ${player.id} as Player ${player.playerNumber}`);
+    console.log(`Spawning Player: ${player.id} as Player ${player.inPosition}`);
 
     let headScaling = 0.3;
     let controllerScaling = 0.1;
@@ -1465,6 +1465,14 @@ socket.on('playerDisconnected', (id) => {
             defaultCamera.rotation = new Vector3(Math.PI / 2, Math.PI, Math.PI / 4);
         }
     }
+});
+
+socket.on('leftGameArea' , () => {
+    console.log('Player left the Game Area.');
+});
+
+socket.on('reenteredGameArea' , () => {
+    console.log('Player reentered the Game Area.');
 });
 
 ////////////////////////// RENDER LOOP //////////////////////////////

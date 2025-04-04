@@ -10,6 +10,7 @@ import { start } from "repl";
 import { constants } from "node:crypto";
 import e from "express";
 import { write } from "node:fs";
+import { time } from "node:console";
 
 const port = process.env.PORT || 3000;
 
@@ -88,8 +89,37 @@ class Player {
 
     changeInPosition(newPosition) {
         if (this.inPosition != newPosition) {
-            console.log(`InPos change from ${this.inPosition} to ${newPosition}`);
+            console.log(`${this.id}: InPos change from ${this.inPosition} to ${newPosition}`);
+            console.log(`${this.id}: Player ${this.playerNumber} is in position ${newPosition}`);
             this.inPosition = newPosition;
+            if (this.isPlaying) {
+                if (newPosition == 0) {
+                    console.log(`Player ${this.id} left the game area.`);
+                    io.to(this.id).emit('leftGameArea',);
+                    areaTimerList[this.playerNumber] = setTimeout(() => {
+                        // throw player out of the game
+                        console.log(`Player ${this.id} was kicked out of the game.`);
+
+                        if (this.isPlaying) {
+                            playerStartInfos[this.playerNumber].used = false;
+                        }
+
+                        this.isPlaying = false;
+                        this.score = 0;
+                        this.playerNumber = 0;
+
+                        io.emit('playerLeftGame', this.id);
+                        io.emit('scoreUpdate', this.id, 0);
+
+                    }, 5000);
+                } else if (newPosition == this.playerNumber) {
+                    if (areaTimerList[this.playerNumber] != null) {
+                        clearTimeout(areaTimerList[this.playerNumber]);
+                        areaTimerList[this.playerNumber] = null;
+                    }
+                    io.to(this.id).emit('reenteredGameArea');
+                }
+            }
 
             io.emit('inPosChange', this.id, this.inPosition);
         }
@@ -111,6 +141,12 @@ let networkTestTableArray = [];
 
 // Store all connected players
 let playerList = {};
+
+let areaTimer1 = null;
+let areaTimer2 = null;
+let areaTimer3 = null;
+let areaTimer4 = null;
+let areaTimerList = {1: areaTimer1, 2: areaTimer2, 3: areaTimer3, 4: areaTimer4};
 
 // Game Variables
 const maxPlayers = 4;
@@ -718,7 +754,7 @@ setInterval(function () {
         io.emit('serverUpdate', prepareGameData(), ball.position, performance.now(), serverUpdateCounter);
         serverUpdateCounter++;
     }
-}, 10);
+}, 20);
 // }
 
 ///////////////////////// End Game loop and logic /////////////////////////////
@@ -747,8 +783,8 @@ function clientEntersAR(newPlayer, socket) {
     socket.leave('waitingRoom');
     socket.join('gameRoom');
 
-    console.log(`Player ${newPlayer.id} entered AR on Position ${newPlayer.playerNumber}.`);
-    networkTestArray.push(`Player ${newPlayer.id} entered AR on Position ${newPlayer.playerNumber}.`);
+    console.log(`Player ${newPlayer.id} entered AR on Position ${newPlayer.inPosition}.`);
+    networkTestArray.push(`Player ${newPlayer.id} entered AR on Position ${newPlayer.inPosition}.`);
 
     // Add new player to the playerArray
     playerList[newPlayer.id] = newPlayer;
@@ -966,7 +1002,7 @@ function writeArrayToFile(testCategory, testType, testArray, isTable, socketId =
 
             let headerContent = `Performance Test ${nextTestNumber}\nTest Category: ${testCategory}\nTest Type: ${testType}\nDate: ${currentDate}\n`;
             if (testCategory == 'latency') {
-                headerContent += `Socket ID: ${socketId}\n`;
+                headerContent += `Socket ID: ${socketId}\nDevice: ?\n`;
             }
             headerContent += `\n`;
             const arrayContent = testArray.join('\n');
