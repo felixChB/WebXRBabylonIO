@@ -15,10 +15,10 @@ import { time } from "node:console";
 const port = process.env.PORT || 3000;
 
 ////////////// CHANGE THIS TO YOUR LOCAL IP ADDRESS ///////////////////
-//const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
+const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
 //const ipAdress = '192.168.178.35'; // Desktop zuhause // WLAN
 //const ipAdress = '192.168.0.30'; // for local network // Router
-const ipAdress = '192.168.1.188'; // Router
+//const ipAdress = '192.168.1.188'; // Router
 ///////////////////////////////////////////////////////////////////////
 
 const app = express();
@@ -89,37 +89,47 @@ class Player {
 
     changeInPosition(newPosition) {
         if (this.inPosition != newPosition) {
-            console.log(`${this.id}: InPos change from ${this.inPosition} to ${newPosition}`);
-            console.log(`${this.id}: Player ${this.playerNumber} is in position ${newPosition}`);
-            this.inPosition = newPosition;
             if (this.isPlaying) {
+                // if the playing player leaves the game area, set a timer to kick him out of the game
                 if (newPosition == 0) {
-                    console.log(`Player ${this.id} left the game area.`);
-                    io.to(this.id).emit('leftGameArea',);
-                    areaTimerList[this.playerNumber] = setTimeout(() => {
+                    console.log(`Player ${this.playerNumber}: ${this.id} left the game area.`);
+                    io.to(this.id).emit('leftGameArea', areaLeftTimerTime);
+                    areaLeftTimerList[this.playerNumber] = setTimeout(() => {
                         // throw player out of the game
                         console.log(`Player ${this.id} was kicked out of the game.`);
-
-                        if (this.isPlaying) {
-                            playerStartInfos[this.playerNumber].used = false;
-                        }
-
-                        this.isPlaying = false;
-                        this.score = 0;
-                        this.playerNumber = 0;
-
-                        io.emit('playerLeftGame', this.id);
-                        io.emit('scoreUpdate', this.id, 0);
-
-                    }, 5000);
+                        playerLeavesGame(this.id);
+                    }, areaLeftTimerTime);
                 } else if (newPosition == this.playerNumber) {
-                    if (areaTimerList[this.playerNumber] != null) {
-                        clearTimeout(areaTimerList[this.playerNumber]);
-                        areaTimerList[this.playerNumber] = null;
+                    // clear the timer if the player reenters the game area
+                    // let the player in the game
+                    if (areaLeftTimerList[this.playerNumber] != null) {
+                        clearTimeout(areaLeftTimerList[this.playerNumber]);
+                        areaLeftTimerList[this.playerNumber] = null;
                     }
                     io.to(this.id).emit('reenteredGameArea');
                 }
+            } else {
+                if (newPosition != 0) {
+                    console.log(`Player: ${this.id} entered the game area ${this.inPosition}.`);
+                    io.to(this.id).emit('enteredGameArea', areaEnteredTimerTime);
+
+                    areaEnteredTimerList[newPosition] = setTimeout(() => {
+                        // let the player join the game
+                        console.log(`Player ${this.id} tries to join the Game through the area ${this.inPosition}.`);
+                        playerStartPlaying(this.id, this.inPosition);
+                    }, areaEnteredTimerTime);
+                } else if (newPosition == 0) {
+                    // clear the timer if the player leaves the game area again
+                    // stop the timer for the player to join the game
+                    if (areaEnteredTimerList[this.position] != null) {
+                        clearTimeout(areaEnteredTimerList[this.position]);
+                        areaEnteredTimerList[this.position] = null;
+                    }
+                    io.to(this.id).emit('leftJoiningGameArea');
+                }
             }
+            console.log(`${this.id}: InPos change from ${this.inPosition} to ${newPosition}`);
+            this.inPosition = newPosition;
 
             io.emit('inPosChange', this.id, this.inPosition);
         }
@@ -142,11 +152,16 @@ let networkTestTableArray = [];
 // Store all connected players
 let playerList = {};
 
-let areaTimer1 = null;
-let areaTimer2 = null;
-let areaTimer3 = null;
-let areaTimer4 = null;
-let areaTimerList = {1: areaTimer1, 2: areaTimer2, 3: areaTimer3, 4: areaTimer4};
+const areaLeftTimerTime = 5000; // 5 seconds
+const areaEnteredTimerTime = 5000; // 5 seconds
+
+let areaLeftTimer1, areaLeftTimer2, areaLeftTimer3, areaLeftTimer4;
+areaLeftTimer1 = areaLeftTimer2 = areaLeftTimer3 = areaLeftTimer4 = null;
+let areaLeftTimerList = { 1: areaLeftTimer1, 2: areaLeftTimer2, 3: areaLeftTimer3, 4: areaLeftTimer4 };
+
+let areaEnteredTimer1, areaEnteredTimer2, areaEnteredTimer3, areaEnteredTimer4;
+areaEnteredTimer1 = areaEnteredTimer2 = areaEnteredTimer3 = areaEnteredTimer4 = null;
+let areaEnteredTimerList = { 1: areaEnteredTimer1, 2: areaEnteredTimer2, 3: areaEnteredTimer3, 4: areaEnteredTimer4 };
 
 // Game Variables
 const maxPlayers = 4;
@@ -326,7 +341,7 @@ io.on('connection', (socket) => {
 
             const newPlayer = new Player(socket.id, previousPlayerData);
 
-            clientStartPlaying(newPlayer, socket);
+            playerStartPlaying(newPlayer, socket);
         } else {
             socket.emit('startPosDenied');
         }
@@ -352,32 +367,25 @@ io.on('connection', (socket) => {
     // !7
     socket.on('requestJoinGame', (requestPlayerInPos) => {
 
-        if (requestPlayerInPos == 0) {
-            socket.emit('startPosDenied', 1);
-        } else {
-            if (playerStartInfos[requestPlayerInPos].used == false) {
-                playerStartInfos[requestPlayerInPos].used = true;
+        playerStartPlaying(socket.id, requestPlayerInPos);
 
-                clientStartPlaying(socket, requestPlayerInPos);
-            } else {
-                socket.emit('startPosDenied', 2);
-            }
-        }
+        // if (requestPlayerInPos == 0) {
+        //     socket.emit('startPosDenied', 1);
+        // } else {
+        //     if (playerStartInfos[requestPlayerInPos].used == false) {
+        //         playerStartInfos[requestPlayerInPos].used = true;
+
+        //         playerStartPlaying(socket.id, requestPlayerInPos);
+        //     } else {
+        //         socket.emit('startPosDenied', 2);
+        //     }
+        // }
     });
 
     socket.on('clientLeavesGame', () => {
         console.log(`Player ${socket.id} left the game.`);
 
-        if (playerList[socket.id].isPlaying) {
-            playerStartInfos[playerList[socket.id].playerNumber].used = false;
-        }
-
-        playerList[socket.id].isPlaying = false;
-        playerList[socket.id].score = 0;
-        playerList[socket.id].playerNumber = 0;
-
-        io.emit('playerLeftGame', socket.id);
-        io.emit('scoreUpdate', socket.id, 0);
+        playerLeavesGame(socket.id);
     });
 
     socket.on('playerEndVR', () => {
@@ -789,6 +797,15 @@ function clientEntersAR(newPlayer, socket) {
     // Add new player to the playerArray
     playerList[newPlayer.id] = newPlayer;
 
+    console.log(`Player: ${newPlayer.id} entered the game area ${newPlayer.inPosition}.`);
+    socket.emit('enteredGameArea', areaEnteredTimerTime);
+
+    areaEnteredTimerList[newPlayer.inPosition] = setTimeout(() => {
+        // let the player join the game
+        console.log(`Player ${newPlayer.id} tries to join the Game through the area ${newPlayer.inPosition}.`);
+        playerStartPlaying(newPlayer.id, newPlayer.inPosition);
+    }, areaEnteredTimerTime);
+
     socket.emit('clientEntersAR', playerList[newPlayer.id]);
 
     socket.to('waitingRoom').to('gameRoom').emit('newPlayer', playerList[newPlayer.id]);
@@ -797,31 +814,56 @@ function clientEntersAR(newPlayer, socket) {
 // !7
 // Start the game for the new player
 // can be called from a new player or an previous player
-function clientStartPlaying(socket, playerNumber) {
-    console.log(`Player ${socket.id} started playing as Player ${playerNumber}.`);
-    networkTestArray.push(`Player ${socket.id} started playing as Player ${playerNumber}.`);
+function playerStartPlaying(socketId, playerStartNumber) {
 
-    // set the isPlaying flag to true
-    playerList[socket.id].playerNumber = playerNumber;
-    playerList[socket.id].isPlaying = true;
+    if (playerList[socketId].isPlaying) {
+        console.log(`Player ${socketId} is already playing.`);
+        networkTestArray.push(`Player ${socketId} is already playing.`);
+    } else {
+        if (playerStartNumber == 0) {
+            io.to(socketId).emit('startPosDenied', 1);
+        } else {
+            if (playerStartInfos[playerStartNumber].used == false) {
+                playerStartInfos[playerStartNumber].used = true;
 
-    // !8
-    // Start the Game on client side and send the player's information to the new player
-    socket.emit('clientStartPlaying', playerList[socket.id].playerNumber);
+                console.log(`Player ${socketId} started playing as Player ${playerStartNumber}.`);
+                networkTestArray.push(`Player ${socketId} started playing as Player ${playerStartNumber}.`);
 
-    // Notify other players of the new player (waitingRoom and gameRoom)
-    socket.to('waitingRoom').to('gameRoom').emit('playerStartPlaying', socket.id, playerList[socket.id].playerNumber);
+                // set the isPlaying flag to true
+                playerList[socketId].playerNumber = playerStartNumber;
+                playerList[socketId].isPlaying = true;
 
-    // Test color change for connection
-    // socket.on('clicked', (playerColor) => {
-    //     changeBallColor(playerColor);
-    // });
-
-    // socket.on('testClick', (id) => {
-    //     playerList[id].score += 1;
-    //     io.emit('scoreUpdate', id, playerList[id].score);
-    // });
+                // !8
+                // send the message of the new player to all players
+                // including the client itself (for him the game starts then)
+                io.to('waitingRoom').to('gameRoom').emit('playerStartPlaying', socketId, playerList[socketId].playerNumber);
+            } else {
+                io.to(socketId).emit('startPosDenied', 2);
+            }
+        }
+    }
 };
+
+// a player leaves the game or gets kicked out
+// reset the player data and remove him from the game
+// also reset the playerStartInfo to be used again
+function playerLeavesGame(playerId) {
+    if (playerList[playerId].isPlaying) {
+        playerStartInfos[playerList[playerId].playerNumber].used = false;
+
+        if (areaLeftTimerList[playerList[playerId].playerNumber] != null) {
+            clearTimeout(areaLeftTimerList[playerList[playerId].playerNumber]);
+            areaLeftTimerList[playerList[playerId].playerNumber] = null;
+        }
+
+        playerList[playerId].isPlaying = false;
+        playerList[playerId].score = 0;
+        playerList[playerId].playerNumber = 0;
+
+        io.emit('playerLeftGame', playerId);
+        io.emit('scoreUpdate', playerId, 0);
+    }
+}
 
 // function changeBallColor(playerColor) {
 //     activeColor = playerColor;

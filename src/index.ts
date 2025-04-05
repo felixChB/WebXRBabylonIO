@@ -1050,27 +1050,6 @@ socket.on('clientEntersAR', (newSocketPlayer) => {
     });
 });
 
-// !8
-// when the current player is already on the server and starts the game
-socket.on('clientStartPlaying', (startPlayingNumber) => {
-    latencyTestArray.push(`----------Client started playing----------`);
-    // console.log('You started playing');
-    playerList[clientID].isPlaying = true;
-    playerList[clientID].playerNumber = startPlayingNumber;
-
-    // set the material of the player to a player material
-    changePlayerColor(clientID);
-
-    addPlayerGameUtils(playerList[clientID], true);
-
-    let playerWall = scene.getMeshByName(`player${playerList[clientID].playerNumber}Wall`) as Mesh;
-    if (playerWall) {
-        playerWall.isVisible = false;
-    }
-
-    updatePlayerScore(clientID, playerList[clientID].score);
-});
-
 // when the current player is already on the server and a new player joins
 socket.on('newPlayer', (newPlayer) => {
     latencyTestArray.push(`----------New Player joined: ${newPlayer.id}----------`);
@@ -1092,6 +1071,9 @@ socket.on('newPlayer', (newPlayer) => {
     }*/
 });
 
+// !8
+// when the client is on the server and a new player starts playing
+// can be the client itself (if in ar)
 socket.on('playerStartPlaying', (newPlayerId, startPlayingNumber) => {
     latencyTestArray.push(`----------Player started playing: ${newPlayerId} as ${startPlayingNumber}----------`);
     console.log('Player started playing: ', newPlayerId, ' as ', startPlayingNumber);
@@ -1102,7 +1084,11 @@ socket.on('playerStartPlaying', (newPlayerId, startPlayingNumber) => {
     // set the material of the player to a player material
     changePlayerColor(newPlayerId);
 
-    addPlayerGameUtils(playerList[newPlayerId], false);
+    if (newPlayerId == clientID) {
+        addPlayerGameUtils(playerList[newPlayerId], true);
+    } else {
+        addPlayerGameUtils(playerList[newPlayerId], false);
+    }
 
     let playerWall = scene.getMeshByName(`player${playerList[newPlayerId].playerNumber}Wall`) as Mesh;
     if (playerWall) {
@@ -1116,7 +1102,7 @@ socket.on('playerStartPlaying', (newPlayerId, startPlayingNumber) => {
     updatePlayerScore(newPlayerId, playerList[newPlayerId].score);
 
     // set the availability of the start buttons according to the used startpositions on the server
-    if (newPlayerId.isPlaying) {
+    if (playerList[newPlayerId].isPlaying) {
         if (!startButtons[playerList[newPlayerId].playerNumber].classList.contains('unavailable')) {
             startButtons[playerList[newPlayerId].playerNumber].classList.add('unavailable');
         }
@@ -1395,18 +1381,25 @@ socket.on('playerLeftGame', (playerId) => {
         if (playerWall) {
             playerWall.isVisible = true;
         }
-        let playerScore = scene.getMeshByName(`player${leftPlayer.playerNumber}ScoreMesh`) as Mesh;
-        if (playerScore) {
-            playerScore.isVisible = false;
-        }
+        // let playerScore = scene.getMeshByName(`player${leftPlayer.playerNumber}ScoreMesh`) as Mesh;
+        // if (playerScore) {
+        //     playerScore.isVisible = false;
+        // }
 
         playerList[playerId].isPlaying = false;
-        playerList[playerId].playerNumber = 0;
-        changePlayerColor(playerId);
 
         leftPlayer.paddle?.dispose();
         leftPlayer.paddleLight?.dispose();
         leftPlayer.scoreMesh?.dispose();
+
+        // set the availability of the start buttons according to the used startpositions on the server
+        if (!playerList[playerId].isPlaying) {
+            if (startButtons[playerList[playerId].playerNumber].classList.contains('unavailable')) {
+                startButtons[playerList[playerId].playerNumber].classList.remove('unavailable');
+            }
+        }
+        playerList[playerId].playerNumber = 0;
+        changePlayerColor(playerId);
     }
 });
 
@@ -1467,12 +1460,20 @@ socket.on('playerDisconnected', (id) => {
     }
 });
 
-socket.on('leftGameArea' , () => {
-    console.log('Player left the Game Area.');
+socket.on('leftGameArea', (areaLeftTimerTime) => {
+    console.log('Player left the Game Area. Timer: ', areaLeftTimerTime);
 });
 
-socket.on('reenteredGameArea' , () => {
+socket.on('reenteredGameArea', () => {
     console.log('Player reentered the Game Area.');
+});
+
+socket.on('reenteredGameArea', (areaEnteredTimerTime) => {
+    console.log('Player reentered the Game Area. Timer: ', areaEnteredTimerTime);
+});
+
+socket.on('leftJoiningGameArea', () => {
+    console.log('Player left the Joining Game Area.');
 });
 
 ////////////////////////// RENDER LOOP //////////////////////////////
@@ -1495,7 +1496,7 @@ engine.runRenderLoop(function () {
             const renderLoopTime = performance.now();
             const deltaRenderLoopTime = renderLoopTime - updateCounterArray[serverUpdateCounter];
             const roundedDRLT = Math.round(deltaRenderLoopTime);
-            
+
             // console.log('Server Update Counter: ', serverUpdateCounter);
             // latencyTestArray.push(`Server Update Counter: ${serverUpdateCounter}`);
             latencyTestArray.push(`SUC: ${serverUpdateCounter}, Delay: ${roundedDRLT}ms`);
