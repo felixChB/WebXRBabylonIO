@@ -87,51 +87,52 @@ class Player {
         io.emit('playerUpdate', this);
     }
 
-    changeInPosition(newPosition) {
-        if (this.inPosition != newPosition) {
+    changeInPosition(newInPosition) {
+        if (this.inPosition != newInPosition) {
+            let oldInPosition = this.inPosition;
+            console.log(`${this.id}: InPos change from ${oldInPosition} to ${newInPosition}`);
+            this.inPosition = newInPosition;
+            io.emit('inPosChange', this.id, this.inPosition);
+            
             if (this.isPlaying) {
-                // if the playing player leaves the game area, set a timer to kick him out of the game
-                if (newPosition == 0) {
-                    console.log(`Player ${this.playerNumber}: ${this.id} left the game area.`);
-                    io.to(this.id).emit('leftGameArea', areaLeftTimerTime);
-                    areaLeftTimerList[this.playerNumber] = setTimeout(() => {
+                // if the playing player exits the game area, set a timer to kick him out of the game
+                if (newInPosition != this.playerNumber) {
+                    console.log(`Player ${this.playerNumber}: ${this.id} exit the game area.`);
+                    io.to(this.id).emit('exitGameArea', areaExitTimerTime);
+                    areaExitTimerList[this.playerNumber] = setTimeout(() => {
                         // throw player out of the game
                         console.log(`Player ${this.id} was kicked out of the game.`);
-                        playerLeavesGame(this.id);
-                    }, areaLeftTimerTime);
-                } else if (newPosition == this.playerNumber) {
+                        playerExitsGame(this.id);
+                    }, areaExitTimerTime);
+                } else if (newInPosition == this.playerNumber) {
                     // clear the timer if the player reenters the game area
                     // let the player in the game
-                    if (areaLeftTimerList[this.playerNumber] != null) {
-                        clearTimeout(areaLeftTimerList[this.playerNumber]);
-                        areaLeftTimerList[this.playerNumber] = null;
+                    if (areaExitTimerList[this.playerNumber] != null) {
+                        clearTimeout(areaExitTimerList[this.playerNumber]);
+                        areaExitTimerList[this.playerNumber] = null;
                     }
                     io.to(this.id).emit('reenteredGameArea');
                 }
             } else {
-                if (newPosition != 0) {
-                    console.log(`Player: ${this.id} entered the game area ${this.inPosition}.`);
+                if (newInPosition != 0) {
+                    console.log(`Player: ${this.id} entered the game area ${newInPosition}.`);
                     io.to(this.id).emit('enteredGameArea', areaEnteredTimerTime);
 
-                    areaEnteredTimerList[newPosition] = setTimeout(() => {
+                    areaEnteredTimerList[newInPosition] = setTimeout(() => {
                         // let the player join the game
-                        console.log(`Player ${this.id} tries to join the Game through the area ${this.inPosition}.`);
-                        playerStartPlaying(this.id, this.inPosition);
+                        console.log(`Player ${this.id} tries to join the Game through the area ${newInPosition}.`);
+                        playerStartPlaying(this.id, newInPosition);
                     }, areaEnteredTimerTime);
-                } else if (newPosition == 0) {
-                    // clear the timer if the player leaves the game area again
+                } else if (newInPosition == 0) {
+                    // clear the timer if the player exits the game area again
                     // stop the timer for the player to join the game
-                    if (areaEnteredTimerList[this.position] != null) {
-                        clearTimeout(areaEnteredTimerList[this.position]);
-                        areaEnteredTimerList[this.position] = null;
+                    if (areaEnteredTimerList[oldInPosition] != null) {
+                        clearTimeout(areaEnteredTimerList[oldInPosition]);
+                        areaEnteredTimerList[oldInPosition] = null;
                     }
-                    io.to(this.id).emit('leftJoiningGameArea');
+                    io.to(this.id).emit('exitJoiningGameArea');
                 }
             }
-            console.log(`${this.id}: InPos change from ${this.inPosition} to ${newPosition}`);
-            this.inPosition = newPosition;
-
-            io.emit('inPosChange', this.id, this.inPosition);
         }
     }
 };
@@ -152,12 +153,12 @@ let networkTestTableArray = [];
 // Store all connected players
 let playerList = {};
 
-const areaLeftTimerTime = 5000; // 5 seconds
-const areaEnteredTimerTime = 5000; // 5 seconds
+const areaExitTimerTime = 3000; // in milliseconds
+const areaEnteredTimerTime = 3000; // in milliseconds
 
-let areaLeftTimer1, areaLeftTimer2, areaLeftTimer3, areaLeftTimer4;
-areaLeftTimer1 = areaLeftTimer2 = areaLeftTimer3 = areaLeftTimer4 = null;
-let areaLeftTimerList = { 1: areaLeftTimer1, 2: areaLeftTimer2, 3: areaLeftTimer3, 4: areaLeftTimer4 };
+let areaExitTimer1, areaExitTimer2, areaExitTimer3, areaExitTimer4;
+areaExitTimer1 = areaExitTimer2 = areaExitTimer3 = areaExitTimer4 = null;
+let areaExitTimerList = { 1: areaExitTimer1, 2: areaExitTimer2, 3: areaExitTimer3, 4: areaExitTimer4 };
 
 let areaEnteredTimer1, areaEnteredTimer2, areaEnteredTimer3, areaEnteredTimer4;
 areaEnteredTimer1 = areaEnteredTimer2 = areaEnteredTimer3 = areaEnteredTimer4 = null;
@@ -382,10 +383,10 @@ io.on('connection', (socket) => {
         // }
     });
 
-    socket.on('clientLeavesGame', () => {
+    socket.on('clientExitsGame', () => {
         console.log(`Player ${socket.id} left the game.`);
 
-        playerLeavesGame(socket.id);
+        playerExitsGame(socket.id);
     });
 
     socket.on('playerEndVR', () => {
@@ -797,9 +798,6 @@ function clientEntersAR(newPlayer, socket) {
     // Add new player to the playerArray
     playerList[newPlayer.id] = newPlayer;
 
-    console.log(`Player: ${newPlayer.id} entered the game area ${newPlayer.inPosition}.`);
-    socket.emit('enteredGameArea', areaEnteredTimerTime);
-
     areaEnteredTimerList[newPlayer.inPosition] = setTimeout(() => {
         // let the player join the game
         console.log(`Player ${newPlayer.id} tries to join the Game through the area ${newPlayer.inPosition}.`);
@@ -809,6 +807,9 @@ function clientEntersAR(newPlayer, socket) {
     socket.emit('clientEntersAR', playerList[newPlayer.id]);
 
     socket.to('waitingRoom').to('gameRoom').emit('newPlayer', playerList[newPlayer.id]);
+
+    console.log(`Player: ${newPlayer.id} entered the game area ${newPlayer.inPosition}.`);
+    socket.emit('enteredGameArea', areaEnteredTimerTime);
 }
 
 // !7
@@ -844,23 +845,23 @@ function playerStartPlaying(socketId, playerStartNumber) {
     }
 };
 
-// a player leaves the game or gets kicked out
+// a player exits the game or gets kicked out
 // reset the player data and remove him from the game
 // also reset the playerStartInfo to be used again
-function playerLeavesGame(playerId) {
+function playerExitsGame(playerId) {
     if (playerList[playerId].isPlaying) {
         playerStartInfos[playerList[playerId].playerNumber].used = false;
 
-        if (areaLeftTimerList[playerList[playerId].playerNumber] != null) {
-            clearTimeout(areaLeftTimerList[playerList[playerId].playerNumber]);
-            areaLeftTimerList[playerList[playerId].playerNumber] = null;
+        if (areaExitTimerList[playerList[playerId].playerNumber] != null) {
+            clearTimeout(areaExitTimerList[playerList[playerId].playerNumber]);
+            areaExitTimerList[playerList[playerId].playerNumber] = null;
         }
 
         playerList[playerId].isPlaying = false;
         playerList[playerId].score = 0;
         playerList[playerId].playerNumber = 0;
 
-        io.emit('playerLeftGame', playerId);
+        io.emit('playerExitGame', playerId);
         io.emit('scoreUpdate', playerId, 0);
     }
 }

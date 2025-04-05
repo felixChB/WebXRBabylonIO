@@ -37,7 +37,11 @@ let leftController: WebXRInputSource | null = null;
 let rightController: WebXRInputSource | null = null;
 
 // store the textBlock GUI elements for updating the scores
-const guiElements: { [key: string]: GUI.TextBlock } = {};
+const guiTextElements: { [key: string]: GUI.TextBlock } = {};
+const guiRectElements: { [key: string]: GUI.Rectangle } = {};
+
+let exitGameAreaInterval: NodeJS.Timer | null = null;
+let enteredGameAreaInterval: NodeJS.Timer | null = null;
 
 // Get HTML Elements
 // const divFps = document.getElementById('fps');
@@ -214,38 +218,49 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
 
     // GUI --------------------------------------------------------------------------------------
 
-    // Particle System --------------------------------------------------------------------------------------
+    let areaExitGUI = GUI.AdvancedDynamicTexture.CreateFullscreenUI("areaExitGUI");
+    let areaExitRect = new GUI.Rectangle();
+    areaExitRect.width = "95%";
+    areaExitRect.height = "95%";
+    areaExitRect.thickness = 1;
+    areaExitRect.color = "white";
+    areaExitRect.alpha = 1;
+    areaExitRect.zIndex = 1;
+    areaExitGUI.addControl(areaExitRect);
+    guiRectElements['areaExitRect'] = areaExitRect;
+    areaExitRect.isVisible = false;
 
-    /*
-    var ballParticles = new ParticleSystem('ballParticles', 300, scene);
-    ballParticles.particleTexture = new Texture('./assets/particleTexture.png', scene);
-    ballParticles.emitter = ballSphere;
-    ballParticles.id = 'ballParticles';
-    var ballSphereEmitter = ballParticles.createSphereEmitter(ballSize);
-    ballSphereEmitter.radiusRange = 0;
-    //ballParticles.minEmitBox = new Vector3(0, 0, 0);
-    //ballParticles.maxEmitBox = new Vector3(0, 0, 0);
-    ballParticles.color1 = Color4.FromHexString(ballColor);
-    ballParticles.color2 = Color4.FromHexString('#ff0000');
-    ballParticles.colorDead = new Color4(0, 0, 0, 0.0);
-    ballParticles.minSize = 0.001;
-    ballParticles.maxSize = 0.005;
-    ballParticles.minLifeTime = 0.05;
-    ballParticles.maxLifeTime = 0.1;
-    ballParticles.emitRate = 300;
-    ballParticles.blendMode = ParticleSystem.BLENDMODE_ONEONE;
-    //ballParticles.gravity = new Vector3(0, -9.81, 0);
-    //ballParticles.direction1 = new Vector3(0, 8, 0);
-    //ballParticles.direction2 = new Vector3(0, 8, 0);
-    //ballParticles.minAngularSpeed = 0;
-    //ballParticles.maxAngularSpeed = Math.PI;
-    ballParticles.minEmitPower = 1;
-    ballParticles.maxEmitPower = 3;
-    ballParticles.updateSpeed = 0.005;
+    let areaExitText = new GUI.TextBlock();
+    areaExitText.textVerticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
+    areaExitText.top = "5%";
+    areaExitText.text = "";
+    areaExitText.color = "white";
+    areaExitText.fontFamily = "loadedFont";
+    areaExitText.fontSize = 20;
+    areaExitRect.addControl(areaExitText);
+    guiTextElements['areaExitText'] = areaExitText;
 
-    //ballParticles.start();
-    */
+    let areaEnteredGUI = GUI.AdvancedDynamicTexture.CreateFullscreenUI("areaEnteredGUI");
+    let areaEnteredRect = new GUI.Rectangle();
+    areaEnteredRect.width = "95%";
+    areaEnteredRect.height = "95%";
+    areaEnteredRect.thickness = 1;
+    areaEnteredRect.color = "white";
+    areaEnteredRect.alpha = 1;
+    areaEnteredRect.zIndex = 1;
+    areaEnteredGUI.addControl(areaEnteredRect);
+    guiRectElements['areaEnteredRect'] = areaEnteredRect;
+    areaEnteredRect.isVisible = false;
 
+    let areaEnteredText = new GUI.TextBlock();
+    areaEnteredText.textVerticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
+    areaEnteredText.top = "5%";
+    areaEnteredText.text = "";
+    areaEnteredText.color = "white";
+    areaEnteredText.fontFamily = "loadedFont";
+    areaEnteredText.fontSize = 20;
+    areaEnteredRect.addControl(areaEnteredText);
+    guiTextElements['areaEnteredText'] = areaEnteredText;
 
     // Materials --------------------------------------------------------------------------------------
 
@@ -964,7 +979,7 @@ socket.on('clientEntersAR', (newSocketPlayer) => {
                     bbuttonComponent.onButtonStateChangedObservable.add(() => {
                         if (bbuttonComponent.pressed) {
                             if (playerList[clientID].isPlaying) {
-                                socket.emit('clientLeavesGame', playerList[clientID].playerNumber);
+                                socket.emit('clientExitsGame', playerList[clientID].playerNumber);
                             }
                         }
                     });
@@ -1107,6 +1122,10 @@ socket.on('playerStartPlaying', (newPlayerId, startPlayingNumber) => {
             startButtons[playerList[newPlayerId].playerNumber].classList.add('unavailable');
         }
     }
+
+    guiRectElements['areaEnteredRect'].isVisible = false;
+    guiTextElements['areaEnteredText'].text = ``;
+    guiTextElements['areaEnteredText'].color = "white";
 });
 
 // update the players position and rotation from the server
@@ -1164,11 +1183,11 @@ function updateBall(ballPosition: { x: number, y: number, z: number }) {
 
 // update the score gui element for the specific player
 function updatePlayerScore(scoredPlayerID: string, newScore: number) {
-    // if (guiElements[`score${playerList[scoredPlayerID].playerNumber}Label`]) {
-    //     guiElements[`score${playerList[scoredPlayerID].playerNumber}Label`].text = newScore.toString();
+    // if (guiTextElements[`score${playerList[scoredPlayerID].playerNumber}Label`]) {
+    //     guiTextElements[`score${playerList[scoredPlayerID].playerNumber}Label`].text = newScore.toString();
     // }
-    if (guiElements[`player${playerList[scoredPlayerID].playerNumber}_scoreLabel`]) {
-        guiElements[`player${playerList[scoredPlayerID].playerNumber}_scoreLabel`].text = newScore.toString();
+    if (guiTextElements[`player${playerList[scoredPlayerID].playerNumber}_scoreLabel`]) {
+        guiTextElements[`player${playerList[scoredPlayerID].playerNumber}_scoreLabel`].text = newScore.toString();
     }
 }
 
@@ -1337,8 +1356,8 @@ function addPlayerGameUtils(player: Player, isPlayer: boolean) {
     scoreLabel.color = playerStartInfos[player.playerNumber].color;
     scoreLabel.fontSize = 100;
     scoreRect.addControl(scoreLabel);
-    // add to guiElements
-    guiElements[`player${player.playerNumber}_scoreLabel`] = scoreLabel;
+    // add to guiTextElements
+    guiTextElements[`player${player.playerNumber}_scoreLabel`] = scoreLabel;
 
     playerList[player.id].paddle = player.paddle;
     playerList[player.id].paddleLight = player.paddleLight;
@@ -1371,26 +1390,26 @@ socket.on('ballBounce', (whichPlayer: number, isPaddle: boolean) => {
     }
 });
 
-socket.on('playerLeftGame', (playerId) => {
-    const leftPlayer = playerList[playerId];
-    if (leftPlayer) {
-        console.log(`Player ${leftPlayer.playerNumber} left the game.`);
-        latencyTestArray.push(`----------Player ${leftPlayer.playerNumber} left the game.----------`);
+socket.on('playerExitGame', (playerId) => {
+    const exitPlayer = playerList[playerId];
+    if (exitPlayer) {
+        console.log(`Player ${exitPlayer.playerNumber} left the game.`);
+        latencyTestArray.push(`----------Player ${exitPlayer.playerNumber} left the game.----------`);
 
-        let playerWall = scene.getMeshByName(`player${leftPlayer.playerNumber}Wall`) as Mesh;
+        let playerWall = scene.getMeshByName(`player${exitPlayer.playerNumber}Wall`) as Mesh;
         if (playerWall) {
             playerWall.isVisible = true;
         }
-        // let playerScore = scene.getMeshByName(`player${leftPlayer.playerNumber}ScoreMesh`) as Mesh;
+        // let playerScore = scene.getMeshByName(`player${exitPlayer.playerNumber}ScoreMesh`) as Mesh;
         // if (playerScore) {
         //     playerScore.isVisible = false;
         // }
 
         playerList[playerId].isPlaying = false;
 
-        leftPlayer.paddle?.dispose();
-        leftPlayer.paddleLight?.dispose();
-        leftPlayer.scoreMesh?.dispose();
+        exitPlayer.paddle?.dispose();
+        exitPlayer.paddleLight?.dispose();
+        exitPlayer.scoreMesh?.dispose();
 
         // set the availability of the start buttons according to the used startpositions on the server
         if (!playerList[playerId].isPlaying) {
@@ -1400,6 +1419,10 @@ socket.on('playerLeftGame', (playerId) => {
         }
         playerList[playerId].playerNumber = 0;
         changePlayerColor(playerId);
+
+        guiRectElements['areaExitRect'].isVisible = false;
+        guiTextElements['areaExitText'].text = ``;
+        guiTextElements['areaExitText'].color = "white";
     }
 });
 
@@ -1460,20 +1483,58 @@ socket.on('playerDisconnected', (id) => {
     }
 });
 
-socket.on('leftGameArea', (areaLeftTimerTime) => {
-    console.log('Player left the Game Area. Timer: ', areaLeftTimerTime);
+// when the playing player Exits the game area
+socket.on('exitGameArea', (areaExitTimerTime) => {
+    console.log('Player exit the Game Area. Timer: ', areaExitTimerTime);
+    guiRectElements['areaExitRect'].isVisible = true;
+    guiRectElements['areaExitRect'].color = playerStartInfos[playerList[clientID].playerNumber].color;
+    guiTextElements['areaExitText'].text = `You exit the Game Area of Position ${playerList[clientID].playerNumber}.\nExit the Game in: \n${areaExitTimerTime / 1000}s\nor reenter the Game Area.`;
+    guiTextElements['areaExitText'].color = playerStartInfos[playerList[clientID].playerNumber].color;
+    let timer = areaExitTimerTime / 1000;
+    exitGameAreaInterval = setInterval(() => {
+        timer -= 1;
+        guiTextElements['areaExitText'].text = `You exit the Game Area of Position ${playerList[clientID].playerNumber}.\nExit the Game in: \n${timer}s\nor reenter the Game Area.`;
+        if (timer <= 0) {
+            clearInterval(exitGameAreaInterval as NodeJS.Timeout);
+            timer = areaExitTimerTime / 1000;
+        }
+    }, 1000);
 });
 
+// when the playing player reenters the game area
 socket.on('reenteredGameArea', () => {
     console.log('Player reentered the Game Area.');
+    guiRectElements['areaExitRect'].isVisible = false;
+    guiTextElements['areaExitText'].text = ``;
+    guiTextElements['areaExitText'].color = "white";
+    clearInterval(exitGameAreaInterval as NodeJS.Timeout);
 });
 
-socket.on('reenteredGameArea', (areaEnteredTimerTime) => {
+// when the player enters a game area to join the game
+socket.on('enteredGameArea', (areaEnteredTimerTime) => {
     console.log('Player reentered the Game Area. Timer: ', areaEnteredTimerTime);
+    guiRectElements['areaEnteredRect'].isVisible = true;
+    guiRectElements['areaEnteredRect'].color = playerStartInfos[playerList[clientID].inPosition].color;
+    guiTextElements['areaEnteredText'].text = `You entered the Game Area of Position ${playerList[clientID].inPosition}.\nJoin the Game in: \n${areaEnteredTimerTime / 1000}s\nor leave the Game Area.`;
+    guiTextElements['areaEnteredText'].color = playerStartInfos[playerList[clientID].inPosition].color;
+    let timer = areaEnteredTimerTime / 1000;
+    enteredGameAreaInterval = setInterval(() => {
+        timer -= 1;
+        guiTextElements['areaEnteredText'].text = `You entered the Game Area of Position ${playerList[clientID].inPosition}.\nJoin the Game in: \n${timer}s\nor leave the Game Area.`;
+        if (timer <= 0) {
+            clearInterval(enteredGameAreaInterval as NodeJS.Timeout);
+            timer = areaEnteredTimerTime / 1000;
+        }
+    }, 1000);
 });
 
-socket.on('leftJoiningGameArea', () => {
-    console.log('Player left the Joining Game Area.');
+// when the player Exits the game area while trying to join the game
+socket.on('exitJoiningGameArea', () => {
+    console.log('Player exit the Joining Game Area.');
+    guiRectElements['areaEnteredRect'].isVisible = false;
+    guiTextElements['areaEnteredText'].text = ``;
+    guiTextElements['areaEnteredText'].color = "white";
+    clearInterval(enteredGameAreaInterval as NodeJS.Timeout);
 });
 
 ////////////////////////// RENDER LOOP //////////////////////////////
