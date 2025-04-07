@@ -144,6 +144,7 @@ let connectedClientNumber = 0;
 /////////////////////////////  VARIABLES  //////////////////////////////////
 // Server Variables
 let serverStartTime;
+const serverRefreshRate = 10; // time between server updates in milliseconds
 
 // Test Variables
 let serverUpdateCounter = 0;
@@ -763,7 +764,7 @@ setInterval(function () {
         io.emit('serverUpdate', prepareGameData(), ball.position, performance.now(), serverUpdateCounter);
         serverUpdateCounter++;
     }
-}, 20);
+}, serverRefreshRate);
 // }
 
 ///////////////////////// End Game loop and logic /////////////////////////////

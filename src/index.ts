@@ -18,6 +18,7 @@ if (rotationQuaternion) {
     //console.log('Rotation Quaternion: ', rotationQuaternion);
 }
 let clientStartTime = Date.now();
+const clientRefreshRate = 10; // time between client updates in ms
 
 let clientID: string;
 let clientPlayer: Player | null = null;
@@ -54,12 +55,7 @@ for (let i = 1; i <= 4; i++) {
     let startbutton = document.getElementById(`startPos-${i}`);
     startButtons[i] = startbutton as HTMLButtonElement;
 }
-// const startPosButtons = document.querySelectorAll('.posSelection');
-
-// Create HTML Elements
-const canvas = document.createElement('canvas'); // Create a canvas element for rendering
-canvas.id = 'renderCanvas';
-document.body.appendChild(canvas);
+const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
 
 // Test Variables
 let serverUpdateCounter = 0;
@@ -220,8 +216,8 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
 
     let areaExitGUI = GUI.AdvancedDynamicTexture.CreateFullscreenUI("areaExitGUI");
     let areaExitRect = new GUI.Rectangle();
-    areaExitRect.width = "95%";
-    areaExitRect.height = "95%";
+    areaExitRect.width = "60%";
+    areaExitRect.height = "60%";
     areaExitRect.thickness = 1;
     areaExitRect.color = "white";
     areaExitRect.alpha = 1;
@@ -231,7 +227,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     areaExitRect.isVisible = false;
 
     let areaExitText = new GUI.TextBlock();
-    areaExitText.textVerticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
+    //areaExitText.textVerticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
     areaExitText.top = "5%";
     areaExitText.text = "";
     areaExitText.color = "white";
@@ -242,8 +238,8 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
 
     let areaEnteredGUI = GUI.AdvancedDynamicTexture.CreateFullscreenUI("areaEnteredGUI");
     let areaEnteredRect = new GUI.Rectangle();
-    areaEnteredRect.width = "95%";
-    areaEnteredRect.height = "95%";
+    areaEnteredRect.width = "60%";
+    areaEnteredRect.height = "60%";
     areaEnteredRect.thickness = 1;
     areaEnteredRect.color = "white";
     areaEnteredRect.alpha = 1;
@@ -253,7 +249,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     areaEnteredRect.isVisible = false;
 
     let areaEnteredText = new GUI.TextBlock();
-    areaEnteredText.textVerticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
+    //areaEnteredText.textVerticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
     areaEnteredText.top = "5%";
     areaEnteredText.text = "";
     areaEnteredText.color = "white";
@@ -768,7 +764,7 @@ window.addEventListener('resize', function () {
                     }
                 }
             }
-        }, 20);
+        },clientRefreshRate);
     }
 })();
 

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/src/monitor-style.css">
+
+    <!-- <script src="/socket.io/socket.io.js"></script> -->
+    <!-- <script src="https://cdn.babylonjs.com/babylon.js"></script> -->
+    <script language="JavaScript" type="module" src="./dist/bundle.js" defer></script>
+</head>
+
+<body>
+    <div id="header"></div>
+    <div id="game-wrapper">
+        <div id="player-section">
+            <div id="player-1">
+                <ul>
+                    <li>Player ID:</li>
+                    <li></li>
+                    <li></li>
+                    <li><button id="kick-1">Kick player 1</button></li>
+                    <li><button id="start-1">Join Game player 1</button></li>
+                </ul>
+                
+            </div>
+            <div id="player-4">
+                <button id="kick-4">Kick player 4</button>
+            </div>
+            <div id="player-3">
+                <button id="kick-3">Kick player 3</button>
+            </div>
+            <div id="player-2">
+                <button id="kick-2">Kick player 2</button>
+            </div>
+        </div>
+        <canvas id="renderCanvas"></canvas>
+    </div>
+</body>
+
+</html>
