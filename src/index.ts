@@ -1,5 +1,5 @@
 import { io } from 'socket.io-client';
-import { /*Camera,*/ Engine, FreeCamera, Material, /*PBRBaseMaterial,*/ PBRMaterial, Scene } from '@babylonjs/core';
+import { /*Camera,*/ Engine, FreeCamera, HighlightLayer, /*Material,*/ /*PBRBaseMaterial,*/ PBRMaterial, Scene } from '@babylonjs/core';
 import { /*ArcRotateCamera,*/ MeshBuilder, /*ShadowGenerator,*/ GlowLayer, /*ParticleSystem,*/ Animation } from '@babylonjs/core';
 import { HemisphericLight, DirectionalLight, PointLight /*SSRRenderingPipeline, Constants*/ } from '@babylonjs/core';
 import { Mesh, StandardMaterial, Texture, Color3, Color4, Vector3, Quaternion, CubeTexture /*LinesMesh*/ } from '@babylonjs/core';
@@ -43,6 +43,8 @@ const guiRectElements: { [key: string]: GUI.Rectangle } = {};
 
 let exitGameAreaInterval: NodeJS.Timer | null = null;
 let enteredGameAreaInterval: NodeJS.Timer | null = null;
+
+const ghostColor = '#bdbdbd';
 
 // Get HTML Elements
 // const divFps = document.getElementById('fps');
@@ -116,13 +118,6 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     ballLight.intensity = 2;
     ballLight.radius = ballSize;
 
-    // add a Glowlayer to let emissive materials glow
-    var gl = new GlowLayer("glow", scene, {
-        mainTextureFixedSize: 1024,
-        blurKernelSize: 64,
-    });
-    gl.intensity = 0.5;
-
     var hdrTexture = new CubeTexture('./assets/abstract_blue.env', scene);
     var skyBoxMesh = scene.createDefaultSkybox(hdrTexture, true, 1000, 0.5);
     if (skyBoxMesh) {
@@ -180,34 +175,38 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
 
     player1Ground.isVisible = player2Ground.isVisible = player3Ground.isVisible = player4Ground.isVisible = false;
 
-    var player1GroundPlane = MeshBuilder.CreatePlane('player1GroundPlane', { size: 1 }, scene);
+    var player1GroundPlane = MeshBuilder.CreateBox('player1GroundPlane', { size: 1 }, scene);
     player1GroundPlane.position = new Vector3(playerStartInfos[1].position.x, 0, 0);
-    player1GroundPlane.scaling = new Vector3(playerAreaDepth, playCubeSize.z, 1);
-    player1GroundPlane.rotation = new Vector3(-Math.PI / 2, 0, playerStartInfos[1].rotation.z);
+    player1GroundPlane.scaling = new Vector3(playerAreaDepth, 0.001, playCubeSize.z);
+    //player1GroundPlane.scaling = new Vector3(playerAreaDepth, playCubeSize.z, 1);
+    //player1GroundPlane.rotation = new Vector3(-Math.PI / 2, 0, playerStartInfos[1].rotation.z);
     player1GroundPlane.enableEdgesRendering();
     player1GroundPlane.edgesWidth = planeEdgeWidth;
     player1GroundPlane.edgesColor = Color4.FromHexString(playerStartInfos[1].color);
 
-    var player2GroundPlane = MeshBuilder.CreatePlane('player2GroundPlane', { size: 1 }, scene);
+    var player2GroundPlane = MeshBuilder.CreateBox('player2GroundPlane', { size: 1 }, scene);
     player2GroundPlane.position = new Vector3(playerStartInfos[2].position.x, 0, 0);
-    player2GroundPlane.scaling = new Vector3(playerAreaDepth, playCubeSize.z, 1);
-    player2GroundPlane.rotation = new Vector3(-Math.PI / 2, 0, playerStartInfos[2].rotation.z);
+    player2GroundPlane.scaling = new Vector3(playerAreaDepth, 0.001, playCubeSize.z);
+    //player2GroundPlane.scaling = new Vector3(playerAreaDepth, playCubeSize.z, 1);
+    //player2GroundPlane.rotation = new Vector3(-Math.PI / 2, 0, playerStartInfos[2].rotation.z);
     player2GroundPlane.enableEdgesRendering();
     player2GroundPlane.edgesWidth = planeEdgeWidth;
     player2GroundPlane.edgesColor = Color4.FromHexString(playerStartInfos[2].color);
 
-    var player3GroundPlane = MeshBuilder.CreatePlane('player3GroundPlane', { size: 1 }, scene);
+    var player3GroundPlane = MeshBuilder.CreateBox('player3GroundPlane', { size: 1 }, scene);
     player3GroundPlane.position = new Vector3(0, 0, playerStartInfos[3].position.z);
-    player3GroundPlane.scaling = new Vector3(playCubeSize.x, playerAreaDepth, 1);
-    player3GroundPlane.rotation = new Vector3(-Math.PI / 2, 0, playerStartInfos[3].rotation.x);
+    player3GroundPlane.scaling = new Vector3(playCubeSize.x, 0.001, playerAreaDepth);
+    //player3GroundPlane.scaling = new Vector3(playCubeSize.x, playerAreaDepth, 1);
+    //player3GroundPlane.rotation = new Vector3(-Math.PI / 2, 0, playerStartInfos[3].rotation.x);
     player3GroundPlane.enableEdgesRendering();
     player3GroundPlane.edgesWidth = planeEdgeWidth;
     player3GroundPlane.edgesColor = Color4.FromHexString(playerStartInfos[3].color);
 
-    var player4GroundPlane = MeshBuilder.CreatePlane('player4GroundPlane', { size: 1 }, scene);
+    var player4GroundPlane = MeshBuilder.CreateBox('player4GroundPlane', { size: 1 }, scene);
     player4GroundPlane.position = new Vector3(0, 0, playerStartInfos[4].position.z);
-    player4GroundPlane.scaling = new Vector3(playCubeSize.x, playerAreaDepth, 1);
-    player4GroundPlane.rotation = new Vector3(-Math.PI / 2, 0, playerStartInfos[4].rotation.x);
+    player4GroundPlane.scaling = new Vector3(playCubeSize.x, 0.001, playerAreaDepth);
+    //player4GroundPlane.scaling = new Vector3(playCubeSize.x, playerAreaDepth, 1);
+    //player4GroundPlane.rotation = new Vector3(-Math.PI / 2, 0, playerStartInfos[4].rotation.x);
     player4GroundPlane.enableEdgesRendering();
     player4GroundPlane.edgesWidth = planeEdgeWidth;
     player4GroundPlane.edgesColor = Color4.FromHexString(playerStartInfos[4].color);
@@ -237,13 +236,13 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     bottomWall.position = new Vector3(0, playCubeElevation, 0);
     bottomWall.scaling = new Vector3(playCubeSize.x, 0.01, playCubeSize.z);
 
-    // GUI --------------------------------------------------------------------------------------
-
     let HUDMesh = MeshBuilder.CreatePlane(`client_HUD`, { size: 1 }, scene);
     HUDMesh.position = new Vector3(0, 2.5, 0);
     HUDMesh.rotation = new Vector3(0, 0, 0);
     HUDMesh.scaling = new Vector3(playCubeSize.x, calculatedCubeHeight, 1);
     HUDMesh.isVisible = false;
+
+    // GUI --------------------------------------------------------------------------------------
 
     var playerHUDTex = GUI.AdvancedDynamicTexture.CreateForMesh(HUDMesh);
     // Player Score
@@ -302,6 +301,9 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     playerStartMat.metallic = 1.0;
     playerStartMat.roughness = 0.0;
 
+    var playerStartMatPlane = new PBRMaterial('playerStartMatPlane', scene);
+    playerStartMatPlane.alpha = 0;
+
     var playerWallMat = new PBRMaterial('playerWallMat', scene);
     playerWallMat.albedoColor = Color3.FromHexString('#000000');
     playerWallMat.alpha = 0.7;
@@ -319,7 +321,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
 
     // creating the player 0 Material if the player has no position yet
     var player0Mat = new PBRMaterial(`player0_mat`, scene);
-    player0Mat.emissiveColor = Color3.FromHexString('#bdbdbd');
+    player0Mat.emissiveColor = Color3.FromHexString(ghostColor);
     player0Mat.alpha = 0.2;
     player0Mat.disableLighting = true;
     player0Mat.backFaceCulling = false;
@@ -377,10 +379,15 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
 
     for (let i = 1; i <= 4; i++) {
         let playerGround = scene.getMeshByName(`player${i}Ground`) as Mesh;
+        let playerGroundPlane = scene.getMeshByName(`player${i}GroundPlane`) as Mesh;
         let playerWall = scene.getMeshByName(`player${i}Wall`) as Mesh;
         if (playerGround) {
             playerGround.material = playerStartMat;
             // playerGround.material = wireframeMat;
+        }
+        if (playerGroundPlane) {
+            playerGroundPlane.material = playerStartMatPlane;
+            // playerGroundPlane.material = wireframeMat;
         }
         if (playerWall) {
             playerWall.material = playerWallMat;
@@ -392,6 +399,30 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     bottomWall.material = playerWallMat;
 
     ground.isVisible = false;
+
+    // Processing --------------------------------------------------------------------------------------
+
+    // add a Glowlayer to let emissive materials glow
+    var gl = new GlowLayer("glow", scene, {
+        mainTextureFixedSize: 1024,
+        blurKernelSize: 64,
+    });
+    gl.intensity = 0.5;
+
+    // var high = new HighlightLayer("highlight", scene);
+
+    // high.addMesh(player1GroundPlane, Color3.FromHexString(playerStartInfos[1].color));
+    // high.addMesh(player2GroundPlane, Color3.FromHexString(playerStartInfos[2].color));
+    // high.addMesh(player3GroundPlane, Color3.FromHexString(playerStartInfos[3].color));
+    // high.addMesh(player4GroundPlane, Color3.FromHexString(playerStartInfos[4].color));
+    // high.addExcludedMesh(playBox);
+    // high.addExcludedMesh(player1Wall);
+    // high.addExcludedMesh(player2Wall);
+    // high.addExcludedMesh(player3Wall);
+    // high.addExcludedMesh(player4Wall);
+    // high.addExcludedMesh(topWall);
+    // high.addExcludedMesh(bottomWall);
+    // high.addExcludedMesh(HUDMesh);
 }
 
 ////////////////////////////// END CREATE BABYLON SCENE ETC. //////////////////////////////
@@ -531,7 +562,7 @@ class Player implements PlayerData {
         // }
         // clamp the paddle position to the play area
         if (this.paddle) {
-            if (this.playerNumber == 1) {
+            if (this.playerNumber == 1 || this.inPosition == 1) {
                 let paddleY, paddleZ;
                 if (this.contrPosR.y + sceneStartInfos.playerPaddleSize.h / 2 > sceneStartInfos.playCubeSize.y) {
                     paddleY = sceneStartInfos.playCubeSize.y - sceneStartInfos.playerPaddleSize.h / 2;
@@ -554,7 +585,7 @@ class Player implements PlayerData {
                 if (this.paddleLight) {
                     this.paddleLight.position = this.paddle.position;
                 }
-            } else if (this.playerNumber == 2) {
+            } else if (this.playerNumber == 2 || this.inPosition == 2) {
                 let paddleY, paddleZ;
                 if (this.contrPosR.y + sceneStartInfos.playerPaddleSize.h / 2 > sceneStartInfos.playCubeSize.y) {
                     paddleY = sceneStartInfos.playCubeSize.y - sceneStartInfos.playerPaddleSize.h / 2;
@@ -577,7 +608,7 @@ class Player implements PlayerData {
                 if (this.paddleLight) {
                     this.paddleLight.position = this.paddle.position;
                 }
-            } else if (this.playerNumber == 3) {
+            } else if (this.playerNumber == 3 || this.inPosition == 3) {
                 let paddleY, paddleX;
                 if (this.contrPosR.y + sceneStartInfos.playerPaddleSize.h / 2 > sceneStartInfos.playCubeSize.y) {
                     paddleY = sceneStartInfos.playCubeSize.y - sceneStartInfos.playerPaddleSize.h / 2;
@@ -600,7 +631,7 @@ class Player implements PlayerData {
                 if (this.paddleLight) {
                     this.paddleLight.position = this.paddle.position;
                 }
-            } else if (this.playerNumber == 4) {
+            } else if (this.playerNumber == 4 || this.inPosition == 4) {
                 let paddleY, paddleX;
                 if (this.contrPosR.y + sceneStartInfos.playerPaddleSize.h / 2 > sceneStartInfos.playCubeSize.y) {
                     paddleY = sceneStartInfos.playCubeSize.y - sceneStartInfos.playerPaddleSize.h / 2;
@@ -911,8 +942,10 @@ socket.on('currentState', (players: { [key: string]: Player }, ballColor: string
 
         // Spawn new player Entity
         addPlayer(playerList[id], false);
+        addPlayerGameUtils(playerList[id], false);
         if (playerList[id].isPlaying) {
-            addPlayerGameUtils(playerList[id], false);
+            showPlayerGameUtils(playerList[id].id);
+            //addPlayerGameUtils(playerList[id], false);
         }
     });
 
@@ -1058,6 +1091,7 @@ socket.on('clientEntersAR', (newSocketPlayer) => {
 
         // Spawn yourself Entity
         addPlayer(playerList[clientID], true);
+        addPlayerGameUtils(playerList[clientID], true);
 
         // set the xrCamera position and rotation to the player position and rotation from the server
         if (xrCamera) {
@@ -1086,6 +1120,7 @@ socket.on('newPlayer', (newPlayer) => {
 
     // Spawn new player Entity
     addPlayer(playerList[newPlayer.id], false);
+    addPlayerGameUtils(playerList[newPlayer.id], false);
 
     /*if (previousPlayer) {
         if (previousPlayer.playerNumber == newPlayer.playerNumber) {
@@ -1110,7 +1145,8 @@ socket.on('playerStartPlaying', (newPlayerId, startPlayingNumber) => {
     changePlayerColor(newPlayerId);
 
     if (newPlayerId == clientID) {
-        addPlayerGameUtils(playerList[newPlayerId], true);
+        showPlayerGameUtils(playerList[newPlayerId].id);
+        //addPlayerGameUtils(playerList[newPlayerId], true);
 
         let skyBoxMesh = scene.getMeshByName('skyBoxMesh') as Mesh;
         if (skyBoxMesh) {
@@ -1128,7 +1164,8 @@ socket.on('playerStartPlaying', (newPlayerId, startPlayingNumber) => {
             }
         }
     } else {
-        addPlayerGameUtils(playerList[newPlayerId], false);
+        showPlayerGameUtils(playerList[newPlayerId].id);
+        //addPlayerGameUtils(playerList[newPlayerId], false);
     }
 
     let playerWall = scene.getMeshByName(`player${playerList[newPlayerId].playerNumber}Wall`) as Mesh;
@@ -1191,6 +1228,19 @@ socket.on('inPosChange', (playerId, newInPos) => {
     if (playerList[playerId]) {
         playerList[playerId].inPosition = newInPos;
     }
+
+    if (newInPos != 0) {
+        (playerList[playerId].paddle as Mesh).rotation = new Vector3(playerStartInfos[playerList[playerId].inPosition].rotation.x, playerStartInfos[playerList[playerId].inPosition].rotation.y, playerStartInfos[playerList[playerId].inPosition].rotation.z);
+        if (playerList[playerId].inPosition == 1) {
+            (playerList[playerId].paddle as Mesh).position = new Vector3(sceneStartInfos.playCubeSize.x / 2, playerList[playerId].contrPosR.y, playerList[playerId].contrPosR.z);
+        } else if (playerList[playerId].inPosition == 2) {
+            (playerList[playerId].paddle as Mesh).position = new Vector3(-sceneStartInfos.playCubeSize.x / 2, playerList[playerId].contrPosR.y, playerList[playerId].contrPosR.z);
+        } else if (playerList[playerId].inPosition == 3) {
+            (playerList[playerId].paddle as Mesh).position = new Vector3(playerList[playerId].contrPosR.x, playerList[playerId].contrPosR.y, sceneStartInfos.playCubeSize.z / 2);
+        } else if (playerList[playerId].inPosition == 4) {
+            (playerList[playerId].paddle as Mesh).position = new Vector3(playerList[playerId].contrPosR.x, playerList[playerId].contrPosR.y, -sceneStartInfos.playCubeSize.z / 2);
+        }
+    }
 });
 
 function changePlayerColor(playerId: string) {
@@ -1212,8 +1262,8 @@ function updatePlayerScore(scoredPlayerID: string, newScore: number) {
     // if (guiTextElements[`score${playerList[scoredPlayerID].playerNumber}Label`]) {
     //     guiTextElements[`score${playerList[scoredPlayerID].playerNumber}Label`].text = newScore.toString();
     // }
-    if (guiTextElements[`player${playerList[scoredPlayerID].playerNumber}_scoreLabel`]) {
-        guiTextElements[`player${playerList[scoredPlayerID].playerNumber}_scoreLabel`].text = newScore.toString();
+    if (guiTextElements[`player_${scoredPlayerID}_scoreLabel`]) {
+        guiTextElements[`player_${scoredPlayerID}_scoreLabel`].text = newScore.toString();
     }
 }
 
@@ -1288,7 +1338,7 @@ function addPlayer(player: Player, isPlayer: boolean) {
     let controllerScaling = 0.1;
 
     // add the players head
-    player.headObj = MeshBuilder.CreateBox(`player${player.playerNumber}_head`, { size: 1 }, scene);
+    player.headObj = MeshBuilder.CreateBox(`player_${player.id}_head`, { size: 1 }, scene);
     player.headObj.scaling = new Vector3(headScaling, headScaling, headScaling);
     player.headObj.position = new Vector3(player.position.x, player.position.y, player.position.z);
     player.headObj.rotation = new Vector3(player.rotation.x, player.rotation.y, player.rotation.z);
@@ -1300,13 +1350,13 @@ function addPlayer(player: Player, isPlayer: boolean) {
     }
 
     // add the players right and left controller
-    player.controllerR = MeshBuilder.CreateBox(`player${player.playerNumber}_contrR`, { size: 1 });
+    player.controllerR = MeshBuilder.CreateBox(`player_${player.id}_contrR`, { size: 1 });
     player.controllerR.scaling = new Vector3(controllerScaling, controllerScaling, controllerScaling);
     player.controllerR.position = new Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
     player.controllerR.rotation = new Vector3(player.contrRotR.x, player.contrRotR.y, player.contrRotR.z);
     player.controllerR.material = player.headObj.material;
 
-    player.controllerL = MeshBuilder.CreateBox(`player${player.playerNumber}_contrL`, { size: 1 });
+    player.controllerL = MeshBuilder.CreateBox(`player_${player.id}_contrL`, { size: 1 });
     player.controllerL.scaling = new Vector3(controllerScaling, controllerScaling, controllerScaling);
     player.controllerL.position = new Vector3(player.contrPosL.x, player.contrPosL.y, player.contrPosL.z);
     player.controllerL.rotation = new Vector3(player.contrRotL.x, player.contrRotL.y, player.contrRotL.z);
@@ -1329,30 +1379,34 @@ function addPlayerGameUtils(player: Player, isPlayer: boolean) {
     let paddleThickness = 0.01;
 
     // add the players paddle
-    player.paddle = MeshBuilder.CreateBox(`player${player.playerNumber}_paddle`, { size: 1 });
-    if (player.playerNumber == 1) {
-        player.paddle.scaling = new Vector3(paddleThickness, sceneStartInfos.playerPaddleSize.h, sceneStartInfos.playerPaddleSize.w);
+    player.paddle = MeshBuilder.CreateBox(`player_${player.id}_paddle`, { size: 1 });
+    player.paddle.scaling = new Vector3(sceneStartInfos.playerPaddleSize.w, sceneStartInfos.playerPaddleSize.h, paddleThickness);
+    player.paddle.rotation = new Vector3(playerStartInfos[player.inPosition].rotation.x, playerStartInfos[player.inPosition].rotation.y, playerStartInfos[player.inPosition].rotation.z);
+    if (player.inPosition == 1) {
+        //player.paddle.scaling = new Vector3(paddleThickness, sceneStartInfos.playerPaddleSize.h, sceneStartInfos.playerPaddleSize.w);
         player.paddle.position = new Vector3(sceneStartInfos.playCubeSize.x / 2, player.contrPosR.y, player.contrPosR.z);
-    } else if (player.playerNumber == 2) {
-        player.paddle.scaling = new Vector3(paddleThickness, sceneStartInfos.playerPaddleSize.h, sceneStartInfos.playerPaddleSize.w);
+    } else if (player.inPosition == 2) {
+        //player.paddle.scaling = new Vector3(paddleThickness, sceneStartInfos.playerPaddleSize.h, sceneStartInfos.playerPaddleSize.w);
         player.paddle.position = new Vector3(-sceneStartInfos.playCubeSize.x / 2, player.contrPosR.y, player.contrPosR.z);
-    } else if (player.playerNumber == 3) {
-        player.paddle.scaling = new Vector3(sceneStartInfos.playerPaddleSize.w, sceneStartInfos.playerPaddleSize.h, paddleThickness);
+    } else if (player.inPosition == 3) {
+        //player.paddle.scaling = new Vector3(sceneStartInfos.playerPaddleSize.w, sceneStartInfos.playerPaddleSize.h, paddleThickness);
         player.paddle.position = new Vector3(player.contrPosR.x, player.contrPosR.y, sceneStartInfos.playCubeSize.z / 2);
-    } else if (player.playerNumber == 4) {
-        player.paddle.scaling = new Vector3(sceneStartInfos.playerPaddleSize.w, sceneStartInfos.playerPaddleSize.h, paddleThickness);
+    } else if (player.inPosition == 4) {
+        //player.paddle.scaling = new Vector3(sceneStartInfos.playerPaddleSize.w, sceneStartInfos.playerPaddleSize.h, paddleThickness);
         player.paddle.position = new Vector3(player.contrPosR.x, player.contrPosR.y, -sceneStartInfos.playCubeSize.z / 2);
     }
-    player.paddle.position = new Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
-    player.paddle.material = scene.getMaterialByName(`player${player.playerNumber}_paddle_mat`) as PBRMaterial;
+    // player.paddle.position = new Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
+    player.paddle.material = scene.getMaterialByName(`player0_mat`) as PBRMaterial;
+    // player.paddle.material = scene.getMaterialByName(`player_${player.id}_paddle_mat`) as PBRMaterial;
 
     // add a light to the paddle
-    player.paddleLight = new PointLight(`player${player.playerNumber}_paddelLight`, player.paddle.position, scene);
-    player.paddleLight.diffuse = Color3.FromHexString(playerStartInfos[player.playerNumber].color);
+    player.paddleLight = new PointLight(`player_${player.id}_paddelLight`, player.paddle.position, scene);
+    player.paddleLight.diffuse = Color3.FromHexString(ghostColor);
+    //player.paddleLight.diffuse = Color3.FromHexString(playerStartInfos[player.playerNumber].color);
     player.paddleLight.intensity = 1;
 
     // add the score Mesh to the player
-    player.scoreMesh = MeshBuilder.CreatePlane(`player${player.playerNumber}_scoreMesh`, { size: 1 }, scene);
+    player.scoreMesh = MeshBuilder.CreatePlane(`player_${player.id}_scoreMesh`, { size: 1 }, scene);
     if (playerUsingXR) {
         player.scoreMesh.position = new Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
     } else {
@@ -1369,7 +1423,8 @@ function addPlayerGameUtils(player: Player, isPlayer: boolean) {
     if (!isPlayer) {
         player.scoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
     } else {
-        player.scoreMesh.rotation = new Vector3(playerStartInfos[player.playerNumber].rotation.x, playerStartInfos[player.playerNumber].rotation.y, playerStartInfos[player.playerNumber].rotation.z);
+        player.scoreMesh.rotation = new Vector3(0, 0, 0);
+        //player.scoreMesh.rotation = new Vector3(playerStartInfos[player.playerNumber].rotation.x, playerStartInfos[player.playerNumber].rotation.y, playerStartInfos[player.playerNumber].rotation.z);
     }
 
     var playerScoreTex = GUI.AdvancedDynamicTexture.CreateForMesh(player.scoreMesh);
@@ -1380,15 +1435,50 @@ function addPlayerGameUtils(player: Player, isPlayer: boolean) {
     var scoreLabel = new GUI.TextBlock();
     scoreLabel.fontFamily = "loadedFont";
     scoreLabel.text = "0";
-    scoreLabel.color = playerStartInfos[player.playerNumber].color;
+    scoreLabel.color = ghostColor;
+    //scoreLabel.color = playerStartInfos[player.playerNumber].color;
     scoreLabel.fontSize = 100;
     scoreRect.addControl(scoreLabel);
     // add to guiTextElements
-    guiTextElements[`player${player.playerNumber}_scoreLabel`] = scoreLabel;
+    guiTextElements[`player_${player.id}_scoreLabel`] = scoreLabel;
 
     playerList[player.id].paddle = player.paddle;
     playerList[player.id].paddleLight = player.paddleLight;
     playerList[player.id].scoreMesh = player.scoreMesh;
+}
+
+function showPlayerGameUtils(playerId: string) {
+    console.log(`Showing Player Game Utils of Player: ${playerId}`);
+    if (playerList[playerId].paddle) {
+        playerList[playerId].paddle.material = scene.getMaterialByName(`player${playerList[playerId].playerNumber}_paddle_mat`) as PBRMaterial;
+        playerList[playerId].paddle.isVisible = true;
+    }
+    if (playerList[playerId].paddleLight) {
+        playerList[playerId].paddleLight.diffuse = Color3.FromHexString(playerStartInfos[playerList[playerId].playerNumber].color);
+        playerList[playerId].paddleLight.intensity = 1;
+    }
+    if (playerList[playerId].scoreMesh) {
+        guiTextElements[`player_${playerId}_scoreLabel`].color = playerStartInfos[playerList[playerId].playerNumber].color;
+        playerList[playerId].scoreMesh.rotation = new Vector3(playerStartInfos[playerList[playerId].playerNumber].rotation.x, playerStartInfos[playerList[playerId].playerNumber].rotation.y, playerStartInfos[playerList[playerId].playerNumber].rotation.z);
+        playerList[playerId].scoreMesh.isVisible = true;
+    }
+}
+
+function hidePlayerGameUtils(playerId: string) {
+    console.log(`Hiding Player Game Utils of Player: ${playerId}`);
+    if (playerList[playerId].paddle) {
+        playerList[playerId].paddle.material = scene.getMaterialByName(`player0_mat`) as PBRMaterial;
+        playerList[playerId].paddle.isVisible = false;
+    }
+    if (playerList[playerId].paddleLight) {
+        playerList[playerId].paddleLight.diffuse = Color3.FromHexString(ghostColor);
+        playerList[playerId].paddleLight.intensity = 0;
+    }
+    if (playerList[playerId].scoreMesh) {
+        guiTextElements[`player_${playerId}_scoreLabel`].color = ghostColor;
+        playerList[playerId].scoreMesh.rotation = new Vector3(0, 0, 0);
+        playerList[playerId].scoreMesh.isVisible = false;
+    }
 }
 
 // visual effect if the ball bounces on a paddle or wall
@@ -1450,9 +1540,11 @@ socket.on('playerExitGame', (playerId) => {
 
         playerList[playerId].isPlaying = false;
 
-        exitPlayer.paddle?.dispose();
-        exitPlayer.paddleLight?.dispose();
-        exitPlayer.scoreMesh?.dispose();
+        hidePlayerGameUtils(playerId);
+
+        // exitPlayer.paddle?.dispose();
+        // exitPlayer.paddleLight?.dispose();
+        // exitPlayer.scoreMesh?.dispose();
 
         // set the availability of the start buttons according to the used startpositions on the server
         if (!playerList[playerId].isPlaying) {
@@ -1486,7 +1578,7 @@ socket.on('playerDisconnected', (id) => {
         if (playerWall) {
             playerWall.isVisible = true;
         }
-        let playerScore = scene.getMeshByName(`player${disconnectedPlayer.playerNumber}ScoreMesh`) as Mesh;
+        let playerScore = scene.getMeshByName(`player_${disconnectedPlayer.id}ScoreMesh`) as Mesh;
         if (playerScore) {
             playerScore.isVisible = false;
 
@@ -1557,6 +1649,8 @@ socket.on('reenteredGameArea', () => {
 // when the player enters a game area to join the game
 socket.on('enteredGameArea', (areaEnteredTimerTime) => {
     console.log('Player reentered the Game Area. Timer: ', areaEnteredTimerTime);
+    (playerList[clientID].paddle as Mesh).isVisible = true;
+    (playerList[clientID].paddleLight as PointLight).intensity = 1;
     setHUDPosition(playerList[clientID].inPosition);
     guiRectElements['client_HUDRect'].color = playerStartInfos[playerList[clientID].inPosition].color;
     guiTextElements['client_HUDLabel'].text = `You entered the Game Area of Position ${playerList[clientID].inPosition}.\nJoin the Game in: \n${areaEnteredTimerTime / 1000}s\nor leave the Game Area.`;
@@ -1575,6 +1669,8 @@ socket.on('enteredGameArea', (areaEnteredTimerTime) => {
 // when the player Exits the game area while trying to join the game
 socket.on('exitJoiningGameArea', () => {
     console.log('Player exit the Joining Game Area.');
+    (playerList[clientID].paddle as Mesh).isVisible = false;
+    (playerList[clientID].paddleLight as PointLight).intensity = 0;
     setHUDPosition(0);
     guiTextElements['client_HUDLabel'].text = ``;
     guiTextElements['client_HUDLabel'].color = "red";

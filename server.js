@@ -98,12 +98,14 @@ class Player {
                 // if the playing player exits the game area, set a timer to kick him out of the game
                 if (newInPosition != this.playerNumber) {
                     console.log(`Player ${this.playerNumber}: ${this.id} exit the game area.`);
-                    io.to(this.id).emit('exitGameArea', areaExitTimerTime);
-                    areaExitTimerList[this.playerNumber] = setTimeout(() => {
-                        // throw player out of the game
-                        console.log(`Player ${this.id} was kicked out of the game.`);
-                        playerExitsGame(this.id);
-                    }, areaExitTimerTime);
+                    exitDelayTimer = setTimeout(() => {
+                        io.to(this.id).emit('exitGameArea', areaExitTimerTime);
+                        areaExitTimerList[this.playerNumber] = setTimeout(() => {
+                            // throw player out of the game
+                            console.log(`Player ${this.id} was kicked out of the game.`);
+                            playerExitsGame(this.id);
+                        }, areaExitTimerTime);
+                    }, exitDelayTime);
                 } else if (newInPosition == this.playerNumber) {
                     // clear the timer if the player reenters the game area
                     // let the player in the game
@@ -111,24 +113,33 @@ class Player {
                         clearTimeout(areaExitTimerList[this.playerNumber]);
                         areaExitTimerList[this.playerNumber] = null;
                     }
+                    if (exitDelayTimer != null) {
+                        clearTimeout(exitDelayTimer);
+                        exitDelayTimer = null;
+                    }
                     io.to(this.id).emit('reenteredGameArea');
                 }
             } else {
                 if (newInPosition != 0) {
                     console.log(`Player: ${this.id} entered the game area ${newInPosition}.`);
-                    io.to(this.id).emit('enteredGameArea', areaEnteredTimerTime);
-
-                    areaEnteredTimerList[newInPosition] = setTimeout(() => {
-                        // let the player join the game
-                        console.log(`Player ${this.id} tries to join the Game through the area ${newInPosition}.`);
-                        playerStartPlaying(this.id, newInPosition);
-                    }, areaEnteredTimerTime);
+                    enteredDelayTimer = setTimeout(() => {
+                        io.to(this.id).emit('enteredGameArea', areaEnteredTimerTime);
+                        areaEnteredTimerList[newInPosition] = setTimeout(() => {
+                            // let the player join the game
+                            console.log(`Player ${this.id} tries to join the Game through the area ${newInPosition}.`);
+                            playerStartPlaying(this.id, newInPosition);
+                        }, areaEnteredTimerTime);
+                    }, enteredDelayTime);
                 } else if (newInPosition == 0) {
                     // clear the timer if the player exits the game area again
                     // stop the timer for the player to join the game
                     if (areaEnteredTimerList[oldInPosition] != null) {
                         clearTimeout(areaEnteredTimerList[oldInPosition]);
                         areaEnteredTimerList[oldInPosition] = null;
+                    }
+                    if (enteredDelayTimer != null) {
+                        clearTimeout(enteredDelayTimer);
+                        enteredDelayTimer = null;
                     }
                     io.to(this.id).emit('exitJoiningGameArea');
                 }
@@ -156,6 +167,8 @@ let playerList = {};
 
 const areaExitTimerTime = 3000; // in milliseconds
 const areaEnteredTimerTime = 3000; // in milliseconds
+const enteredDelayTime = 1000; // in milliseconds
+const exitDelayTime = 1000; // in milliseconds
 
 let areaExitTimer1, areaExitTimer2, areaExitTimer3, areaExitTimer4;
 areaExitTimer1 = areaExitTimer2 = areaExitTimer3 = areaExitTimer4 = null;
@@ -165,12 +178,15 @@ let areaEnteredTimer1, areaEnteredTimer2, areaEnteredTimer3, areaEnteredTimer4;
 areaEnteredTimer1 = areaEnteredTimer2 = areaEnteredTimer3 = areaEnteredTimer4 = null;
 let areaEnteredTimerList = { 1: areaEnteredTimer1, 2: areaEnteredTimer2, 3: areaEnteredTimer3, 4: areaEnteredTimer4 };
 
+let enteredDelayTimer, exitDelayTimer;
+enteredDelayTimer = exitDelayTimer = null;
+
 // Game Variables
 const maxPlayers = 4;
-const playCubeSize = { x: 1.5, y: 2, z: 1.5 }; // the size of the player cube in meters // the y value is the top of the cube
-const playCubeElevation = 0.5; // the elevation of the player cube in meters
-const playerAreaDepth = 1; // the depth of the player area in the z direction in meters
-const playerAreaDistance = 0.5; // the distance from the player area to the wall in meters
+const playCubeSize = { x: 1, y: 2, z: 1 }; // the size of the player cube in meters // the y value is the top of the cube
+const playCubeElevation = 0.7; // the elevation of the player cube in meters
+const playerAreaDepth = 0.5; // the depth of the player area in the z direction in meters
+const playerAreaDistance = 0.2; // the distance from the player area to the wall in meters
 const playerPaddleSize = { h: 0.2, w: 0.4 }; // the size of the player plane in meters
 const ballStartSpeed = 0.02;
 const ballStartColor = '#1f53ff';
