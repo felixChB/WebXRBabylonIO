@@ -155,7 +155,7 @@ let connectedClientNumber = 0;
 /////////////////////////////  VARIABLES  //////////////////////////////////
 // Server Variables
 let serverStartTime;
-const serverRefreshRate = 10; // time between server updates in milliseconds
+const serverRefreshRate = 20; // time between server updates in milliseconds
 
 // Test Variables
 let serverUpdateCounter = 0;
@@ -827,12 +827,12 @@ function clientEntersAR(newPlayer, socket) {
         playerStartPlaying(newPlayer.id, newPlayer.inPosition);
     }, areaEnteredTimerTime);
 
-    socket.emit('clientEntersAR', playerList[newPlayer.id]);
+    socket.emit('clientEntersAR', playerList[newPlayer.id], areaEnteredTimerTime);
 
     socket.to('waitingRoom').to('gameRoom').emit('newPlayer', playerList[newPlayer.id]);
 
     console.log(`Player: ${newPlayer.id} entered the game area ${newPlayer.inPosition}.`);
-    socket.emit('enteredGameArea', areaEnteredTimerTime);
+    //socket.emit('enteredGameArea', areaEnteredTimerTime);
 }
 
 // !7

@@ -18,7 +18,7 @@ if (rotationQuaternion) {
     //console.log('Rotation Quaternion: ', rotationQuaternion);
 }
 let clientStartTime = Date.now();
-const clientRefreshRate = 10; // time between client updates in ms
+const clientRefreshRate = 20; // time between client updates in ms
 
 let clientID: string;
 let clientPlayer: Player | null = null;
@@ -104,8 +104,8 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
 
     // Lights --------------------------------------------------------------------------------------
     // Creates a light, aiming 0,1,0 - to the sky
-    var hemiLight = new HemisphericLight('hemiLight', new Vector3(0, 1, 0), scene);
-    hemiLight.intensity = 0.1;
+    // var hemiLight = new HemisphericLight('hemiLight', new Vector3(0, 1, 0), scene);
+    // hemiLight.intensity = 0.1;
 
     var dirLight = new DirectionalLight("DirectionalLight", new Vector3(-0.7, -0.5, 0.4), scene);
     dirLight.position = new Vector3(9, 11, -17);
@@ -143,6 +143,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     playBox.enableEdgesRendering();
     playBox.edgesWidth = edgeWidth;
     playBox.edgesColor = new Color4(1, 1, 1, 1);
+    playBox.isVisible = false;
 
     // Grounds for the Player Start Positions
     var player1Ground = MeshBuilder.CreateBox('player1Ground', { size: 1 }, scene);
@@ -231,10 +232,12 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     var topWall = MeshBuilder.CreateBox('player5Wall', { size: 1 }, scene);
     topWall.position = new Vector3(0, playCubeSize.y, 0);
     topWall.scaling = new Vector3(playCubeSize.x, 0.01, playCubeSize.z);
+    topWall.isVisible = false;
 
     var bottomWall = MeshBuilder.CreateBox('player6Wall', { size: 1 }, scene);
     bottomWall.position = new Vector3(0, playCubeElevation, 0);
     bottomWall.scaling = new Vector3(playCubeSize.x, 0.01, playCubeSize.z);
+    bottomWall.isVisible = false;
 
     let HUDMesh = MeshBuilder.CreatePlane(`client_HUD`, { size: 1 }, scene);
     HUDMesh.position = new Vector3(0, 2.5, 0);
@@ -288,7 +291,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
 
     var playBoxMat = new StandardMaterial('playBoxMat', scene);
     playBoxMat.diffuseColor = Color3.FromHexString('#ffffff');
-    playBoxMat.alpha = 0.1;
+    playBoxMat.alpha = 0;
     playBoxMat.specularColor = new Color3(0, 0, 0);
 
     var ballMaterial = new PBRMaterial('ballMaterial', scene);
@@ -306,16 +309,16 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
 
     var playerWallMat = new PBRMaterial('playerWallMat', scene);
     playerWallMat.albedoColor = Color3.FromHexString('#000000');
-    playerWallMat.alpha = 0.7;
-    playerWallMat.metallic = 0.2;
+    playerWallMat.alpha = 0.3;
+    playerWallMat.metallic = 0;
     playerWallMat.roughness = 0.5;
     playerWallMat.backFaceCulling = false;
 
     var wallBounceMat = new PBRMaterial('wallBounceMat', scene);
     wallBounceMat.albedoColor = Color3.FromHexString('#575757');
     //wallBounceMat.emissiveColor = Color3.FromHexString('#ffffff');
-    wallBounceMat.alpha = 0.7;
-    wallBounceMat.metallic = 0.2;
+    wallBounceMat.alpha = 0.3;
+    wallBounceMat.metallic = 0;
     wallBounceMat.roughness = 0.5;
     wallBounceMat.backFaceCulling = false;
 
@@ -953,7 +956,7 @@ socket.on('currentState', (players: { [key: string]: Player }, ballColor: string
 });
 
 // !6
-socket.on('clientEntersAR', (newSocketPlayer) => {
+socket.on('clientEntersAR', (newSocketPlayer, areaEnteredTimerTime) => {
     latencyTestArray.push(`----------Client enters AR----------`);
 
     startScreen?.style.setProperty('display', 'none');
@@ -1092,6 +1095,10 @@ socket.on('clientEntersAR', (newSocketPlayer) => {
         // Spawn yourself Entity
         addPlayer(playerList[clientID], true);
         addPlayerGameUtils(playerList[clientID], true);
+        (playerList[clientID].paddle as Mesh).isVisible = true;
+        (playerList[clientID].paddleLight as PointLight).intensity = 1;
+        updateHUDPosition(playerList[clientID].inPosition);
+        updateHUDInfo('enteredGameArea', areaEnteredTimerTime);
 
         // set the xrCamera position and rotation to the player position and rotation from the server
         if (xrCamera) {
@@ -1186,7 +1193,7 @@ socket.on('playerStartPlaying', (newPlayerId, startPlayingNumber) => {
         }
     }
 
-    setHUDPosition(0);
+    updateHUDPosition(0);
     guiTextElements['client_HUDLabel'].text = ``;
     guiTextElements['client_HUDLabel'].color = "red";
 });
@@ -1398,12 +1405,13 @@ function addPlayerGameUtils(player: Player, isPlayer: boolean) {
     // player.paddle.position = new Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
     player.paddle.material = scene.getMaterialByName(`player0_mat`) as PBRMaterial;
     // player.paddle.material = scene.getMaterialByName(`player_${player.id}_paddle_mat`) as PBRMaterial;
+    player.paddle.isVisible = false;
 
     // add a light to the paddle
     player.paddleLight = new PointLight(`player_${player.id}_paddelLight`, player.paddle.position, scene);
     player.paddleLight.diffuse = Color3.FromHexString(ghostColor);
     //player.paddleLight.diffuse = Color3.FromHexString(playerStartInfos[player.playerNumber].color);
-    player.paddleLight.intensity = 1;
+    player.paddleLight.intensity = 0;
 
     // add the score Mesh to the player
     player.scoreMesh = MeshBuilder.CreatePlane(`player_${player.id}_scoreMesh`, { size: 1 }, scene);
@@ -1426,6 +1434,7 @@ function addPlayerGameUtils(player: Player, isPlayer: boolean) {
         player.scoreMesh.rotation = new Vector3(0, 0, 0);
         //player.scoreMesh.rotation = new Vector3(playerStartInfos[player.playerNumber].rotation.x, playerStartInfos[player.playerNumber].rotation.y, playerStartInfos[player.playerNumber].rotation.z);
     }
+    player.scoreMesh.isVisible = false;
 
     var playerScoreTex = GUI.AdvancedDynamicTexture.CreateForMesh(player.scoreMesh);
     // Player Score
@@ -1555,7 +1564,7 @@ socket.on('playerExitGame', (playerId) => {
         playerList[playerId].playerNumber = 0;
         changePlayerColor(playerId);
 
-        setHUDPosition(0);
+        updateHUDPosition(0);
         guiTextElements['client_HUDLabel'].text = ``;
         guiTextElements['client_HUDLabel'].color = "red";
     }
@@ -1622,28 +1631,15 @@ socket.on('playerDisconnected', (id) => {
 // when the playing player Exits the game area
 socket.on('exitGameArea', (areaExitTimerTime) => {
     console.log('Player exit the Game Area. Timer: ', areaExitTimerTime);
-    setHUDPosition(playerList[clientID].playerNumber);
-    guiRectElements['client_HUDRect'].color = "red";
-    guiTextElements['client_HUDLabel'].text = `You exited the Game Area of Position ${playerList[clientID].playerNumber}.\nExit the Game in: \n${areaExitTimerTime / 1000}s\nor reenter the Game Area.`;
-    guiTextElements['client_HUDLabel'].color = "red";
-    let timer = areaExitTimerTime / 1000;
-    exitGameAreaInterval = setInterval(() => {
-        timer -= 1;
-        guiTextElements['client_HUDLabel'].text = `You exited the Game Area of Position ${playerList[clientID].playerNumber}.\nExit the Game in: \n${timer}s\nor reenter the Game Area.`;
-        if (timer <= 0) {
-            clearInterval(exitGameAreaInterval as NodeJS.Timeout);
-            timer = areaExitTimerTime / 1000;
-        }
-    }, 1000);
+    updateHUDPosition(playerList[clientID].playerNumber);
+    updateHUDInfo('exitGameArea', areaExitTimerTime);
 });
 
 // when the playing player reenters the game area
 socket.on('reenteredGameArea', () => {
     console.log('Player reentered the Game Area.');
-    setHUDPosition(0);
-    guiTextElements['client_HUDLabel'].text = ``;
-    guiTextElements['client_HUDLabel'].color = "red";
-    clearInterval(exitGameAreaInterval as NodeJS.Timeout);
+    updateHUDPosition(0);
+    updateHUDInfo('reenteredGameArea');
 });
 
 // when the player enters a game area to join the game
@@ -1651,19 +1647,8 @@ socket.on('enteredGameArea', (areaEnteredTimerTime) => {
     console.log('Player reentered the Game Area. Timer: ', areaEnteredTimerTime);
     (playerList[clientID].paddle as Mesh).isVisible = true;
     (playerList[clientID].paddleLight as PointLight).intensity = 1;
-    setHUDPosition(playerList[clientID].inPosition);
-    guiRectElements['client_HUDRect'].color = playerStartInfos[playerList[clientID].inPosition].color;
-    guiTextElements['client_HUDLabel'].text = `You entered the Game Area of Position ${playerList[clientID].inPosition}.\nJoin the Game in: \n${areaEnteredTimerTime / 1000}s\nor leave the Game Area.`;
-    guiTextElements['client_HUDLabel'].color = playerStartInfos[playerList[clientID].inPosition].color;
-    let timer = areaEnteredTimerTime / 1000;
-    enteredGameAreaInterval = setInterval(() => {
-        timer -= 1;
-        guiTextElements['client_HUDLabel'].text = `You entered the Game Area of Position ${playerList[clientID].inPosition}.\nJoin the Game in: \n${timer}s\nor leave the Game Area.`;
-        if (timer <= 0) {
-            clearInterval(enteredGameAreaInterval as NodeJS.Timeout);
-            timer = areaEnteredTimerTime / 1000;
-        }
-    }, 1000);
+    updateHUDPosition(playerList[clientID].inPosition);
+    updateHUDInfo('enteredGameArea', areaEnteredTimerTime);
 });
 
 // when the player Exits the game area while trying to join the game
@@ -1671,13 +1656,11 @@ socket.on('exitJoiningGameArea', () => {
     console.log('Player exit the Joining Game Area.');
     (playerList[clientID].paddle as Mesh).isVisible = false;
     (playerList[clientID].paddleLight as PointLight).intensity = 0;
-    setHUDPosition(0);
-    guiTextElements['client_HUDLabel'].text = ``;
-    guiTextElements['client_HUDLabel'].color = "red";
-    clearInterval(enteredGameAreaInterval as NodeJS.Timeout);
+    updateHUDPosition(0);
+    updateHUDInfo('exitJoiningGameArea');
 });
 
-function setHUDPosition(positionNumber: number) {
+function updateHUDPosition(positionNumber: number) {
     let HUDMesh = scene.getMeshByName(`client_HUD`) as Mesh;
     if (HUDMesh) {
         if (positionNumber == 0) {
@@ -1689,6 +1672,44 @@ function setHUDPosition(positionNumber: number) {
             HUDMesh.position = scene.getMeshByName(`player${positionNumber}Wall`)?.position as Vector3;
             HUDMesh.rotation = new Vector3(playerStartInfos[positionNumber].rotation.x, playerStartInfos[positionNumber].rotation.y, playerStartInfos[positionNumber].rotation.z);
         }
+    }
+}
+
+function updateHUDInfo(eventType: string, eventTimerTime: number = 0) {
+    if (eventType == 'exitGameArea') {
+        guiRectElements['client_HUDRect'].color = "red";
+        guiTextElements['client_HUDLabel'].text = `You exited the Game Area of Position ${playerList[clientID].playerNumber}.\nExit the Game in: \n${eventTimerTime / 1000}s\nor reenter the Game Area.`;
+        guiTextElements['client_HUDLabel'].color = "red";
+        let timer = eventTimerTime / 1000;
+        exitGameAreaInterval = setInterval(() => {
+            timer -= 1;
+            guiTextElements['client_HUDLabel'].text = `You exited the Game Area of Position ${playerList[clientID].playerNumber}.\nExit the Game in: \n${timer}s\nor reenter the Game Area.`;
+            if (timer <= 0) {
+                clearInterval(exitGameAreaInterval as NodeJS.Timeout);
+                timer = eventTimerTime / 1000;
+            }
+        }, 1000);
+    } else if (eventType == 'reenteredGameArea') {
+        guiTextElements['client_HUDLabel'].text = ``;
+        guiTextElements['client_HUDLabel'].color = "red";
+        clearInterval(exitGameAreaInterval as NodeJS.Timeout);
+    } else if (eventType == 'enteredGameArea') {
+        guiRectElements['client_HUDRect'].color = playerStartInfos[playerList[clientID].inPosition].color;
+        guiTextElements['client_HUDLabel'].text = `You entered the Game Area of Position ${playerList[clientID].inPosition}.\nJoin the Game in: \n${eventTimerTime / 1000}s\nor leave the Game Area.`;
+        guiTextElements['client_HUDLabel'].color = playerStartInfos[playerList[clientID].inPosition].color;
+        let timer = eventTimerTime / 1000;
+        enteredGameAreaInterval = setInterval(() => {
+            timer -= 1;
+            guiTextElements['client_HUDLabel'].text = `You entered the Game Area of Position ${playerList[clientID].inPosition}.\nJoin the Game in: \n${timer}s\nor leave the Game Area.`;
+            if (timer <= 0) {
+                clearInterval(enteredGameAreaInterval as NodeJS.Timeout);
+                timer = eventTimerTime / 1000;
+            }
+        }, 1000);
+    } else if (eventType == 'exitJoiningGameArea') {
+        guiTextElements['client_HUDLabel'].text = ``;
+        guiTextElements['client_HUDLabel'].color = "red";
+        clearInterval(enteredGameAreaInterval as NodeJS.Timeout);
     }
 }
 
