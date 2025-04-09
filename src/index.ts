@@ -1,8 +1,8 @@
 import { io } from 'socket.io-client';
-import { /*Camera,*/ Engine, FreeCamera, /*PBRBaseMaterial,*/ PBRMaterial, Scene } from '@babylonjs/core';
+import { /*Camera,*/ Engine, FreeCamera, Material, /*PBRBaseMaterial,*/ PBRMaterial, Scene } from '@babylonjs/core';
 import { /*ArcRotateCamera,*/ MeshBuilder, /*ShadowGenerator,*/ GlowLayer, /*ParticleSystem,*/ Animation } from '@babylonjs/core';
 import { HemisphericLight, DirectionalLight, PointLight /*SSRRenderingPipeline, Constants*/ } from '@babylonjs/core';
-import { Mesh, StandardMaterial, Texture, Color3, Color4, Vector3, Quaternion, /*CubeTexture*/ /*LinesMesh*/ } from '@babylonjs/core';
+import { Mesh, StandardMaterial, Texture, Color3, Color4, Vector3, Quaternion, CubeTexture /*LinesMesh*/ } from '@babylonjs/core';
 import { WebXRDefaultExperience, WebXRInputSource } from '@babylonjs/core/XR';
 import * as GUI from '@babylonjs/gui';
 
@@ -123,13 +123,17 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     });
     gl.intensity = 0.5;
 
-
-    // var hdrTexture = new CubeTexture('./assets/abstract_blue.env', scene);
-    // scene.createDefaultSkybox(hdrTexture, true, 10000);
+    var hdrTexture = new CubeTexture('./assets/abstract_blue.env', scene);
+    var skyBoxMesh = scene.createDefaultSkybox(hdrTexture, true, 1000, 0.5);
+    if (skyBoxMesh) {
+        skyBoxMesh.name = 'skyBoxMesh';
+        skyBoxMesh.isVisible = false;
+    }
 
     // Meshes --------------------------------------------------------------------------------------
 
     let edgeWidth = 0.3;
+    let planeEdgeWidth = 0.5;
 
     var ballSphere = MeshBuilder.CreateSphere('ballSphere', { diameter: 2, segments: 32 }, scene);
     ballSphere.position = new Vector3(ballStartPos.x, ballStartPos.y, ballStartPos.z);
@@ -145,18 +149,8 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     playBox.edgesWidth = edgeWidth;
     playBox.edgesColor = new Color4(1, 1, 1, 1);
 
-    // var testBox = MeshBuilder.CreateBox('testBox', { size: 1 }, scene);
-    // testBox.position = new Vector3(0, (playCubeSize.y / 2), 0);
-    // testBox.scaling = new Vector3(playCubeSize.x, playCubeSize.y, playCubeSize.z);
-    // testBox.enableEdgesRendering();
-    // testBox.edgesWidth = edgeWidth;
-    // testBox.edgesColor = new Color4(1, 0, 1, 1);
-
-    // playBox.isVisible = false;
-
     // Grounds for the Player Start Positions
     var player1Ground = MeshBuilder.CreateBox('player1Ground', { size: 1 }, scene);
-    // player1Ground.position = new Vector3((playCubeSize.x / 2 + playerAreaDepth / 2) + 0, -25, 0);
     player1Ground.position = new Vector3(playerStartInfos[1].position.x, -25, 0);
     player1Ground.scaling = new Vector3(playerAreaDepth, 50, playCubeSize.z);
     player1Ground.enableEdgesRendering();
@@ -164,7 +158,6 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     player1Ground.edgesColor = Color4.FromHexString(playerStartInfos[1].color);
 
     var player2Ground = MeshBuilder.CreateBox('player2Ground', { size: 1 }, scene);
-    // player2Ground.position = new Vector3(-(playCubeSize.x / 2 + playerAreaDepth / 2), -25, 0);
     player2Ground.position = new Vector3(playerStartInfos[2].position.x, -25, 0);
     player2Ground.scaling = new Vector3(playerAreaDepth, 50, playCubeSize.z);
     player2Ground.enableEdgesRendering();
@@ -172,7 +165,6 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     player2Ground.edgesColor = Color4.FromHexString(playerStartInfos[2].color);
 
     var player3Ground = MeshBuilder.CreateBox('player3Ground', { size: 1 }, scene);
-    // player3Ground.position = new Vector3(0, -25, (playCubeSize.z / 2 + playerAreaDepth / 2));
     player3Ground.position = new Vector3(0, -25, playerStartInfos[3].position.z);
     player3Ground.scaling = new Vector3(playCubeSize.x, 50, playerAreaDepth);
     player3Ground.enableEdgesRendering();
@@ -180,12 +172,45 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     player3Ground.edgesColor = Color4.FromHexString(playerStartInfos[3].color);
 
     var player4Ground = MeshBuilder.CreateBox('player4Ground', { size: 1 }, scene);
-    // player4Ground.position = new Vector3(0, -25, -(playCubeSize.z / 2 + playerAreaDepth / 2));
     player4Ground.position = new Vector3(0, -25, playerStartInfos[4].position.z);
     player4Ground.scaling = new Vector3(playCubeSize.x, 50, playerAreaDepth);
     player4Ground.enableEdgesRendering();
     player4Ground.edgesWidth = edgeWidth;
     player4Ground.edgesColor = Color4.FromHexString(playerStartInfos[4].color);
+
+    player1Ground.isVisible = player2Ground.isVisible = player3Ground.isVisible = player4Ground.isVisible = false;
+
+    var player1GroundPlane = MeshBuilder.CreatePlane('player1GroundPlane', { size: 1 }, scene);
+    player1GroundPlane.position = new Vector3(playerStartInfos[1].position.x, 0, 0);
+    player1GroundPlane.scaling = new Vector3(playerAreaDepth, playCubeSize.z, 1);
+    player1GroundPlane.rotation = new Vector3(-Math.PI / 2, 0, playerStartInfos[1].rotation.z);
+    player1GroundPlane.enableEdgesRendering();
+    player1GroundPlane.edgesWidth = planeEdgeWidth;
+    player1GroundPlane.edgesColor = Color4.FromHexString(playerStartInfos[1].color);
+
+    var player2GroundPlane = MeshBuilder.CreatePlane('player2GroundPlane', { size: 1 }, scene);
+    player2GroundPlane.position = new Vector3(playerStartInfos[2].position.x, 0, 0);
+    player2GroundPlane.scaling = new Vector3(playerAreaDepth, playCubeSize.z, 1);
+    player2GroundPlane.rotation = new Vector3(-Math.PI / 2, 0, playerStartInfos[2].rotation.z);
+    player2GroundPlane.enableEdgesRendering();
+    player2GroundPlane.edgesWidth = planeEdgeWidth;
+    player2GroundPlane.edgesColor = Color4.FromHexString(playerStartInfos[2].color);
+
+    var player3GroundPlane = MeshBuilder.CreatePlane('player3GroundPlane', { size: 1 }, scene);
+    player3GroundPlane.position = new Vector3(0, 0, playerStartInfos[3].position.z);
+    player3GroundPlane.scaling = new Vector3(playCubeSize.x, playerAreaDepth, 1);
+    player3GroundPlane.rotation = new Vector3(-Math.PI / 2, 0, playerStartInfos[3].rotation.x);
+    player3GroundPlane.enableEdgesRendering();
+    player3GroundPlane.edgesWidth = planeEdgeWidth;
+    player3GroundPlane.edgesColor = Color4.FromHexString(playerStartInfos[3].color);
+
+    var player4GroundPlane = MeshBuilder.CreatePlane('player4GroundPlane', { size: 1 }, scene);
+    player4GroundPlane.position = new Vector3(0, 0, playerStartInfos[4].position.z);
+    player4GroundPlane.scaling = new Vector3(playCubeSize.x, playerAreaDepth, 1);
+    player4GroundPlane.rotation = new Vector3(-Math.PI / 2, 0, playerStartInfos[4].rotation.x);
+    player4GroundPlane.enableEdgesRendering();
+    player4GroundPlane.edgesWidth = planeEdgeWidth;
+    player4GroundPlane.edgesColor = Color4.FromHexString(playerStartInfos[4].color);
 
     var player1Wall = MeshBuilder.CreateBox('player1Wall', { size: 1 }, scene);
     player1Wall.position = new Vector3(playCubeSize.x / 2 + 0, midPointOfPlayCube, 0);
@@ -258,6 +283,34 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     areaEnteredRect.addControl(areaEnteredText);
     guiTextElements['areaEnteredText'] = areaEnteredText;
 
+    let HUDMesh = MeshBuilder.CreatePlane(`client_HUD`, { size: 1 }, scene);
+    HUDMesh.position = new Vector3(0, 2.5, 0);
+    HUDMesh.rotation = new Vector3(0, 0, 0);
+    HUDMesh.scaling = new Vector3(playCubeSize.x, calculatedCubeHeight, 1);
+    HUDMesh.isVisible = false;
+
+    var playerHUDTex = GUI.AdvancedDynamicTexture.CreateForMesh(HUDMesh);
+    // Player Score
+    var HUDRect = new GUI.Rectangle();
+    HUDRect.width = "95%";
+    HUDRect.height = "95%";
+    HUDRect.thickness = 2;
+    HUDRect.color = "red";
+    HUDRect.alpha = 1;
+    HUDRect.zIndex = 1;
+    //HUDRect.isVisible = false;
+    playerHUDTex.addControl(HUDRect);
+
+    var HUDLabel = new GUI.TextBlock();
+    HUDLabel.fontFamily = "loadedFont";
+    HUDLabel.text = "";
+    HUDLabel.color = "red";
+    HUDLabel.fontSize = 40;
+    HUDRect.addControl(HUDLabel);
+    // add to guiTextElements
+    guiRectElements[`client_HUDRect`] = HUDRect;
+    guiTextElements[`client_HUDLabel`] = HUDLabel;
+
     // Materials --------------------------------------------------------------------------------------
 
     var wireframeTexture = new Texture('./assets/figma_grid_wireframe_white.png', scene);
@@ -282,8 +335,6 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     playBoxMat.diffuseColor = Color3.FromHexString('#ffffff');
     playBoxMat.alpha = 0.1;
     playBoxMat.specularColor = new Color3(0, 0, 0);
-
-    //testBox.material = wireframeMat;
 
     var ballMaterial = new PBRMaterial('ballMaterial', scene);
     ballMaterial.emissiveColor = Color3.FromHexString(ballColor);
@@ -312,7 +363,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
 
     // creating the player 0 Material if the player has no position yet
     var player0Mat = new PBRMaterial(`player0_mat`, scene);
-    player0Mat.emissiveColor = Color3.FromHexString('#ff526f');
+    player0Mat.emissiveColor = Color3.FromHexString('#bdbdbd');
     player0Mat.alpha = 0.2;
     player0Mat.disableLighting = true;
     player0Mat.backFaceCulling = false;
@@ -472,6 +523,7 @@ class Player implements PlayerData {
     paddle?: Mesh | null;
     scoreMesh?: Mesh | null;
     paddleLight?: PointLight | null;
+    //HUDMesh?: Mesh | null;
 
     constructor(player: PlayerData, headObj?: Mesh, controllerR?: Mesh, controllerL?: Mesh, paddle?: Mesh, scoreMesh?: Mesh, paddleLight?: PointLight) {
         this.id = player.id;
@@ -492,6 +544,7 @@ class Player implements PlayerData {
         this.paddle = paddle || null;
         this.scoreMesh = scoreMesh || null;
         this.paddleLight = paddleLight || null;
+        //this.HUDMesh = HUDMesh || null;
     }
 
     setData(playerGameData: PlayerGameData) {
@@ -516,6 +569,10 @@ class Player implements PlayerData {
             this.controllerL.position = new Vector3(this.contrPosL.x, this.contrPosL.y, this.contrPosL.z);
             this.controllerL.rotation = new Vector3(this.contrRotL.x, this.contrRotL.y, this.contrRotL.z);
         }
+        // if (this.HUDMesh) {
+        //     this.HUDMesh.position = new Vector3(this.position.x, this.position.y, this.position.z - 0.5);
+        //     this.HUDMesh.rotation = new Vector3(this.rotation.x, this.rotation.y, this.rotation.z);
+        // }
         // clamp the paddle position to the play area
         if (this.paddle) {
             if (this.playerNumber == 1) {
@@ -764,7 +821,7 @@ window.addEventListener('resize', function () {
                     }
                 }
             }
-        },clientRefreshRate);
+        }, clientRefreshRate);
     }
 })();
 
@@ -1056,6 +1113,7 @@ socket.on('clientEntersAR', (newSocketPlayer) => {
         if (playerWall) {
             playerWall.isVisible = false;
         }
+
     }).catch((err) => {
         console.error('Failed to enter VR', err);
     });
@@ -1097,6 +1155,22 @@ socket.on('playerStartPlaying', (newPlayerId, startPlayingNumber) => {
 
     if (newPlayerId == clientID) {
         addPlayerGameUtils(playerList[newPlayerId], true);
+
+        let skyBoxMesh = scene.getMeshByName('skyBoxMesh') as Mesh;
+        if (skyBoxMesh) {
+            skyBoxMesh.isVisible = true;
+        }
+
+        for (let i = 1; i <= 4; i++) {
+            let playerGround = scene.getMeshByName(`player${i}Ground`) as Mesh;
+            let playerGroundPlane = scene.getMeshByName(`player${i}GroundPlane`) as Mesh;
+            if (playerGround) {
+                playerGround.isVisible = true;
+            }
+            if (playerGroundPlane) {
+                playerGroundPlane.isVisible = false;
+            }
+        }
     } else {
         addPlayerGameUtils(playerList[newPlayerId], false);
     }
@@ -1119,9 +1193,10 @@ socket.on('playerStartPlaying', (newPlayerId, startPlayingNumber) => {
         }
     }
 
-    guiRectElements['areaEnteredRect'].isVisible = false;
-    guiTextElements['areaEnteredText'].text = ``;
-    guiTextElements['areaEnteredText'].color = "white";
+    setHUDPosition(0);
+    //guiRectElements['client_HUDRect'].isVisible = false;
+    guiTextElements['client_HUDLabel'].text = ``;
+    //guiTextElements['client_HUDLabel'].color = "white";
 });
 
 // update the players position and rotation from the server
@@ -1289,6 +1364,7 @@ function addPlayer(player: Player, isPlayer: boolean) {
     playerList[player.id].headObj = player.headObj;
     playerList[player.id].controllerR = player.controllerR;
     playerList[player.id].controllerL = player.controllerL;
+    //playerList[player.id].HUDMesh = player.HUDMesh;
 }
 
 // spawn the stuff for playing for the player
@@ -1396,6 +1472,22 @@ socket.on('playerExitGame', (playerId) => {
         if (playerWall) {
             playerWall.isVisible = true;
         }
+
+        let skyBoxMesh = scene.getMeshByName('skyBoxMesh') as Mesh;
+        if (skyBoxMesh) {
+            skyBoxMesh.isVisible = false;
+        }
+
+        for (let i = 1; i <= 4; i++) {
+            let playerGround = scene.getMeshByName(`player${i}Ground`) as Mesh;
+            let playerGroundPlane = scene.getMeshByName(`player${i}GroundPlane`) as Mesh;
+            if (playerGround) {
+                playerGround.isVisible = false;
+            }
+            if (playerGroundPlane) {
+                playerGroundPlane.isVisible = true;
+            }
+        }
         // let playerScore = scene.getMeshByName(`player${exitPlayer.playerNumber}ScoreMesh`) as Mesh;
         // if (playerScore) {
         //     playerScore.isVisible = false;
@@ -1416,9 +1508,10 @@ socket.on('playerExitGame', (playerId) => {
         playerList[playerId].playerNumber = 0;
         changePlayerColor(playerId);
 
-        guiRectElements['areaExitRect'].isVisible = false;
-        guiTextElements['areaExitText'].text = ``;
-        guiTextElements['areaExitText'].color = "white";
+        setHUDPosition(0);
+        //guiRectElements['client_HUDRect'].isVisible = false;
+        guiTextElements['client_HUDLabel'].text = ``;
+        //guiTextElements['client_HUDLabel'].color = "white";
     }
 });
 
@@ -1433,6 +1526,7 @@ socket.on('playerDisconnected', (id) => {
         disconnectedPlayer.paddle?.dispose();
         disconnectedPlayer.paddleLight?.dispose();
         disconnectedPlayer.scoreMesh?.dispose();
+        //disconnectedPlayer.HUDMesh?.dispose();
 
         let playerWall = scene.getMeshByName(`player${disconnectedPlayer.playerNumber}Wall`) as Mesh;
         if (playerWall) {
@@ -1482,14 +1576,15 @@ socket.on('playerDisconnected', (id) => {
 // when the playing player Exits the game area
 socket.on('exitGameArea', (areaExitTimerTime) => {
     console.log('Player exit the Game Area. Timer: ', areaExitTimerTime);
-    guiRectElements['areaExitRect'].isVisible = true;
-    guiRectElements['areaExitRect'].color = playerStartInfos[playerList[clientID].playerNumber].color;
-    guiTextElements['areaExitText'].text = `You exit the Game Area of Position ${playerList[clientID].playerNumber}.\nExit the Game in: \n${areaExitTimerTime / 1000}s\nor reenter the Game Area.`;
-    guiTextElements['areaExitText'].color = playerStartInfos[playerList[clientID].playerNumber].color;
+    setHUDPosition(playerList[clientID].playerNumber);
+    //guiRectElements['client_HUDRect'].isVisible = true;
+    //guiRectElements['client_HUDRect'].color = playerStartInfos[playerList[clientID].playerNumber].color;
+    guiTextElements['client_HUDLabel'].text = `You exit the Game Area of Position ${playerList[clientID].playerNumber}.\nExit the Game in: \n${areaExitTimerTime / 1000}s\nor reenter the Game Area.`;
+    //guiTextElements['client_HUDLabel'].color = playerStartInfos[playerList[clientID].playerNumber].color;
     let timer = areaExitTimerTime / 1000;
     exitGameAreaInterval = setInterval(() => {
         timer -= 1;
-        guiTextElements['areaExitText'].text = `You exit the Game Area of Position ${playerList[clientID].playerNumber}.\nExit the Game in: \n${timer}s\nor reenter the Game Area.`;
+        guiTextElements['client_HUDLabel'].text = `You exit the Game Area of Position ${playerList[clientID].playerNumber}.\nExit the Game in: \n${timer}s\nor reenter the Game Area.`;
         if (timer <= 0) {
             clearInterval(exitGameAreaInterval as NodeJS.Timeout);
             timer = areaExitTimerTime / 1000;
@@ -1500,23 +1595,25 @@ socket.on('exitGameArea', (areaExitTimerTime) => {
 // when the playing player reenters the game area
 socket.on('reenteredGameArea', () => {
     console.log('Player reentered the Game Area.');
-    guiRectElements['areaExitRect'].isVisible = false;
-    guiTextElements['areaExitText'].text = ``;
-    guiTextElements['areaExitText'].color = "white";
+    setHUDPosition(0);
+    //guiRectElements['client_HUDRect'].isVisible = false;
+    guiTextElements['client_HUDLabel'].text = ``;
+    //guiTextElements['client_HUDLabel'].color = "white";
     clearInterval(exitGameAreaInterval as NodeJS.Timeout);
 });
 
 // when the player enters a game area to join the game
 socket.on('enteredGameArea', (areaEnteredTimerTime) => {
     console.log('Player reentered the Game Area. Timer: ', areaEnteredTimerTime);
-    guiRectElements['areaEnteredRect'].isVisible = true;
-    guiRectElements['areaEnteredRect'].color = playerStartInfos[playerList[clientID].inPosition].color;
-    guiTextElements['areaEnteredText'].text = `You entered the Game Area of Position ${playerList[clientID].inPosition}.\nJoin the Game in: \n${areaEnteredTimerTime / 1000}s\nor leave the Game Area.`;
-    guiTextElements['areaEnteredText'].color = playerStartInfos[playerList[clientID].inPosition].color;
+    setHUDPosition(playerList[clientID].inPosition);
+    //guiRectElements['client_HUDRect'].isVisible = true;
+    //guiRectElements['client_HUDRect'].color = playerStartInfos[playerList[clientID].inPosition].color;
+    guiTextElements['client_HUDLabel'].text = `You entered the Game Area of Position ${playerList[clientID].inPosition}.\nJoin the Game in: \n${areaEnteredTimerTime / 1000}s\nor leave the Game Area.`;
+    //guiTextElements['client_HUDLabel'].color = playerStartInfos[playerList[clientID].inPosition].color;
     let timer = areaEnteredTimerTime / 1000;
     enteredGameAreaInterval = setInterval(() => {
         timer -= 1;
-        guiTextElements['areaEnteredText'].text = `You entered the Game Area of Position ${playerList[clientID].inPosition}.\nJoin the Game in: \n${timer}s\nor leave the Game Area.`;
+        guiTextElements['client_HUDLabel'].text = `You entered the Game Area of Position ${playerList[clientID].inPosition}.\nJoin the Game in: \n${timer}s\nor leave the Game Area.`;
         if (timer <= 0) {
             clearInterval(enteredGameAreaInterval as NodeJS.Timeout);
             timer = areaEnteredTimerTime / 1000;
@@ -1527,11 +1624,27 @@ socket.on('enteredGameArea', (areaEnteredTimerTime) => {
 // when the player Exits the game area while trying to join the game
 socket.on('exitJoiningGameArea', () => {
     console.log('Player exit the Joining Game Area.');
-    guiRectElements['areaEnteredRect'].isVisible = false;
-    guiTextElements['areaEnteredText'].text = ``;
-    guiTextElements['areaEnteredText'].color = "white";
+    setHUDPosition(0);
+    //guiRectElements['client_HUDRect'].isVisible = false;
+    guiTextElements['client_HUDLabel'].text = ``;
+    //guiTextElements['client_HUDLabel'].color = "white";
     clearInterval(enteredGameAreaInterval as NodeJS.Timeout);
 });
+
+function setHUDPosition(positionNumber: number) {
+    let HUDMesh = scene.getMeshByName(`client_HUD`) as Mesh;
+    if (HUDMesh) {
+        if (positionNumber == 0) {
+            HUDMesh.position = new Vector3(0, 0, 0);
+            HUDMesh.rotation = new Vector3(0, 0, 0);
+            HUDMesh.isVisible = false;
+        } else {
+            HUDMesh.isVisible = true;
+            HUDMesh.position = scene.getMeshByName(`player${positionNumber}Wall`)?.position as Vector3;
+            HUDMesh.rotation = new Vector3(playerStartInfos[positionNumber].rotation.x, playerStartInfos[positionNumber].rotation.y, playerStartInfos[positionNumber].rotation.z);
+        }
+    }
+}
 
 ////////////////////////// RENDER LOOP //////////////////////////////
 // Register a render loop to repeatedly render the scene

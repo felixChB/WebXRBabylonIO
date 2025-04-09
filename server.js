@@ -93,7 +93,7 @@ class Player {
             console.log(`${this.id}: InPos change from ${oldInPosition} to ${newInPosition}`);
             this.inPosition = newInPosition;
             io.emit('inPosChange', this.id, this.inPosition);
-            
+
             if (this.isPlaying) {
                 // if the playing player exits the game area, set a timer to kick him out of the game
                 if (newInPosition != this.playerNumber) {
@@ -434,6 +434,10 @@ io.on('connection', (socket) => {
 
         io.emit('playerDisconnected', socket.id);
         io.emit('scoreUpdate', socket.id, 0);
+
+        if (playerList.length == 0) {
+            resetGame();
+        }
     });
 
     // End the Server when a player presses the x button (should be done by the operator)
@@ -755,6 +759,8 @@ setInterval(function () {
         if (ball.position.x != 0 && ball.position.y != (playCubeSize.y / 2) - playCubeElevation && ball.position.z != 0) {
             console.log('No Players in the Game, resetting Ball.');
             resetGame();
+            io.emit('serverUpdate', prepareGameData(), ball.position, performance.now(), serverUpdateCounter);
+            serverUpdateCounter++;
         }
     }
 
