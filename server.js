@@ -165,6 +165,7 @@ let networkTestTableArray = [];
 // Store all connected players
 let playerList = {};
 
+const firstEnteredTimerTime = 5000; // in milliseconds
 const areaExitTimerTime = 3000; // in milliseconds
 const areaEnteredTimerTime = 3000; // in milliseconds
 const enteredDelayTime = 1000; // in milliseconds
@@ -183,10 +184,10 @@ enteredDelayTimer = exitDelayTimer = null;
 
 // Game Variables
 const maxPlayers = 4;
-const playCubeSize = { x: 1, y: 2, z: 1 }; // the size of the player cube in meters // the y value is the top of the cube
-const playCubeElevation = 0.7; // the elevation of the player cube in meters
-const playerAreaDepth = 0.5; // the depth of the player area in the z direction in meters
-const playerAreaDistance = 0.2; // the distance from the player area to the wall in meters
+const playCubeSize = { x: 1.5, y: 1.9, z: 1.5 }; // the size of the player cube in meters // the y value is the top of the cube
+const playCubeElevation = 0.5; // the elevation of the player cube in meters
+const playerAreaDepth = 1; // the depth of the player area in the z direction in meters
+const playerAreaDistance = 0.5; // the distance from the player area to the wall in meters
 const playerPaddleSize = { h: 0.2, w: 0.4 }; // the size of the player plane in meters
 const ballStartSpeed = 0.02;
 const ballStartColor = '#1f53ff';
@@ -414,6 +415,9 @@ io.on('connection', (socket) => {
 
             if (playerList[socket.id].isPlaying) {
                 playerStartInfos[playerList[socket.id].playerNumber].used = false;
+                killTimers(playerList[socket.id].playerNumber);
+            } else {
+                killTimers(playerList[socket.id].inPosition);
             }
 
             delete playerList[socket.id];
@@ -440,6 +444,9 @@ io.on('connection', (socket) => {
 
             if (playerList[socket.id].isPlaying) {
                 playerStartInfos[playerList[socket.id].playerNumber].used = false;
+                killTimers(playerList[socket.id].playerNumber);
+            } else {
+                killTimers(playerList[socket.id].inPosition);
             }
 
             delete playerList[socket.id];
@@ -803,6 +810,25 @@ function prepareGameData() {
     return playerGameDataList;
 }
 
+function killTimers(playerNumer) {
+    if (areaEnteredTimerList[playerNumer] != null) {
+        clearTimeout(areaEnteredTimerList[playerNumer]);
+        areaEnteredTimerList[playerNumer] = null;
+    }
+    if (areaExitTimerList[playerNumer] != null) {
+        clearTimeout(areaExitTimerList[playerNumer]);
+        areaExitTimerList[playerNumer] = null;
+    }
+    if (exitDelayTimer != null) {
+        clearTimeout(exitDelayTimer);
+        exitDelayTimer = null;
+    }
+    if (enteredDelayTimer != null) {
+        clearTimeout(enteredDelayTimer);
+        enteredDelayTimer = null;
+    }
+}
+
 function scoreAfterMiss(oldScore) {
     let newScore = oldScore - 10;
     if (newScore < 0) {
@@ -825,9 +851,9 @@ function clientEntersAR(newPlayer, socket) {
         // let the player join the game
         console.log(`Player ${newPlayer.id} tries to join the Game through the area ${newPlayer.inPosition}.`);
         playerStartPlaying(newPlayer.id, newPlayer.inPosition);
-    }, areaEnteredTimerTime);
+    }, firstEnteredTimerTime);
 
-    socket.emit('clientEntersAR', playerList[newPlayer.id], areaEnteredTimerTime);
+    socket.emit('clientEntersAR', playerList[newPlayer.id], firstEnteredTimerTime);
 
     socket.to('waitingRoom').to('gameRoom').emit('newPlayer', playerList[newPlayer.id]);
 

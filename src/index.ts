@@ -1,7 +1,7 @@
 import { io } from 'socket.io-client';
-import { /*Camera,*/ Engine, FreeCamera, HighlightLayer, /*Material,*/ /*PBRBaseMaterial,*/ PBRMaterial, Scene } from '@babylonjs/core';
+import { /*Camera,*/ Engine, FreeCamera, /*Material,*/ /*PBRBaseMaterial,*/ PBRMaterial, Scene } from '@babylonjs/core';
 import { /*ArcRotateCamera,*/ MeshBuilder, /*ShadowGenerator,*/ GlowLayer, /*ParticleSystem,*/ Animation } from '@babylonjs/core';
-import { HemisphericLight, DirectionalLight, PointLight /*SSRRenderingPipeline, Constants*/ } from '@babylonjs/core';
+import { DirectionalLight, PointLight /*SSRRenderingPipeline, Constants*/ } from '@babylonjs/core';
 import { Mesh, StandardMaterial, Texture, Color3, Color4, Vector3, Quaternion, CubeTexture /*LinesMesh*/ } from '@babylonjs/core';
 import { WebXRDefaultExperience, WebXRInputSource } from '@babylonjs/core/XR';
 import * as GUI from '@babylonjs/gui';
@@ -143,7 +143,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     playBox.enableEdgesRendering();
     playBox.edgesWidth = edgeWidth;
     playBox.edgesColor = new Color4(1, 1, 1, 1);
-    playBox.isVisible = false;
+    // playBox.isVisible = false;
 
     // Grounds for the Player Start Positions
     var player1Ground = MeshBuilder.CreateBox('player1Ground', { size: 1 }, scene);
@@ -232,12 +232,10 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     var topWall = MeshBuilder.CreateBox('player5Wall', { size: 1 }, scene);
     topWall.position = new Vector3(0, playCubeSize.y, 0);
     topWall.scaling = new Vector3(playCubeSize.x, 0.01, playCubeSize.z);
-    topWall.isVisible = false;
 
     var bottomWall = MeshBuilder.CreateBox('player6Wall', { size: 1 }, scene);
     bottomWall.position = new Vector3(0, playCubeElevation, 0);
     bottomWall.scaling = new Vector3(playCubeSize.x, 0.01, playCubeSize.z);
-    bottomWall.isVisible = false;
 
     let HUDMesh = MeshBuilder.CreatePlane(`client_HUD`, { size: 1 }, scene);
     HUDMesh.position = new Vector3(0, 2.5, 0);
@@ -260,10 +258,11 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     playerHUDTex.addControl(HUDRect);
 
     var HUDLabel = new GUI.TextBlock();
+    HUDLabel.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
     HUDLabel.fontFamily = "loadedFont";
     HUDLabel.text = "";
     HUDLabel.color = "red";
-    HUDLabel.fontSize = 40;
+    HUDLabel.fontSize = 50;
     HUDRect.addControl(HUDLabel);
     // add to guiTextElements
     guiRectElements[`client_HUDRect`] = HUDRect;
@@ -305,7 +304,9 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     playerStartMat.roughness = 0.0;
 
     var playerStartMatPlane = new PBRMaterial('playerStartMatPlane', scene);
-    playerStartMatPlane.alpha = 0;
+    playerStartMat.albedoColor = Color3.FromHexString('#141414');
+    playerStartMatPlane.alpha = 0.4;
+    playerStartMatPlane.backFaceCulling = true;
 
     var playerWallMat = new PBRMaterial('playerWallMat', scene);
     playerWallMat.albedoColor = Color3.FromHexString('#000000');
@@ -551,6 +552,16 @@ class Player implements PlayerData {
             this.headObj.position = new Vector3(this.position.x, this.position.y, this.position.z);
             this.headObj.rotation = new Vector3(this.rotation.x, this.rotation.y, this.rotation.z);
         }
+        // if (this.id == clientID) {
+        //     if (this.controllerR) {
+        //         this.controllerR.position = new Vector3(rightController?.grip?.position.x, rightController?.grip?.position.y, rightController?.grip?.position.z);
+        //         this.controllerR.rotation = new Vector3(rightController?.grip?.rotationQuaternion?.toEulerAngles().x, rightController?.grip?.rotationQuaternion?.toEulerAngles().y, rightController?.grip?.rotationQuaternion?.toEulerAngles().z);
+        //     }
+        //     if (this.controllerL) {
+        //         this.controllerL.position = new Vector3(leftController?.grip?.position.x, leftController?.grip?.position.y, leftController?.grip?.position.z);
+        //         this.controllerL.rotation = new Vector3(leftController?.grip?.rotationQuaternion?.toEulerAngles().x, leftController?.grip?.rotationQuaternion?.toEulerAngles().y, leftController?.grip?.rotationQuaternion?.toEulerAngles().z);
+        //     }
+        // } else {
         if (this.controllerR) {
             this.controllerR.position = new Vector3(this.contrPosR.x, this.contrPosR.y, this.contrPosR.z);
             this.controllerR.rotation = new Vector3(this.contrRotR.x, this.contrRotR.y, this.contrRotR.z);
@@ -559,6 +570,7 @@ class Player implements PlayerData {
             this.controllerL.position = new Vector3(this.contrPosL.x, this.contrPosL.y, this.contrPosL.z);
             this.controllerL.rotation = new Vector3(this.contrRotL.x, this.contrRotL.y, this.contrRotL.z);
         }
+        //}
         // if (this.HUDMesh) {
         //     this.HUDMesh.position = new Vector3(this.position.x, this.position.y, this.position.z - 0.5);
         //     this.HUDMesh.rotation = new Vector3(this.rotation.x, this.rotation.y, this.rotation.z);
@@ -582,7 +594,7 @@ class Player implements PlayerData {
                     paddleZ = this.contrPosR.z;
                 }
                 this.paddle.position = new Vector3(sceneStartInfos.playCubeSize.x / 2, paddleY, paddleZ);
-                if (this.scoreMesh && playerUsingXR) {
+                if (this.scoreMesh /*&& playerUsingXR*/) {
                     this.scoreMesh.position = this.paddle.position;
                 }
                 if (this.paddleLight) {
@@ -605,7 +617,7 @@ class Player implements PlayerData {
                     paddleZ = this.contrPosR.z;
                 }
                 this.paddle.position = new Vector3(-sceneStartInfos.playCubeSize.x / 2, paddleY, paddleZ);
-                if (this.scoreMesh && playerUsingXR) {
+                if (this.scoreMesh /*&& playerUsingXR*/) {
                     this.scoreMesh.position = this.paddle.position;
                 }
                 if (this.paddleLight) {
@@ -628,7 +640,7 @@ class Player implements PlayerData {
                     paddleX = this.contrPosR.x;
                 }
                 this.paddle.position = new Vector3(paddleX, paddleY, sceneStartInfos.playCubeSize.z / 2);
-                if (this.scoreMesh && playerUsingXR) {
+                if (this.scoreMesh /*&& playerUsingXR*/) {
                     this.scoreMesh.position = this.paddle.position;
                 }
                 if (this.paddleLight) {
@@ -651,7 +663,7 @@ class Player implements PlayerData {
                     paddleX = this.contrPosR.x;
                 }
                 this.paddle.position = new Vector3(paddleX, paddleY, -sceneStartInfos.playCubeSize.z / 2);
-                if (this.scoreMesh && playerUsingXR) {
+                if (this.scoreMesh /*&& playerUsingXR*/) {
                     this.scoreMesh.position = this.paddle.position;
                 }
                 if (this.paddleLight) {
@@ -782,6 +794,7 @@ window.addEventListener('resize', function () {
             console.log('Player is leaving VR');
             socket.emit('playerEndVR');
             startScreen?.style.setProperty('display', 'flex');
+            resetSceneToHTML();
 
             // Reset Camera Position for arc camera
             // camera.alpha = -(Math.PI / 4) * 3;
@@ -961,16 +974,9 @@ socket.on('clientEntersAR', (newSocketPlayer, areaEnteredTimerTime) => {
 
     startScreen?.style.setProperty('display', 'none');
 
-    // if (divID) {
-    //     divID.innerHTML = `Player ID: ${newSocketPlayer.id}`;
-    // }
-
     // Start VR Session for the client
     xr.baseExperience.enterXRAsync('immersive-ar', 'local-floor').then(() => {
         console.log('Enter AR');
-
-        // console log the xr device
-
 
         // look for controllers and add event listeners
         xr.input.onControllerAddedObservable.add((controller) => {
@@ -978,10 +984,6 @@ socket.on('clientEntersAR', (newSocketPlayer, areaEnteredTimerTime) => {
 
                 motionController.disableAnimation = true;
                 motionController._doNotLoadControllerMesh = true;
-
-                // let color: Color3;
-                // let sphere: Mesh;
-                // let material: StandardMaterial;
 
                 if (motionController.handness === 'right') {
 
@@ -1106,9 +1108,11 @@ socket.on('clientEntersAR', (newSocketPlayer, areaEnteredTimerTime) => {
             xrCamera.rotationQuaternion = Quaternion.FromEulerAngles(playerList[clientID].rotation.x, playerList[clientID].rotation.y, playerList[clientID].rotation.z);
         }
 
-        let playerWall = scene.getMeshByName(`player${playerList[clientID].playerNumber}Wall`) as Mesh;
-        if (playerWall) {
-            playerWall.isVisible = false;
+        for (let i = 1; i <= 6; i++) {
+            let wall = scene.getMeshByName(`player${i}Wall`) as Mesh;
+            if (wall) {
+                wall.isVisible = false;
+            }
         }
 
     }).catch((err) => {
@@ -1150,10 +1154,9 @@ socket.on('playerStartPlaying', (newPlayerId, startPlayingNumber) => {
 
     // set the material of the player to a player material
     changePlayerColor(newPlayerId);
+    showPlayerGameUtils(playerList[newPlayerId].id);
 
     if (newPlayerId == clientID) {
-        showPlayerGameUtils(playerList[newPlayerId].id);
-        //addPlayerGameUtils(playerList[newPlayerId], true);
 
         let skyBoxMesh = scene.getMeshByName('skyBoxMesh') as Mesh;
         if (skyBoxMesh) {
@@ -1170,19 +1173,21 @@ socket.on('playerStartPlaying', (newPlayerId, startPlayingNumber) => {
                 playerGroundPlane.isVisible = false;
             }
         }
-    } else {
-        showPlayerGameUtils(playerList[newPlayerId].id);
-        //addPlayerGameUtils(playerList[newPlayerId], false);
+        for (let i = 1; i <= 6; i++) {
+            let wall = scene.getMeshByName(`player${i}Wall`) as Mesh;
+            if (wall) {
+                wall.isVisible = true;
+            }
+        }
+        Object.keys(playerList).forEach((id) => {
+            if (playerList[id].playerNumber != 0) {
+                let wall = scene.getMeshByName(`player${playerList[id].playerNumber}Wall`) as Mesh;
+                if (wall) {
+                    wall.isVisible = false;
+                }
+            }
+        });
     }
-
-    let playerWall = scene.getMeshByName(`player${playerList[newPlayerId].playerNumber}Wall`) as Mesh;
-    if (playerWall) {
-        playerWall.isVisible = false;
-    }
-    // let playerScore = scene.getMeshByName(`player${playerList[newPlayer.id].playerNumber}ScoreMesh`) as Mesh;
-    // if (playerScore) {
-    //     playerScore.isVisible = true;
-    // }
 
     updatePlayerScore(newPlayerId, playerList[newPlayerId].score);
 
@@ -1415,21 +1420,21 @@ function addPlayerGameUtils(player: Player, isPlayer: boolean) {
 
     // add the score Mesh to the player
     player.scoreMesh = MeshBuilder.CreatePlane(`player_${player.id}_scoreMesh`, { size: 1 }, scene);
-    if (playerUsingXR) {
-        player.scoreMesh.position = new Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
-    } else {
-        if (player.playerNumber == 1) {
-            player.scoreMesh.position = new Vector3(sceneStartInfos.playCubeSize.x / 2, sceneStartInfos.midPointOfPlayCube, 0);
-        } else if (player.playerNumber == 2) {
-            player.scoreMesh.position = new Vector3(-(sceneStartInfos.playCubeSize.x / 2), sceneStartInfos.midPointOfPlayCube, 0);
-        } else if (player.playerNumber == 3) {
-            player.scoreMesh.position = new Vector3(0, sceneStartInfos.midPointOfPlayCube, (sceneStartInfos.playCubeSize.z / 2));
-        } else if (player.playerNumber == 4) {
-            player.scoreMesh.position = new Vector3(0, sceneStartInfos.midPointOfPlayCube, -(sceneStartInfos.playCubeSize.z / 2));
-        }
+    //if (playerUsingXR) {
+    //player.scoreMesh.position = new Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
+    //} else {
+    if (player.playerNumber == 1) {
+        player.scoreMesh.position = new Vector3(sceneStartInfos.playCubeSize.x / 2, sceneStartInfos.midPointOfPlayCube, 0);
+    } else if (player.playerNumber == 2) {
+        player.scoreMesh.position = new Vector3(-(sceneStartInfos.playCubeSize.x / 2), sceneStartInfos.midPointOfPlayCube, 0);
+    } else if (player.playerNumber == 3) {
+        player.scoreMesh.position = new Vector3(0, sceneStartInfos.midPointOfPlayCube, (sceneStartInfos.playCubeSize.z / 2));
+    } else if (player.playerNumber == 4) {
+        player.scoreMesh.position = new Vector3(0, sceneStartInfos.midPointOfPlayCube, -(sceneStartInfos.playCubeSize.z / 2));
     }
+    //}
     if (!isPlayer) {
-        player.scoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+        // player.scoreMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
     } else {
         player.scoreMesh.rotation = new Vector3(0, 0, 0);
         //player.scoreMesh.rotation = new Vector3(playerStartInfos[player.playerNumber].rotation.x, playerStartInfos[player.playerNumber].rotation.y, playerStartInfos[player.playerNumber].rotation.z);
@@ -1532,6 +1537,15 @@ socket.on('playerExitGame', (playerId) => {
             skyBoxMesh.isVisible = false;
         }
 
+        if (exitPlayer.id == clientID) {
+            for (let i = 1; i <= 6; i++) {
+                let wall = scene.getMeshByName(`player${i}Wall`) as Mesh;
+                if (wall) {
+                    wall.isVisible = false;
+                }
+            }
+        }
+
         for (let i = 1; i <= 4; i++) {
             let playerGround = scene.getMeshByName(`player${i}Ground`) as Mesh;
             let playerGroundPlane = scene.getMeshByName(`player${i}GroundPlane`) as Mesh;
@@ -1624,6 +1638,11 @@ socket.on('playerDisconnected', (id) => {
             scene.activeCamera = defaultCamera;
             defaultCamera.position = new Vector3(0, 5, 0);
             defaultCamera.rotation = new Vector3(Math.PI / 2, Math.PI, Math.PI / 4);
+
+            let skyBoxMesh = scene.getMeshByName('skyBoxMesh') as Mesh;
+            if (skyBoxMesh) {
+                skyBoxMesh.isVisible = false;
+            }
         }
     }
 });
@@ -1678,12 +1697,13 @@ function updateHUDPosition(positionNumber: number) {
 function updateHUDInfo(eventType: string, eventTimerTime: number = 0) {
     if (eventType == 'exitGameArea') {
         guiRectElements['client_HUDRect'].color = "red";
-        guiTextElements['client_HUDLabel'].text = `You exited the Game Area of Position ${playerList[clientID].playerNumber}.\nExit the Game in: \n${eventTimerTime / 1000}s\nor reenter the Game Area.`;
+        guiTextElements['client_HUDLabel'].text = `Exit Game in: \n${eventTimerTime / 1000}s\n`;
+        // guiTextElements['client_HUDLabel'].text = `You Left the Game Area ${playerList[clientID].playerNumber}.\nExit the Game in: \n${eventTimerTime / 1000}s\nor reenter the Game Area.`;
         guiTextElements['client_HUDLabel'].color = "red";
         let timer = eventTimerTime / 1000;
         exitGameAreaInterval = setInterval(() => {
             timer -= 1;
-            guiTextElements['client_HUDLabel'].text = `You exited the Game Area of Position ${playerList[clientID].playerNumber}.\nExit the Game in: \n${timer}s\nor reenter the Game Area.`;
+            guiTextElements['client_HUDLabel'].text = `Exit Game in: \n${timer}s\n`;
             if (timer <= 0) {
                 clearInterval(exitGameAreaInterval as NodeJS.Timeout);
                 timer = eventTimerTime / 1000;
@@ -1695,12 +1715,13 @@ function updateHUDInfo(eventType: string, eventTimerTime: number = 0) {
         clearInterval(exitGameAreaInterval as NodeJS.Timeout);
     } else if (eventType == 'enteredGameArea') {
         guiRectElements['client_HUDRect'].color = playerStartInfos[playerList[clientID].inPosition].color;
-        guiTextElements['client_HUDLabel'].text = `You entered the Game Area of Position ${playerList[clientID].inPosition}.\nJoin the Game in: \n${eventTimerTime / 1000}s\nor leave the Game Area.`;
+        guiTextElements['client_HUDLabel'].text = `Join Game in: \n${eventTimerTime / 1000}s\n`;
+        // guiTextElements['client_HUDLabel'].text = `You entered the Game Area ${playerList[clientID].inPosition}.\nJoin the Game in: \n${eventTimerTime / 1000}s\nor leave the Game Area.`;
         guiTextElements['client_HUDLabel'].color = playerStartInfos[playerList[clientID].inPosition].color;
         let timer = eventTimerTime / 1000;
         enteredGameAreaInterval = setInterval(() => {
             timer -= 1;
-            guiTextElements['client_HUDLabel'].text = `You entered the Game Area of Position ${playerList[clientID].inPosition}.\nJoin the Game in: \n${timer}s\nor leave the Game Area.`;
+            guiTextElements['client_HUDLabel'].text = `Join Game in: \n${timer}s\n`;
             if (timer <= 0) {
                 clearInterval(enteredGameAreaInterval as NodeJS.Timeout);
                 timer = eventTimerTime / 1000;
@@ -1711,6 +1732,31 @@ function updateHUDInfo(eventType: string, eventTimerTime: number = 0) {
         guiTextElements['client_HUDLabel'].color = "red";
         clearInterval(enteredGameAreaInterval as NodeJS.Timeout);
     }
+}
+
+function resetSceneToHTML() {
+    let skyBoxMesh = scene.getMeshByName('skyBoxMesh') as Mesh;
+    if (skyBoxMesh) {
+        skyBoxMesh.isVisible = false;
+    }
+    for (let i = 1; i <= 4; i++) {
+        let playerGround = scene.getMeshByName(`player${i}Ground`) as Mesh;
+        let playerGroundPlane = scene.getMeshByName(`player${i}GroundPlane`) as Mesh;
+        if (playerGround) {
+            playerGround.isVisible = false;
+        }
+        if (playerGroundPlane) {
+            playerGroundPlane.isVisible = true;
+        }
+    }
+    for (let i = 1; i <= 6; i++) {
+        let wall = scene.getMeshByName(`player${i}Wall`) as Mesh;
+        if (wall) {
+            wall.isVisible = true;
+        }
+    }
+    updateHUDInfo('exitJoiningGameArea');
+    updateHUDPosition(0);
 }
 
 ////////////////////////// RENDER LOOP //////////////////////////////
