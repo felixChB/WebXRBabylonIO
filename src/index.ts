@@ -239,50 +239,6 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
 
     // GUI --------------------------------------------------------------------------------------
 
-    let areaExitGUI = GUI.AdvancedDynamicTexture.CreateFullscreenUI("areaExitGUI");
-    let areaExitRect = new GUI.Rectangle();
-    areaExitRect.width = "60%";
-    areaExitRect.height = "60%";
-    areaExitRect.thickness = 1;
-    areaExitRect.color = "white";
-    areaExitRect.alpha = 1;
-    areaExitRect.zIndex = 1;
-    areaExitGUI.addControl(areaExitRect);
-    guiRectElements['areaExitRect'] = areaExitRect;
-    areaExitRect.isVisible = false;
-
-    let areaExitText = new GUI.TextBlock();
-    //areaExitText.textVerticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
-    areaExitText.top = "5%";
-    areaExitText.text = "";
-    areaExitText.color = "white";
-    areaExitText.fontFamily = "loadedFont";
-    areaExitText.fontSize = 20;
-    areaExitRect.addControl(areaExitText);
-    guiTextElements['areaExitText'] = areaExitText;
-
-    let areaEnteredGUI = GUI.AdvancedDynamicTexture.CreateFullscreenUI("areaEnteredGUI");
-    let areaEnteredRect = new GUI.Rectangle();
-    areaEnteredRect.width = "60%";
-    areaEnteredRect.height = "60%";
-    areaEnteredRect.thickness = 1;
-    areaEnteredRect.color = "white";
-    areaEnteredRect.alpha = 1;
-    areaEnteredRect.zIndex = 1;
-    areaEnteredGUI.addControl(areaEnteredRect);
-    guiRectElements['areaEnteredRect'] = areaEnteredRect;
-    areaEnteredRect.isVisible = false;
-
-    let areaEnteredText = new GUI.TextBlock();
-    //areaEnteredText.textVerticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
-    areaEnteredText.top = "5%";
-    areaEnteredText.text = "";
-    areaEnteredText.color = "white";
-    areaEnteredText.fontFamily = "loadedFont";
-    areaEnteredText.fontSize = 20;
-    areaEnteredRect.addControl(areaEnteredText);
-    guiTextElements['areaEnteredText'] = areaEnteredText;
-
     let HUDMesh = MeshBuilder.CreatePlane(`client_HUD`, { size: 1 }, scene);
     HUDMesh.position = new Vector3(0, 2.5, 0);
     HUDMesh.rotation = new Vector3(0, 0, 0);
@@ -294,7 +250,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     var HUDRect = new GUI.Rectangle();
     HUDRect.width = "95%";
     HUDRect.height = "95%";
-    HUDRect.thickness = 2;
+    HUDRect.thickness = 5;
     HUDRect.color = "red";
     HUDRect.alpha = 1;
     HUDRect.zIndex = 1;
@@ -1194,9 +1150,8 @@ socket.on('playerStartPlaying', (newPlayerId, startPlayingNumber) => {
     }
 
     setHUDPosition(0);
-    //guiRectElements['client_HUDRect'].isVisible = false;
     guiTextElements['client_HUDLabel'].text = ``;
-    //guiTextElements['client_HUDLabel'].color = "white";
+    guiTextElements['client_HUDLabel'].color = "red";
 });
 
 // update the players position and rotation from the server
@@ -1509,9 +1464,8 @@ socket.on('playerExitGame', (playerId) => {
         changePlayerColor(playerId);
 
         setHUDPosition(0);
-        //guiRectElements['client_HUDRect'].isVisible = false;
         guiTextElements['client_HUDLabel'].text = ``;
-        //guiTextElements['client_HUDLabel'].color = "white";
+        guiTextElements['client_HUDLabel'].color = "red";
     }
 });
 
@@ -1577,14 +1531,13 @@ socket.on('playerDisconnected', (id) => {
 socket.on('exitGameArea', (areaExitTimerTime) => {
     console.log('Player exit the Game Area. Timer: ', areaExitTimerTime);
     setHUDPosition(playerList[clientID].playerNumber);
-    //guiRectElements['client_HUDRect'].isVisible = true;
-    //guiRectElements['client_HUDRect'].color = playerStartInfos[playerList[clientID].playerNumber].color;
-    guiTextElements['client_HUDLabel'].text = `You exit the Game Area of Position ${playerList[clientID].playerNumber}.\nExit the Game in: \n${areaExitTimerTime / 1000}s\nor reenter the Game Area.`;
-    //guiTextElements['client_HUDLabel'].color = playerStartInfos[playerList[clientID].playerNumber].color;
+    guiRectElements['client_HUDRect'].color = "red";
+    guiTextElements['client_HUDLabel'].text = `You exited the Game Area of Position ${playerList[clientID].playerNumber}.\nExit the Game in: \n${areaExitTimerTime / 1000}s\nor reenter the Game Area.`;
+    guiTextElements['client_HUDLabel'].color = "red";
     let timer = areaExitTimerTime / 1000;
     exitGameAreaInterval = setInterval(() => {
         timer -= 1;
-        guiTextElements['client_HUDLabel'].text = `You exit the Game Area of Position ${playerList[clientID].playerNumber}.\nExit the Game in: \n${timer}s\nor reenter the Game Area.`;
+        guiTextElements['client_HUDLabel'].text = `You exited the Game Area of Position ${playerList[clientID].playerNumber}.\nExit the Game in: \n${timer}s\nor reenter the Game Area.`;
         if (timer <= 0) {
             clearInterval(exitGameAreaInterval as NodeJS.Timeout);
             timer = areaExitTimerTime / 1000;
@@ -1596,9 +1549,8 @@ socket.on('exitGameArea', (areaExitTimerTime) => {
 socket.on('reenteredGameArea', () => {
     console.log('Player reentered the Game Area.');
     setHUDPosition(0);
-    //guiRectElements['client_HUDRect'].isVisible = false;
     guiTextElements['client_HUDLabel'].text = ``;
-    //guiTextElements['client_HUDLabel'].color = "white";
+    guiTextElements['client_HUDLabel'].color = "red";
     clearInterval(exitGameAreaInterval as NodeJS.Timeout);
 });
 
@@ -1606,10 +1558,9 @@ socket.on('reenteredGameArea', () => {
 socket.on('enteredGameArea', (areaEnteredTimerTime) => {
     console.log('Player reentered the Game Area. Timer: ', areaEnteredTimerTime);
     setHUDPosition(playerList[clientID].inPosition);
-    //guiRectElements['client_HUDRect'].isVisible = true;
-    //guiRectElements['client_HUDRect'].color = playerStartInfos[playerList[clientID].inPosition].color;
+    guiRectElements['client_HUDRect'].color = playerStartInfos[playerList[clientID].inPosition].color;
     guiTextElements['client_HUDLabel'].text = `You entered the Game Area of Position ${playerList[clientID].inPosition}.\nJoin the Game in: \n${areaEnteredTimerTime / 1000}s\nor leave the Game Area.`;
-    //guiTextElements['client_HUDLabel'].color = playerStartInfos[playerList[clientID].inPosition].color;
+    guiTextElements['client_HUDLabel'].color = playerStartInfos[playerList[clientID].inPosition].color;
     let timer = areaEnteredTimerTime / 1000;
     enteredGameAreaInterval = setInterval(() => {
         timer -= 1;
@@ -1625,9 +1576,8 @@ socket.on('enteredGameArea', (areaEnteredTimerTime) => {
 socket.on('exitJoiningGameArea', () => {
     console.log('Player exit the Joining Game Area.');
     setHUDPosition(0);
-    //guiRectElements['client_HUDRect'].isVisible = false;
     guiTextElements['client_HUDLabel'].text = ``;
-    //guiTextElements['client_HUDLabel'].color = "white";
+    guiTextElements['client_HUDLabel'].color = "red";
     clearInterval(enteredGameAreaInterval as NodeJS.Timeout);
 });
 
