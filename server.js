@@ -15,7 +15,8 @@ import { time } from "node:console";
 const port = process.env.PORT || 3000;
 
 ////////////// CHANGE THIS TO YOUR LOCAL IP ADDRESS ///////////////////
-const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
+//const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
+const ipAdress = '192.168.178.94'; // Wlan Phil
 //const ipAdress = '192.168.178.35'; // Desktop zuhause // WLAN
 //const ipAdress = '192.168.0.30'; // for local network // Router
 //const ipAdress = '192.168.1.188'; // Router
@@ -237,6 +238,14 @@ let sceneStartinfos = {
 }
 
 let playerStartInfos = {
+
+    0: {
+        playerNumber: 0,
+        position: { x: 2, y: 0, z: 2 }, // adjust to the real life layout
+        rotation: { x: 0, y: -Math.PI / 2, z: 0 }, // adjust to the real life layout
+        color: '#bdbdbd', // ghostColor
+        used: false // will always stay false
+    },
     1: {
         playerNumber: 1,
         position: { x: (playCubeSize.x / 2 + playerAreaDepth / 2 + playerAreaDistance), y: 0, z: 0 },
@@ -847,11 +856,13 @@ function clientEntersAR(newPlayer, socket) {
     // Add new player to the playerArray
     playerList[newPlayer.id] = newPlayer;
 
-    areaEnteredTimerList[newPlayer.inPosition] = setTimeout(() => {
-        // let the player join the game
-        console.log(`Player ${newPlayer.id} tries to join the Game through the area ${newPlayer.inPosition}.`);
-        playerStartPlaying(newPlayer.id, newPlayer.inPosition);
-    }, firstEnteredTimerTime);
+    if (playerList[newPlayer.id].inPosition != 0) {
+        areaEnteredTimerList[newPlayer.inPosition] = setTimeout(() => {
+            // let the player join the game
+            console.log(`Player ${newPlayer.id} tries to join the Game through the area ${newPlayer.inPosition}.`);
+            playerStartPlaying(newPlayer.id, newPlayer.inPosition);
+        }, firstEnteredTimerTime);
+    }
 
     socket.emit('clientEntersAR', playerList[newPlayer.id], firstEnteredTimerTime);
 

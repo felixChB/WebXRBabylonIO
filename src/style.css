@@ -309,3 +309,13 @@ h2 {
     left: calc(50% - 175px);
     bottom: 50px;
 }
+
+#startPos-0 {
+    display: block;
+    position: absolute;
+    text-align: center;
+    width: 350px;
+    left: calc(50% - 175px);
+    bottom: 50px;
+    background-color: '#bdbdbd';
+}

@@ -57,6 +57,7 @@ for (let i = 1; i <= 4; i++) {
     let startbutton = document.getElementById(`startPos-${i}`);
     startButtons[i] = startbutton as HTMLButtonElement;
 }
+const start0Button = document.getElementById('startPos-0') as HTMLButtonElement;
 const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
 
 // Test Variables
@@ -144,6 +145,14 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     playBox.edgesWidth = edgeWidth;
     playBox.edgesColor = new Color4(1, 1, 1, 1);
     // playBox.isVisible = false;
+
+    var recenterGround = MeshBuilder.CreateGround('recenterGround', { width: 1, height: 1 }, scene);
+    recenterGround.position = new Vector3(playerStartInfos[0].position.x, playerStartInfos[0].position.y, playerStartInfos[0].position.z);
+    recenterGround.rotation = new Vector3(playerStartInfos[0].rotation.x, playerStartInfos[0].rotation.y, playerStartInfos[0].rotation.z);
+    recenterGround.scaling = new Vector3(1, 1, 1);
+    recenterGround.enableEdgesRendering();
+    recenterGround.edgesWidth = edgeWidth;
+    recenterGround.edgesColor = Color4.FromHexString(playerStartInfos[0].color);
 
     // Grounds for the Player Start Positions
     var player1Ground = MeshBuilder.CreateBox('player1Ground', { size: 1 }, scene);
@@ -398,6 +407,8 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
             // playerWall.material = wireframeMat;
         }
     }
+
+    recenterGround.material = playerStartMat;
 
     topWall.material = playerWallMat;
     bottomWall.material = playerWallMat;
@@ -772,6 +783,10 @@ window.addEventListener('resize', function () {
         });
     }
 
+    start0Button.addEventListener('click', () => {
+        socket.emit('requestEnterAR', 0);
+    });
+
     xr.teleportation.detach();
     xr.pointerSelection.detach();
 
@@ -1097,10 +1112,12 @@ socket.on('clientEntersAR', (newSocketPlayer, areaEnteredTimerTime) => {
         // Spawn yourself Entity
         addPlayer(playerList[clientID], true);
         addPlayerGameUtils(playerList[clientID], true);
-        (playerList[clientID].paddle as Mesh).isVisible = true;
-        (playerList[clientID].paddleLight as PointLight).intensity = 1;
-        updateHUDPosition(playerList[clientID].inPosition);
-        updateHUDInfo('enteredGameArea', areaEnteredTimerTime);
+        if (playerList[clientID].inPosition != 0) {
+            (playerList[clientID].paddle as Mesh).isVisible = true;
+            (playerList[clientID].paddleLight as PointLight).intensity = 1;
+            updateHUDPosition(playerList[clientID].inPosition);
+            updateHUDInfo('enteredGameArea', areaEnteredTimerTime);
+        }
 
         // set the xrCamera position and rotation to the player position and rotation from the server
         if (xrCamera) {
@@ -1406,6 +1423,8 @@ function addPlayerGameUtils(player: Player, isPlayer: boolean) {
     } else if (player.inPosition == 4) {
         //player.paddle.scaling = new Vector3(sceneStartInfos.playerPaddleSize.w, sceneStartInfos.playerPaddleSize.h, paddleThickness);
         player.paddle.position = new Vector3(player.contrPosR.x, player.contrPosR.y, -sceneStartInfos.playCubeSize.z / 2);
+    } else if (player.inPosition == 0) {
+        player.paddle.position = new Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
     }
     // player.paddle.position = new Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
     player.paddle.material = scene.getMaterialByName(`player0_mat`) as PBRMaterial;
@@ -1431,6 +1450,8 @@ function addPlayerGameUtils(player: Player, isPlayer: boolean) {
         player.scoreMesh.position = new Vector3(0, sceneStartInfos.midPointOfPlayCube, (sceneStartInfos.playCubeSize.z / 2));
     } else if (player.playerNumber == 4) {
         player.scoreMesh.position = new Vector3(0, sceneStartInfos.midPointOfPlayCube, -(sceneStartInfos.playCubeSize.z / 2));
+    } else if (player.playerNumber == 0) {
+        player.scoreMesh.position = new Vector3(player.contrPosR.x, player.contrPosR.y, player.contrPosR.z);
     }
     //}
     if (!isPlayer) {
