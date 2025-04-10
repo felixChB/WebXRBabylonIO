@@ -53,11 +53,11 @@ const startScreen = document.getElementById('startScreen');
 const continueAsPreviousPlayer = document.getElementById('continueAsPreviousPlayer');
 const loadingScreen = document.getElementById('loadingScreen');
 const startButtons: { [key: number]: HTMLButtonElement } = {};
-for (let i = 1; i <= 4; i++) {
+for (let i = 0; i <= 4; i++) {
     let startbutton = document.getElementById(`startPos-${i}`);
     startButtons[i] = startbutton as HTMLButtonElement;
 }
-const start0Button = document.getElementById('startPos-0') as HTMLButtonElement;
+//const start0Button = document.getElementById('startPos-0') as HTMLButtonElement;
 const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
 
 // Test Variables
@@ -763,7 +763,7 @@ window.addEventListener('resize', function () {
     });
 
     // Add an event listener to each button
-    for (let i = 1; i <= Object.keys(startButtons).length; i++) {
+    for (let i = 0; i < Object.keys(startButtons).length; i++) {
 
         // mouse hover effect and camera position change
         startButtons[i].addEventListener('mouseover', () => {
@@ -783,9 +783,9 @@ window.addEventListener('resize', function () {
         });
     }
 
-    start0Button.addEventListener('click', () => {
-        socket.emit('requestEnterAR', 0);
-    });
+    // start0Button.addEventListener('click', () => {
+    //     socket.emit('requestEnterAR', 0);
+    // });
 
     xr.teleportation.detach();
     xr.pointerSelection.detach();
@@ -1299,7 +1299,7 @@ function updatePlayerScore(scoredPlayerID: string, newScore: number) {
 // when the scene is first loaded this will set the color of the start buttons
 // the information can so be send from the server to the client
 function setStartButtonColor(startPositions: { [key: number]: PlayerStartInfo }) {
-    for (let i = 1; i <= Object.keys(startButtons).length; i++) {
+    for (let i = 0; i < Object.keys(startButtons).length; i++) {
         let startButton = document.getElementById(`startPos-${i}`);
         if (startButton) {
             startButton.style.setProperty('border-color', startPositions[i].color);
@@ -1318,7 +1318,7 @@ function setStartButtonColor(startPositions: { [key: number]: PlayerStartInfo })
 // set which player positions are available for the client
 // set the availability of the start buttons, the visibility of the player walls and the visibility of the player scores
 function setPlayerAvailability(startPositions: { [key: number]: PlayerStartInfo }) {
-    for (let i = 1; i <= Object.keys(startButtons).length; i++) {
+    for (let i = 0; i < Object.keys(startButtons).length; i++) {
         let playerWall = scene.getMeshByName(`player${i}Wall`) as Mesh;
         // let playerScoreMesh = scene.getMeshByName(`player${i}ScoreMesh`) as Mesh;
         if (startPositions[i].used == true) {
@@ -1825,6 +1825,7 @@ engine.runRenderLoop(function () {
 /////////////////////////// HTML CSS Stuff //////////////////////////////
 
 function handleMouseOver(playerNumber: number, isPreButton: boolean = false) {
+    const extraDistance = 2;
     const playerStartInfo = playerStartInfos[playerNumber];
     let button, buttonArrow;
     if (isPreButton == false) {
@@ -1855,13 +1856,15 @@ function handleMouseOver(playerNumber: number, isPreButton: boolean = false) {
             let newPosition = new Vector3(playerStartInfo.position.x, cameraHight, playerStartInfo.position.z);
 
             if (playerNumber == 1) {
-                newPosition = new Vector3(playerStartInfo.position.x + 2, cameraHight, playerStartInfo.position.z);
+                newPosition = new Vector3(playerStartInfo.position.x + extraDistance, cameraHight, playerStartInfo.position.z);
             } else if (playerNumber == 2) {
-                newPosition = new Vector3(playerStartInfo.position.x - 2, cameraHight, playerStartInfo.position.z);
+                newPosition = new Vector3(playerStartInfo.position.x - extraDistance, cameraHight, playerStartInfo.position.z);
             } else if (playerNumber == 3) {
-                newPosition = new Vector3(playerStartInfo.position.x, cameraHight, playerStartInfo.position.z + 2);
+                newPosition = new Vector3(playerStartInfo.position.x, cameraHight, playerStartInfo.position.z + extraDistance);
             } else if (playerNumber == 4) {
-                newPosition = new Vector3(playerStartInfo.position.x, cameraHight, playerStartInfo.position.z - 2);
+                newPosition = new Vector3(playerStartInfo.position.x, cameraHight, playerStartInfo.position.z - extraDistance);
+            } else if (playerNumber == 0) {
+                newPosition = new Vector3(playerStartInfo.position.x, cameraHight, playerStartInfo.position.z);
             }
             let oldPosition = defaultCamera.position.clone();
             let oldRotation = defaultCamera.rotation.clone();
