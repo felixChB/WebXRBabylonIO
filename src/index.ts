@@ -6,10 +6,10 @@ import { Mesh, StandardMaterial, Texture, Color3, Color4, Vector3, Quaternion, C
 import { WebXRDefaultExperience, WebXRInputSource } from '@babylonjs/core/XR';
 import * as GUI from '@babylonjs/gui';
 
-import '@babylonjs/core/Materials/Textures/Loaders'; // Required for EnvironmentHelper
+//import '@babylonjs/core/Materials/Textures/Loaders'; // Required for EnvironmentHelper
 import '@babylonjs/loaders/glTF'; // Enable GLTF/GLB loader for loading controller models from WebXR Input registry
 
-import { Inspector } from '@babylonjs/inspector';
+//import { Inspector } from '@babylonjs/inspector';
 
 const socket = io();
 
@@ -2064,7 +2064,7 @@ function getLocalStorage() {
 
 window.addEventListener('keydown', function (event) {
     // Check if the key combination is Ctrl + I
-    if (event.ctrlKey && event.key === 'i') {
+    /*if (event.ctrlKey && event.key === 'i') {
         if (Inspector.IsVisible) {
             Inspector.Hide();
         } else {
@@ -2072,7 +2072,7 @@ window.addEventListener('keydown', function (event) {
                 embedMode: true,
             });
         }
-    }
+    }*/
 
     // add an event listener for ending the server und get the test results
     // l: latency, n: network, x: end server without test results

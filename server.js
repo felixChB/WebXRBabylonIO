@@ -162,6 +162,7 @@ const serverRefreshRate = 20; // time between server updates in milliseconds
 let serverUpdateCounter = 0;
 let networkTestArray = [];
 let networkTestTableArray = [];
+let idToClientMatches = {};
 
 // Store all connected players
 let playerList = {};
@@ -476,6 +477,7 @@ io.on('connection', (socket) => {
     socket.on('collectingTests', (endType) => {
         console.log('Collecting performance test data.');
         networkTestArray.push('Collecting performance test data.');
+        matchIdsToClients();
         if (endType == 'latency') {
             io.emit('requestTestArray');
         } else if (endType == 'network') {
@@ -500,8 +502,8 @@ io.on('connection', (socket) => {
         // writeArrayToTable('latency', fpsTableArray, 'fps', socket.id);
 
         writeArrayToFile('latency', 'RLD', rldArray, false, socket.id);
-        writeArrayToFile('latency', 'RLD', rldTableArray, true);
-        writeArrayToFile('latency', 'FPS', fpsTableArray, true);
+        writeArrayToFile('latency', 'RLD', rldTableArray, true, socket.id);
+        writeArrayToFile('latency', 'FPS', fpsTableArray, true, socket.id);
     });
 });
 
@@ -1046,6 +1048,14 @@ function ballBounce(playerNumber, isPaddle) {
     io.emit('ballBounce', playerNumber, isPaddle);
 }
 
+function matchIdsToClients() {
+    let clientCounter = 1;
+    Object.keys(playerList).forEach((key) => {
+        idToClientMatches[key] = clientCounter;
+        clientCounter++;
+    });
+}
+
 function writeArrayToFile(testCategory, testType, testArray, isTable, socketId = '') {
     // console.log('Writing test results to file');
 
@@ -1053,6 +1063,11 @@ function writeArrayToFile(testCategory, testType, testArray, isTable, socketId =
         if (!testArray || !Array.isArray(testArray)) {
             console.log('serverUpdateData is not an array or is undefined');
         }
+    }
+
+    let clientNumber = 0;
+    if (socketId != '') {
+        clientNumber = idToClientMatches[socketId];
     }
 
     let content = '';
@@ -1092,14 +1107,14 @@ function writeArrayToFile(testCategory, testType, testArray, isTable, socketId =
         nextTestNumber = maxTestNumber + 1;
 
         if (isTable == true) {
-            testFilePath = join(testFolderPath, `${testCategory}_test${nextTestNumber}_${testType}_table.csv`);
+            testFilePath = join(testFolderPath, `${testCategory}_test${nextTestNumber}_${testType}_table_c${clientNumber}.csv`);
 
             content = `SUC,${testType}\n`;
             testArray.forEach(entry => {
                 content += `${entry.suc},${entry.time}\n`;
             });
         } else if (isTable == false) {
-            testFilePath = join(testFolderPath, `${testCategory}_test${nextTestNumber}_${testType}.txt`);
+            testFilePath = join(testFolderPath, `${testCategory}_test${nextTestNumber}_${testType}_c${clientNumber}.txt`);
 
             let currentDate = new Date();
 
