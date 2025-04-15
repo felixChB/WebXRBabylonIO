@@ -3,6 +3,10 @@ const path = require('path');
 
 module.exports = {
     entry: './src/index.ts',
+    entry: {
+        client: './src/index.ts',
+        monitor: { import: './src/monitor.ts', filename: 'monitor.js' },
+    },
     mode: 'development',
     devtool: 'inline-source-map',
     module: {
