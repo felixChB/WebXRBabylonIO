@@ -128,7 +128,7 @@ class Player {
                         areaEnteredTimerList[newInPosition] = setTimeout(() => {
                             // let the player join the game
                             console.log(`Player ${this.id} tries to join the Game through the area ${newInPosition}.`);
-                            playerStartPlaying(this.id, newInPosition);
+                            playerStartPlaying(this.id);
                         }, areaEnteredTimerTime);
                     }, enteredDelayTime);
                 } else if (newInPosition == 0) {
@@ -254,7 +254,6 @@ let playerStartInfos = {
         position: { x: (playCubeSize.x / 2 + playerAreaDepth / 2 + playerAreaDistance), y: 0, z: 0 },
         rotation: { x: 0, y: -Math.PI / 2, z: 0 },
         color: '#00ffff', //CMY //Cyan
-        // color: '#ff0000', //RGB
         used: false
     },
     2: {
@@ -262,7 +261,6 @@ let playerStartInfos = {
         position: { x: -(playCubeSize.x / 2 + playerAreaDepth / 2 + playerAreaDistance), y: 0, z: 0 },
         rotation: { x: 0, y: Math.PI / 2, z: 0 },
         color: '#ff00ff', //CMY //Magenta
-        // color: '#00ff00', //RGB
         used: false
     },
     3: {
@@ -270,7 +268,6 @@ let playerStartInfos = {
         position: { x: 0, y: 0, z: (playCubeSize.z / 2 + playerAreaDepth / 2 + playerAreaDistance) },
         rotation: { x: 0, y: Math.PI, z: 0 },
         color: '#ffff00', //CMY //Yellow
-        // color: '#0000ff', //RGB
         used: false
     },
     4: {
@@ -278,7 +275,6 @@ let playerStartInfos = {
         position: { x: 0, y: 0, z: -(playCubeSize.z / 2 + playerAreaDepth / 2 + playerAreaDistance) },
         rotation: { x: 0, y: 0, z: 0 },
         color: '#1aa543', //CMY //Green
-        // color: '#ffff00', //RGB
         used: false
     }
 }
@@ -316,10 +312,12 @@ io.on('connection', (socket) => {
         // console.log(`${id} SRTT: ${serverRoundTripTime}`);
     });
 
-    /*socket.on('clientRoundTripTime', (clientRoundTripTime, id) => {
+    /*
+    socket.on('clientRoundTripTime', (clientRoundTripTime, id) => {
         networkTestArray.push(`${id} CRTT: ${clientRoundTripTime}`);
         // console.log(`${id} CRTT: ${clientRoundTripTime}`);
-    });*/
+    });
+    */
 
     socket.on('reportLag', (counterAtLag) => {
         console.log(`Player ${socket.id} reported lag at or before counter ${counterAtLag}`);
@@ -388,9 +386,19 @@ io.on('connection', (socket) => {
     });
 
     // !7
-    socket.on('requestJoinGame', (requestPlayerInPos) => {
+    socket.on('requestJoinGame', (requestedGamePos, isMasterRequest) => {
 
-        playerStartPlaying(socket.id, requestPlayerInPos);
+        if (isMasterRequest) {
+            for (let id in playerList) {
+                if (playerList[id].isPlaying == false) {
+                    if (playerList[id].inPosition == requestedGamePos) {
+                        playerStartPlaying(id);
+                    }
+                }
+            }
+        } else {
+            playerStartPlaying(socket.id);
+        }
 
         // if (requestPlayerInPos == 0) {
         //     socket.emit('startPosDenied', 1);
@@ -405,10 +413,20 @@ io.on('connection', (socket) => {
         // }
     });
 
-    socket.on('clientExitsGame', () => {
+    socket.on('clientExitsGame', (requestedExitPos, isMasterRequest) => {
         console.log(`Player ${socket.id} left the game.`);
 
-        playerExitsGame(socket.id);
+        if (isMasterRequest) {
+            for (let id in playerList) {
+                if (playerList[id].isPlaying == true) {
+                    if (playerList[id].playerNumber == requestedExitPos) {
+                        playerExitsGame(id);
+                    }
+                }
+            }
+        } else {
+            playerExitsGame(socket.id);
+        }
     });
 
     socket.on('playerEndVR', () => {
@@ -549,12 +567,6 @@ setInterval(function () {
         } else {
             playerList[key].changeInPosition(0);
         }
-
-        // jedem spieler objekt noch ein inPosition geben wo dann beschrieben wird in welcher area er ist
-        // 0 für wenn er in keiner ist
-        // darüber prüfen für den start und auch falls er die area zu lange verlässt
-        // auch kann über den start in der area die playerNumber gesetzt werden
-
     });
 
     // if there are players in the game
@@ -876,7 +888,7 @@ function clientEntersAR(newPlayer, socket) {
         areaEnteredTimerList[newPlayer.inPosition] = setTimeout(() => {
             // let the player join the game
             console.log(`Player ${newPlayer.id} tries to join the Game through the area ${newPlayer.inPosition}.`);
-            playerStartPlaying(newPlayer.id, newPlayer.inPosition);
+            playerStartPlaying(newPlayer.id);
         }, firstEnteredTimerTime);
     }
 
@@ -891,7 +903,9 @@ function clientEntersAR(newPlayer, socket) {
 // !7
 // Start the game for the new player
 // can be called from a new player or an previous player
-function playerStartPlaying(socketId, playerStartNumber) {
+function playerStartPlaying(socketId) {
+
+    let playerStartNumber = playerList[socketId].inPosition;
 
     if (playerList[socketId].isPlaying) {
         console.log(`Player ${socketId} is already playing.`);
@@ -946,12 +960,6 @@ function playerExitsGame(playerId) {
         io.emit('scoreUpdate', playerId, 0);
     }
 }
-
-// function changeBallColor(playerColor) {
-//     activeColor = playerColor;
-
-//     io.emit('colorChanged', activeColor);
-// }
 
 function getRandomNumber(min, max) {
     const num = Math.random() * (max - min) + min;

@@ -39,6 +39,16 @@ const toggleInterfaceBtn = document.getElementById('toggle-interface') as HTMLBu
 const resetCamBtn = document.getElementById('reset-cam') as HTMLButtonElement;
 const resetServerArrayBtn = document.getElementById('reset-server-array') as HTMLButtonElement;
 const collectTestsBtn = document.getElementById('collect-tests') as HTMLButtonElement;
+const startButtons: { [key: number]: HTMLButtonElement } = {};
+for (let i = 1; i <= 4; i++) {
+    let startbutton = document.getElementById(`start-${i}`);
+    startButtons[i] = startbutton as HTMLButtonElement;
+}
+const kickButtons: { [key: number]: HTMLButtonElement } = {};
+for (let i = 1; i <= 4; i++) {
+    let kickbutton = document.getElementById(`kick-${i}`);
+    kickButtons[i] = kickbutton as HTMLButtonElement;
+}
 
 // Test Variables
 let serverUpdateCounter = 0;
@@ -660,7 +670,6 @@ class Player implements PlayerData {
 // Send the client's start time to the server upon connection
 socket.on('connect', () => {
     socket.emit('clientStartTime', clientStartTime);
-    // console.log('Previous Player Data: ', previousPlayer);
 });
 
 // !2
@@ -1134,8 +1143,21 @@ resetCamBtn.addEventListener('click', function () {
 
 resetServerArrayBtn.addEventListener('click', function () {
 
+
 });
 
 collectTestsBtn.addEventListener('click', function () {
-
+    socket.emit('collectingTests', 'all');
 });
+
+for (let i = 1; i <= Object.keys(startButtons).length; i++) {
+    startButtons[i].addEventListener('click', () => {
+        socket.emit('requestJoinGame', i, true);
+    });
+}
+
+for (let i = 1; i <= Object.keys(kickButtons).length; i++) {
+    kickButtons[i].addEventListener('click', () => {
+        socket.emit('clientExitsGame', i, true);
+    });
+}

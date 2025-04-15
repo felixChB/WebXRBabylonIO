@@ -779,7 +779,6 @@ window.addEventListener('resize', function () {
             // const btnPlayerNumber = Number(htmlBtnId.split('-')[]);
             // console.log(`Button with id ${htmlBtnId} clicked`);
             socket.emit('requestEnterAR', i);
-            // socket.emit('requestJoinGame', i);
         });
     }
 
@@ -1032,7 +1031,7 @@ socket.on('clientEntersAR', (newSocketPlayer, areaEnteredTimerTime) => {
                         if (abuttonComponent.pressed) {
                             // !7
                             if (!playerList[clientID].isPlaying) {
-                                socket.emit('requestJoinGame', playerList[clientID].inPosition);
+                                socket.emit('requestJoinGame', playerList[clientID].inPosition, false);
                             }
                         }
                     });
@@ -1041,7 +1040,7 @@ socket.on('clientEntersAR', (newSocketPlayer, areaEnteredTimerTime) => {
                     bbuttonComponent.onButtonStateChangedObservable.add(() => {
                         if (bbuttonComponent.pressed) {
                             if (playerList[clientID].isPlaying) {
-                                socket.emit('clientExitsGame', playerList[clientID].playerNumber);
+                                socket.emit('clientExitsGame', playerList[clientID].playerNumber, false);
                             }
                         }
                     });
@@ -1553,30 +1552,29 @@ socket.on('playerExitGame', (playerId) => {
             playerWall.isVisible = true;
         }
 
-        let skyBoxMesh = scene.getMeshByName('skyBoxMesh') as Mesh;
-        if (skyBoxMesh) {
-            skyBoxMesh.isVisible = false;
-        }
-
-        if (exitPlayer.id == clientID) {
+        if (playerId == clientID) {
+            let skyBoxMesh = scene.getMeshByName('skyBoxMesh') as Mesh;
+            if (skyBoxMesh) {
+                skyBoxMesh.isVisible = false;
+            }
             for (let i = 1; i <= 6; i++) {
                 let wall = scene.getMeshByName(`player${i}Wall`) as Mesh;
                 if (wall) {
                     wall.isVisible = false;
                 }
             }
+            for (let i = 1; i <= 4; i++) {
+                let playerGround = scene.getMeshByName(`player${i}Ground`) as Mesh;
+                let playerGroundPlane = scene.getMeshByName(`player${i}GroundPlane`) as Mesh;
+                if (playerGround) {
+                    playerGround.isVisible = false;
+                }
+                if (playerGroundPlane) {
+                    playerGroundPlane.isVisible = true;
+                }
+            }
         }
 
-        for (let i = 1; i <= 4; i++) {
-            let playerGround = scene.getMeshByName(`player${i}Ground`) as Mesh;
-            let playerGroundPlane = scene.getMeshByName(`player${i}GroundPlane`) as Mesh;
-            if (playerGround) {
-                playerGround.isVisible = false;
-            }
-            if (playerGroundPlane) {
-                playerGroundPlane.isVisible = true;
-            }
-        }
         // let playerScore = scene.getMeshByName(`player${exitPlayer.playerNumber}ScoreMesh`) as Mesh;
         // if (playerScore) {
         //     playerScore.isVisible = false;
