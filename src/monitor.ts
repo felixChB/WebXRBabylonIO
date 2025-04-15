@@ -31,21 +31,17 @@ const guiRectElements: { [key: string]: GUI.Rectangle } = {};
 const ghostColor = '#bdbdbd';
 
 // Get HTML Elements
-// const divID = document.getElementById('clientID');
-
-//const start0Button = document.getElementById('startPos-0') as HTMLButtonElement;
 const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
+
+const gameMonitorInterface = document.getElementById('game-monitor-interface') as HTMLDivElement;
+
+const toggleInterfaceBtn = document.getElementById('toggle-interface') as HTMLButtonElement;
+const resetCamBtn = document.getElementById('reset-cam') as HTMLButtonElement;
+const resetServerArrayBtn = document.getElementById('reset-server-array') as HTMLButtonElement;
+const collectTestsBtn = document.getElementById('collect-tests') as HTMLButtonElement;
 
 // Test Variables
 let serverUpdateCounter = 0;
-let oldServerUpdateCounter = 0;
-let latencyTestArray: string[] = [];
-const updateCounterArray: number[] = [];
-const renderLoopTestArray: { suc: number; time: number }[] = [];
-
-let fpsOldTime = 0;
-let fpsNewTime = 0;
-const fpsArray: { suc: number; time: number }[] = [];
 
 ////////////////////////////// CREATE BABYLON SCENE ETC. //////////////////////////////
 
@@ -54,11 +50,9 @@ const engine = new Engine(canvas, true);
 const scene = new Scene(engine);
 
 var camera = new ArcRotateCamera('Camera', (Math.PI / 4) * 3, 0, 7, new Vector3(0, 0, 0), scene);
-// camera.attachControl(true); //debug
+camera.attachControl(true);
 
 scene.activeCamera = camera;
-
-// let ssr: SSRRenderingPipeline;
 
 function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { [key: number]: PlayerStartInfo }) {
 
@@ -399,21 +393,6 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
         blurKernelSize: 64,
     });
     gl.intensity = 0.5;
-
-    // var high = new HighlightLayer("highlight", scene);
-
-    // high.addMesh(player1GroundPlane, Color3.FromHexString(playerStartInfos[1].color));
-    // high.addMesh(player2GroundPlane, Color3.FromHexString(playerStartInfos[2].color));
-    // high.addMesh(player3GroundPlane, Color3.FromHexString(playerStartInfos[3].color));
-    // high.addMesh(player4GroundPlane, Color3.FromHexString(playerStartInfos[4].color));
-    // high.addExcludedMesh(playBox);
-    // high.addExcludedMesh(player1Wall);
-    // high.addExcludedMesh(player2Wall);
-    // high.addExcludedMesh(player3Wall);
-    // high.addExcludedMesh(player4Wall);
-    // high.addExcludedMesh(topWall);
-    // high.addExcludedMesh(bottomWall);
-    // high.addExcludedMesh(HUDMesh);
 }
 
 ////////////////////////////// END CREATE BABYLON SCENE ETC. //////////////////////////////
@@ -437,11 +416,6 @@ interface SceneStartInfos {
     calculatedCubeHeight: number;
     midPointOfPlayCube: number;
 }
-
-// interface Ball {
-//     position: { x: number, y: number, z: number };
-//     counter: number;
-// }
 
 interface PlayerGameData {
     id: string;
@@ -525,16 +499,6 @@ class Player implements PlayerData {
             this.headObj.position = new Vector3(this.position.x, this.position.y, this.position.z);
             this.headObj.rotation = new Vector3(this.rotation.x, this.rotation.y, this.rotation.z);
         }
-        // if (this.id == clientID) {
-        //     if (this.controllerR) {
-        //         this.controllerR.position = new Vector3(rightController?.grip?.position.x, rightController?.grip?.position.y, rightController?.grip?.position.z);
-        //         this.controllerR.rotation = new Vector3(rightController?.grip?.rotationQuaternion?.toEulerAngles().x, rightController?.grip?.rotationQuaternion?.toEulerAngles().y, rightController?.grip?.rotationQuaternion?.toEulerAngles().z);
-        //     }
-        //     if (this.controllerL) {
-        //         this.controllerL.position = new Vector3(leftController?.grip?.position.x, leftController?.grip?.position.y, leftController?.grip?.position.z);
-        //         this.controllerL.rotation = new Vector3(leftController?.grip?.rotationQuaternion?.toEulerAngles().x, leftController?.grip?.rotationQuaternion?.toEulerAngles().y, leftController?.grip?.rotationQuaternion?.toEulerAngles().z);
-        //     }
-        // } else {
         if (this.controllerR) {
             this.controllerR.position = new Vector3(this.contrPosR.x, this.contrPosR.y, this.contrPosR.z);
             this.controllerR.rotation = new Vector3(this.contrRotR.x, this.contrRotR.y, this.contrRotR.z);
@@ -710,28 +674,11 @@ socket.on('reload', () => {
     window.location.reload();
 });
 
-socket.on('joinedWaitingRoom', () => {
-    console.log(`You joined the waiting Room. Enter VR to join the Game.`);
-    latencyTestArray.push(`----------Client joined Waiting Room----------`);
-});
-
-socket.on('startPosDenied', (errorCode) => {
-    if (errorCode == 0) {
-        console.log('AR Enter position denied. Position is alreay taken.');
-    } else if (errorCode == 1) {
-        console.log('Starting the Game denied. You are in no game position.');
-    } else if (errorCode == 2) {
-        console.log('Starting the Game denied. Position is alreay taken.');
-    }
-});
-
 // !5
 // get all current Player Information from the Server at the start
 // and spawning all current players except yourself
 socket.on('currentState', (players: { [key: string]: Player }, ballColor: string,
     playerStartInfosServer: { [key: number]: PlayerStartInfo }, sceneStartInfosServer: SceneStartInfos) => {
-
-    latencyTestArray.push(`----------Client received currentState----------`);
 
     sceneStartInfos = sceneStartInfosServer;
     playerStartInfos = playerStartInfosServer;
@@ -742,14 +689,6 @@ socket.on('currentState', (players: { [key: string]: Player }, ballColor: string
 
     let ballMaterial = scene.getMaterialByName('ballMaterial') as PBRMaterial;
     ballMaterial.emissiveColor = Color3.FromHexString(ballColor);
-
-    // let ballParticleSystem = scene.getParticleSystemById('ballParticles');
-    // if (ballParticleSystem) {
-    //     ballParticleSystem.color1 = Color4.FromHexString(ballColor);
-    //     ballParticleSystem.color2 = darkenColor4(Color4.FromHexString(ballColor), 0.5);
-    // }
-
-    // console.log('Playercount: ', Object.keys(players).length);
 
     Object.keys(players).forEach((id) => {
 
@@ -768,7 +707,6 @@ socket.on('currentState', (players: { [key: string]: Player }, ballColor: string
 
 // when the current player is already on the server and a new player joins
 socket.on('newPlayer', (newPlayer) => {
-    latencyTestArray.push(`----------New Player joined: ${newPlayer.id}----------`);
     // console log about new player joined
     console.log('New player joined: ', newPlayer.id);
 
@@ -784,7 +722,6 @@ socket.on('newPlayer', (newPlayer) => {
 // when the client is on the server and a new player starts playing
 // can be the client itself (if in ar)
 socket.on('playerStartPlaying', (newPlayerId, startPlayingNumber) => {
-    latencyTestArray.push(`----------Player started playing: ${newPlayerId} as ${startPlayingNumber}----------`);
     console.log('Player started playing: ', newPlayerId, ' as ', startPlayingNumber);
 
     playerList[newPlayerId].isPlaying = true;
@@ -810,9 +747,6 @@ socket.on('serverUpdate', (playerGameDataList, ballPosition, serverSendTime, ser
     // console.log('Server Update Counter: ', serverUpdateCounter);
 
     serverUpdateCounter = serverUpdateCounterServer;
-    // save the time when the client recieved the server update
-    // pair it with the server update counter to store the specific update with the recivied time
-    updateCounterArray[serverUpdateCounter] = performance.now();
 
     updateBall(ballPosition);
 
@@ -1060,7 +994,6 @@ socket.on('playerExitGame', (playerId) => {
     const exitPlayer = playerList[playerId];
     if (exitPlayer) {
         console.log(`Player ${exitPlayer.playerNumber} left the game.`);
-        latencyTestArray.push(`----------Player ${exitPlayer.playerNumber} left the game.----------`);
 
         let playerWall = scene.getMeshByName(`player${exitPlayer.playerNumber}Wall`) as Mesh;
         if (playerWall) {
@@ -1100,7 +1033,6 @@ socket.on('playerDisconnected', (id) => {
     const disconnectedPlayer = playerList[id];
     if (disconnectedPlayer) {
         console.log('Player disconnected: ', id);
-        latencyTestArray.push(`----------Player ${disconnectedPlayer.playerNumber} disconnected.----------`);
         disconnectedPlayer.headObj?.dispose();
         disconnectedPlayer.controllerR?.dispose();
         disconnectedPlayer.controllerL?.dispose();
@@ -1142,31 +1074,6 @@ engine.runRenderLoop(function () {
         }
     });
 
-    if (serverUpdateCounter > 0) {
-
-        // calculate the time difference between the client recieving the server update and teh client showing the update
-        // this is the time it takes for the client to process the server update and show it on the screen
-        if (oldServerUpdateCounter != serverUpdateCounter) {
-            const renderLoopTime = performance.now();
-            const deltaRenderLoopTime = renderLoopTime - updateCounterArray[serverUpdateCounter];
-            const roundedDRLT = Math.round(deltaRenderLoopTime);
-
-            // console.log('Server Update Counter: ', serverUpdateCounter);
-            // latencyTestArray.push(`Server Update Counter: ${serverUpdateCounter}`);
-            latencyTestArray.push(`SUC: ${serverUpdateCounter}, Delay: ${roundedDRLT}ms`);
-            renderLoopTestArray.push({ suc: serverUpdateCounter, time: roundedDRLT });
-
-        }
-        oldServerUpdateCounter = serverUpdateCounter;
-
-        // calculate the fps
-        fpsNewTime = performance.now();
-        const fps = Math.round(fpsNewTime - fpsOldTime);
-        fpsArray.push({ suc: serverUpdateCounter, time: fps });
-
-        fpsOldTime = fpsNewTime;
-    }
-
     scene.render();
 });
 
@@ -1200,44 +1107,6 @@ window.addEventListener('keydown', function (event) {
     }
 });
 
-socket.on('requestTestArray', () => {
-    for (let i = 0; i < updateCounterArray.length; i++) {
-        if (updateCounterArray[i] == undefined) {
-            latencyTestArray.push(`SUC: ${i}, ERROR: Serverupdate not recieved`);
-        }
-    }
-    socket.emit('sendTestArray', latencyTestArray, renderLoopTestArray, fpsArray);
-    console.log('Test Array sent to Server');
-    // latencyTestArray = [];
-});
-
-// document.addEventListener('click', () => {
-//     if (playerUsingXR) {
-//         socket.emit('clicked', playerList[clientID].color);
-//     }
-// });
-
-// socket.on('colorChanged', (color) => {
-
-//     // console.log('Color Changed to: ', color);
-//     // change color of the sphere
-//     let ballMaterial = scene.getMaterialByName('ballMaterial') as PBRMaterial;
-//     ballMaterial.emissiveColor = Color3.FromHexString(color);
-
-// });
-
-// function debugTestclick() {
-//     socket.emit('testClick', clientID);
-//     console.log('XRCam Rotation Quat: ', xrCamera?.rotationQuaternion);
-//     console.log('XRCam Rotation: ', xrCamera?.rotationQuaternion.toEulerAngles());
-// }
-
-socket.on('ping', (data) => {
-    const clientReceiveTime = Date.now();
-    // console.log('Ping received: ', data);
-    socket.emit('pong', { serverSendTime: data.serverSendTime, clientReceiveTime, clientId: socket.id });
-});
-
 /*socket.on('clientPong', (serverClientSendTime) => {
     const clientSendTime = serverClientSendTime;
     const clientReceiveTime = Date.now();
@@ -1247,3 +1116,26 @@ socket.on('ping', (data) => {
 });*/
 
 ////////////////////////// END TESTING GROUND ////////////////////////////// 
+
+toggleInterfaceBtn.addEventListener('click', function () {
+    if (gameMonitorInterface.style.display === 'none') {
+        gameMonitorInterface.style.display = 'block';
+    } else {
+        gameMonitorInterface.style.display = 'none';
+    }
+});
+
+resetCamBtn.addEventListener('click', function () {
+    camera.alpha = (Math.PI / 4) * 3;
+    camera.beta = 0;
+    camera.radius = 7;
+    camera.target = new Vector3(0, 0, 0);
+});
+
+resetServerArrayBtn.addEventListener('click', function () {
+
+});
+
+collectTestsBtn.addEventListener('click', function () {
+
+});

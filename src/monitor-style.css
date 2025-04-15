@@ -28,16 +28,23 @@ li {
     margin: 5px 0;
 }
 
-#header {
+#monitor-header {
   background-color: #4CAF50;
   color: white;
-  padding: 10px 20px;
+  padding: 10px 0px;
   text-align: center;
   width: 100%;
 }
 
-#game-wrapper {
+#game-monitor-wrapper {
+    display: block;
     position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+#game-monitor-interface {
+    display: block;
     width: 100%;
     height: 100%;
 }

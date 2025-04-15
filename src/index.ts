@@ -2101,33 +2101,6 @@ socket.on('requestTestArray', () => {
     // latencyTestArray = [];
 });
 
-// document.addEventListener('click', () => {
-//     if (playerUsingXR) {
-//         socket.emit('clicked', playerList[clientID].color);
-//     }
-// });
-
-// socket.on('colorChanged', (color) => {
-
-//     // console.log('Color Changed to: ', color);
-//     // change color of the sphere
-//     let ballMaterial = scene.getMaterialByName('ballMaterial') as PBRMaterial;
-//     ballMaterial.emissiveColor = Color3.FromHexString(color);
-
-// });
-
-// function debugTestclick() {
-//     socket.emit('testClick', clientID);
-//     console.log('XRCam Rotation Quat: ', xrCamera?.rotationQuaternion);
-//     console.log('XRCam Rotation: ', xrCamera?.rotationQuaternion.toEulerAngles());
-// }
-
-socket.on('ping', (data) => {
-    const clientReceiveTime = Date.now();
-    // console.log('Ping received: ', data);
-    socket.emit('pong', { serverSendTime: data.serverSendTime, clientReceiveTime, clientId: socket.id });
-});
-
 /*socket.on('clientPong', (serverClientSendTime) => {
     const clientSendTime = serverClientSendTime;
     const clientReceiveTime = Date.now();
