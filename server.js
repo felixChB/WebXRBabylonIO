@@ -15,8 +15,8 @@ import { time } from "node:console";
 const port = process.env.PORT || 3000;
 
 ////////////// CHANGE THIS TO YOUR LOCAL IP ADDRESS ///////////////////
-//const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
-const ipAdress = '192.168.178.94'; // Wlan Phil
+const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
+//const ipAdress = '192.168.178.94'; // Wlan Phil
 //const ipAdress = '192.168.178.35'; // Desktop zuhause // WLAN
 //const ipAdress = '192.168.0.30'; // for local network // Router
 //const ipAdress = '192.168.1.188'; // Router
@@ -162,7 +162,9 @@ const serverRefreshRate = 20; // time between server updates in milliseconds
 let serverUpdateCounter = 0;
 let networkTestArray = [];
 let networkTestTableArray = [];
+let networkTestArrayObject = {};
 let idToClientMatches = {};
+let testNumber = 0;
 
 // Store all connected players
 let playerList = {};
@@ -288,24 +290,16 @@ let playerStartInfos = {
 io.on('connection', (socket) => {
     console.log(`Player connected: ${socket.id}`);
     networkTestArray.push(`Player connected: ${socket.id}`);
+    for (let id in networkTestArrayObject) {
+        if (networkTestArrayObject.hasOwnProperty(id)) {
+            networkTestArrayObject[id].networkTestArray.push(`SUC: ${serverUpdateCounter}, Player connected: ${socket.id}`);
+        }
+    }
     // !2
     socket.emit('ClientID', socket.id);
     connectedClientNumber++;
 
     // Network Ping Pong Test //
-
-    // socket.on('pong', (data) => {
-    //     console.log("Pong received");
-    //     console.log("Pong received Data: " + data.serverSendTime + " | " + data.clientReceiveTime + " | " + data.clientId);
-    //     const serverReceiveTime = Date.now();
-    //     const serverSendTime = data.serverSendTime;
-    //     const clientReceiveTime = data.clientReceiveTime;
-
-    //     const serverToClientLatency = clientReceiveTime - serverSendTime;
-    //     const clientToServerLatency = serverReceiveTime - clientReceiveTime;
-
-    //     console.log(`${data.clientId}: Server -> Client: ${serverToClientLatency} ms | Client -> Server: ${clientToServerLatency} ms, Roundtrip: ${serverToClientLatency + clientToServerLatency} ms`);
-    // });
 
     socket.on('ServerPong', (clientServerSendTime, id, serverUpdateCounterPong) => {
         const serverSendTime = clientServerSendTime;
@@ -315,6 +309,10 @@ io.on('connection', (socket) => {
         // networkTestArray.push(`${id} SRTT: ${serverRoundTripTime}, ServUpCounter: ${serverUpdateCounterPong}`);
         networkTestArray.push(`SUC: ${serverUpdateCounterPong}, SRTT: ${roundedSRTT}ms, client: ${id}`);
         networkTestTableArray.push({ suc: serverUpdateCounterPong, time: roundedSRTT });
+        if (networkTestArrayObject[id]) {
+            networkTestArrayObject[id].networkTestArray.push(`SUC: ${serverUpdateCounterPong}, SRTT: ${roundedSRTT}ms`);
+            networkTestArrayObject[id].networkTestTableArray.push({ suc: serverUpdateCounterPong, time: roundedSRTT });
+        }
         // console.log(`${id} SRTT: ${serverRoundTripTime}`);
     });
 
@@ -323,18 +321,12 @@ io.on('connection', (socket) => {
         // console.log(`${id} CRTT: ${clientRoundTripTime}`);
     });*/
 
-    // Function to send a ping message to the client
-    // function sendPing() {
-    //     const serverSendTime = Date.now();
-    //     socket.emit('ping', { serverSendTime, clientId: socket.id, ballPos: ball.position });
-    // }
-
-    // Send a ping message every 5 seconds
-    // const pingInterval = setInterval(sendPing, 500);
-
     socket.on('reportLag', (counterAtLag) => {
         console.log(`Player ${socket.id} reported lag at or before counter ${counterAtLag}`);
         networkTestArray.push(`Player ${socket.id} reported lag at or before counter ${counterAtLag}`);
+        if (networkTestArrayObject[socket.id]) {
+            networkTestArrayObject[socket.id].networkTestArray.push(`SUC: ${serverUpdateCounter}, Lag at or before counter ${counterAtLag}`);
+        }
     });
 
     // End Network Ping Pong Test //
@@ -382,6 +374,8 @@ io.on('connection', (socket) => {
 
             const newPlayer = new Player(socket.id, playerStartInfos[startPlayerNum]);
 
+            networkTestArrayObject[socket.id] = { networkTestArray: [], networkTestTableArray: [] };
+
             clientEntersAR(newPlayer, socket);
 
             socket.on('clientUpdate', (data) => {
@@ -422,6 +416,11 @@ io.on('connection', (socket) => {
         if (socket.id in playerList) {
             console.log(`Player ${socket.id} left XR.`);
             networkTestArray.push(`Player ${socket.id} left XR.`);
+            for (let id in networkTestArrayObject) {
+                if (networkTestArrayObject.hasOwnProperty(id)) {
+                    networkTestArrayObject[id].networkTestArray.push(`SUC: ${serverUpdateCounter}, Player ${socket.id} left XR.`);
+                }
+            }
 
             if (playerList[socket.id].isPlaying) {
                 playerStartInfos[playerList[socket.id].playerNumber].used = false;
@@ -465,6 +464,12 @@ io.on('connection', (socket) => {
             networkTestArray.push(`Player ${socket.id} disconnected from the waiting room.`);
         }
 
+        for (let id in networkTestArrayObject) {
+            if (networkTestArrayObject.hasOwnProperty(id)) {
+                networkTestArrayObject[id].networkTestArray.push(`SUC: ${serverUpdateCounter}, Player ${socket.id} disconnected.`);
+            }
+        }
+
         io.emit('playerDisconnected', socket.id);
         io.emit('scoreUpdate', socket.id, 0);
 
@@ -478,32 +483,36 @@ io.on('connection', (socket) => {
         console.log('Collecting performance test data.');
         networkTestArray.push('Collecting performance test data.');
         matchIdsToClients();
-        if (endType == 'latency') {
-            io.emit('requestTestArray');
-        } else if (endType == 'network') {
-            // writeTestArrayToFile('network', networkTestArray, 'srtt');
-            // writeArrayToTable('network', networkTestTableArray, 'srtt');
-
-            writeArrayToFile('network', 'SRTT', networkTestArray, false);
-            writeArrayToFile('network', 'SRTT', networkTestTableArray, true);
-        } else if (endType == 'all') {
-            io.emit('requestTestArray');
-            // writeTestArrayToFile('network', networkTestArray, 'srtt');
-            // writeArrayToTable('network', networkTestTableArray, 'srtt');
-
-            writeArrayToFile('network', 'SRTT', networkTestArray, false);
-            writeArrayToFile('network', 'SRTT', networkTestTableArray, true);
-        }
+        createNewTestFolder().then(() => {
+            if (endType == 'client') {
+                io.emit('requestTestArray');
+            } else if (endType == 'network') {
+                for (let id in networkTestArrayObject) {
+                    if (networkTestArrayObject.hasOwnProperty(id)) {
+                        writeArrayToFile('network', 'SRTT', networkTestArrayObject[id].networkTestArray, false, id);
+                        writeArrayToFile('network', 'SRTT', networkTestArrayObject[id].networkTestTableArray, true, id);
+                    }
+                }
+            } else if (endType == 'all') {
+                io.emit('requestTestArray');
+                for (let id in networkTestArrayObject) {
+                    if (networkTestArrayObject.hasOwnProperty(id)) {
+                        writeArrayToFile('network', 'SRTT', networkTestArrayObject[id].networkTestArray, false, id);
+                        writeArrayToFile('network', 'SRTT', networkTestArrayObject[id].networkTestTableArray, true, id);
+                    }
+                }
+            }
+        });
     });
 
     socket.on('sendTestArray', (rldArray, rldTableArray, fpsTableArray) => {
-        // writeTestArrayToFile('latency', rldArray, 'RLD', socket.id);
-        // writeArrayToTable('latency', rldTableArray, 'latency', socket.id);
-        // writeArrayToTable('latency', fpsTableArray, 'fps', socket.id);
+        // writeTestArrayToFile('client', rldArray, 'RLD', socket.id);
+        // writeArrayToTable('client', rldTableArray, 'client', socket.id);
+        // writeArrayToTable('client', fpsTableArray, 'fps', socket.id);
 
-        writeArrayToFile('latency', 'RLD', rldArray, false, socket.id);
-        writeArrayToFile('latency', 'RLD', rldTableArray, true, socket.id);
-        writeArrayToFile('latency', 'FPS', fpsTableArray, true, socket.id);
+        writeArrayToFile('client', 'RLD', rldArray, false, socket.id);
+        writeArrayToFile('client', 'RLD', rldTableArray, true, socket.id);
+        writeArrayToFile('client', 'FPS', fpsTableArray, true, socket.id);
     });
 });
 
@@ -853,7 +862,12 @@ function clientEntersAR(newPlayer, socket) {
     socket.join('gameRoom');
 
     console.log(`Player ${newPlayer.id} entered AR on Position ${newPlayer.inPosition}.`);
-    networkTestArray.push(`Player ${newPlayer.id} entered AR on Position ${newPlayer.inPosition}.`);
+    for (let id in networkTestArrayObject) {
+        if (networkTestArrayObject.hasOwnProperty(id)) {
+            networkTestArrayObject[id].networkTestArray.push(`SUC: ${serverUpdateCounter}, Player ${newPlayer.id} entered AR on Position ${newPlayer.inPosition}.`);
+        }
+    }
+    networkTestArray.push(`SUC: ${serverUpdateCounter}, Player ${newPlayer.id} entered AR on Position ${newPlayer.inPosition}.`);
 
     // Add new player to the playerArray
     playerList[newPlayer.id] = newPlayer;
@@ -881,7 +895,7 @@ function playerStartPlaying(socketId, playerStartNumber) {
 
     if (playerList[socketId].isPlaying) {
         console.log(`Player ${socketId} is already playing.`);
-        networkTestArray.push(`Player ${socketId} is already playing.`);
+        // networkTestArray.push(`Player ${socketId} is already playing.`);
     } else {
         if (playerStartNumber == 0) {
             io.to(socketId).emit('startPosDenied', 1);
@@ -891,6 +905,11 @@ function playerStartPlaying(socketId, playerStartNumber) {
 
                 console.log(`Player ${socketId} started playing as Player ${playerStartNumber}.`);
                 networkTestArray.push(`Player ${socketId} started playing as Player ${playerStartNumber}.`);
+                for (let id in networkTestArrayObject) {
+                    if (networkTestArrayObject.hasOwnProperty(id)) {
+                        networkTestArrayObject[id].networkTestArray.push(`SUC: ${serverUpdateCounter}, Player ${socketId} started playing as Player ${playerStartNumber}.`);
+                    }
+                }
 
                 // set the isPlaying flag to true
                 playerList[socketId].playerNumber = playerStartNumber;
@@ -1050,9 +1069,83 @@ function ballBounce(playerNumber, isPaddle) {
 
 function matchIdsToClients() {
     let clientCounter = 1;
-    Object.keys(playerList).forEach((key) => {
-        idToClientMatches[key] = clientCounter;
-        clientCounter++;
+    for (let id in networkTestArrayObject) {
+        if (networkTestArrayObject.hasOwnProperty(id)) {
+            idToClientMatches[id] = clientCounter;
+            clientCounter++;
+        }
+    }
+    // Object.keys(playerList).forEach((key) => {
+    //     idToClientMatches[key] = clientCounter;
+    //     clientCounter++;
+    // });
+}
+
+function createNewTestFolder() {
+    const testFolderPath = join(__dirname, 'other_files', 'performance_tests');
+
+    return new Promise((resolve, reject) => {
+        // Read the contents of the performance_tests folder
+        fs.readdir(testFolderPath, { withFileTypes: true }, (err, entries) => {
+            if (err) {
+                console.error('Error reading performance_tests directory:', err);
+                return reject(err);
+            }
+
+            // Filter for directories matching the naming convention "test_<number>"
+            const testFolders = entries
+                .filter(entry => entry.isDirectory() && /^test_\d+$/.test(entry.name))
+                .map(entry => entry.name);
+
+            let maxTestNumber = 0;
+
+            // Extract the test numbers and find the highest one
+            testFolders.forEach(folder => {
+                const match = folder.match(/^test_(\d+)$/);
+                if (match) {
+                    const testNumber = parseInt(match[1], 10);
+                    if (testNumber > maxTestNumber) {
+                        maxTestNumber = testNumber;
+                    }
+                }
+            });
+
+            // Determine the next test number
+            const nextTestNumber = maxTestNumber + 1;
+            const newTestFolder = join(testFolderPath, `test_${nextTestNumber}`);
+
+            testNumber = nextTestNumber;
+
+            // Create the new test folder
+            fs.mkdir(newTestFolder, { recursive: true }, (err) => {
+                if (err) {
+                    console.error('Error creating new test folder:', err);
+                    return reject(err);
+                }
+
+                console.log(`Created new test folder: ${newTestFolder}`);
+
+                const networkFolder = join(newTestFolder, 'network');
+                const clientFolder = join(newTestFolder, 'client');
+
+                fs.mkdir(networkFolder, { recursive: true }, (err) => {
+                    if (err) {
+                        console.error('Error creating new test folder:', err);
+                        return reject(err);
+                    }
+
+                    fs.mkdir(clientFolder, { recursive: true }, (err) => {
+                        if (err) {
+                            console.error('Error creating new test folder:', err);
+                            return reject(err);
+                        }
+
+                        console.log(`Created all new test folders for test: ${testNumber}`);
+                        resolve(newTestFolder)
+                    });
+                });
+            });
+        });
     });
 }
 
@@ -1073,71 +1166,69 @@ function writeArrayToFile(testCategory, testType, testArray, isTable, socketId =
     let content = '';
     let testFolderPath = '';
     let testFilePath = '';
-    let nextTestNumber = 0;
-    let maxTestNumber = 0;
+    // let nextTestNumber = 0;
+    // let maxTestNumber = 0;
 
-    if (testCategory == 'latency') {
-        testFolderPath = join(__dirname, 'other_files', 'performance_tests', 'latency_tests');
+    if (testCategory == 'client') {
+        testFolderPath = join(__dirname, 'other_files', 'performance_tests', 'test_' + testNumber, 'client');
     } else if (testCategory == 'network') {
-        testFolderPath = join(__dirname, 'other_files', 'performance_tests', 'network_tests');
+        testFolderPath = join(__dirname, 'other_files', 'performance_tests', 'test_' + testNumber, 'network');
     }
 
     // check if the folder exists and count the files in it
     // then create the next test file with the next number
-    fs.readdir(testFolderPath, (err, files) => {
+    // fs.readdir(testFolderPath, (err, files) => {
+    //     if (err) {
+    //         console.error('Error reading directory', err);
+    //     } else {
+
+    //         if (files.length == 0) {
+    //             nextTestNumber = 1;
+    //         } else {
+    //             files.forEach(file => {
+    //                 const regex = new RegExp(`${testCategory}_test(\\d+)`);
+    //                 const match = file.match(regex);
+    //                 if (match) {
+    //                     const testNumber = parseInt(match[1], 10);
+    //                     if (testNumber > maxTestNumber) {
+    //                         maxTestNumber = testNumber;
+    //                     }
+    //                 }
+    //             });
+    //         }
+    //     }
+    //     nextTestNumber = maxTestNumber + 1;
+
+    // testFolderPath = join(__dirname, 'other_files', 'performance_tests', 'test_' + testNumber);
+
+    if (isTable == true) {
+        testFilePath = join(testFolderPath, `${testCategory}_test_${testNumber}_${testType}_table_c${clientNumber}.csv`);
+
+        content = `SUC,${testType}\n`;
+        testArray.forEach(entry => {
+            content += `${entry.suc},${entry.time}\n`;
+        });
+    } else if (isTable == false) {
+        testFilePath = join(testFolderPath, `${testCategory}_test_${testNumber}_${testType}_c${clientNumber}.txt`);
+
+        let currentDate = new Date();
+
+        let headerContent = `Performance Test ${testNumber}\nTest Category: ${testCategory}\nTest Type: ${testType}\nDate: ${currentDate}\nSocket ID: ${socketId}\nDevice: ?\n\n`;
+        const arrayContent = testArray.join('\n');
+        content = join(headerContent, arrayContent);
+    }
+
+    fs.writeFile(testFilePath, content, { flag: 'w' }, (err) => {
         if (err) {
-            console.error('Error reading directory', err);
+            console.error('Error writing to file', err);
         } else {
 
-            if (files.length == 0) {
-                nextTestNumber = 1;
-            } else {
-                files.forEach(file => {
-                    const regex = new RegExp(`${testCategory}_test(\\d+)`);
-                    const match = file.match(regex);
-                    if (match) {
-                        const testNumber = parseInt(match[1], 10);
-                        if (testNumber > maxTestNumber) {
-                            maxTestNumber = testNumber;
-                        }
-                    }
-                });
+            if (isTable == true) {
+                console.log(`${testCategory}-${testType}-test-${testNumber} results written to csv file`);
+            } else if (isTable == false) {
+                console.log(`${testCategory}-${testType}-test-${testNumber} results written to txt file`);
             }
         }
-        nextTestNumber = maxTestNumber + 1;
-
-        if (isTable == true) {
-            testFilePath = join(testFolderPath, `${testCategory}_test${nextTestNumber}_${testType}_table_c${clientNumber}.csv`);
-
-            content = `SUC,${testType}\n`;
-            testArray.forEach(entry => {
-                content += `${entry.suc},${entry.time}\n`;
-            });
-        } else if (isTable == false) {
-            testFilePath = join(testFolderPath, `${testCategory}_test${nextTestNumber}_${testType}_c${clientNumber}.txt`);
-
-            let currentDate = new Date();
-
-            let headerContent = `Performance Test ${nextTestNumber}\nTest Category: ${testCategory}\nTest Type: ${testType}\nDate: ${currentDate}\n`;
-            if (testCategory == 'latency') {
-                headerContent += `Socket ID: ${socketId}\nDevice: ?\n`;
-            }
-            headerContent += `\n`;
-            const arrayContent = testArray.join('\n');
-            content = join(headerContent, arrayContent);
-        }
-
-        fs.writeFile(testFilePath, content, { flag: 'w' }, (err) => {
-            if (err) {
-                console.error('Error writing to file', err);
-            } else {
-
-                if (isTable == true) {
-                    console.log(`${testCategory}-${testType}-test results written to csv file`);
-                } else if (isTable == false) {
-                    console.log(`${testCategory}-${testType}-test results written to txt file`);
-                }
-            }
-        });
     });
+    // });
 }

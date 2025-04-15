@@ -1,0 +1,17 @@
+Performance Test 18
+Test Category: latency
+Test Type: RLD
+Date: Mon Apr 14 2025 16:17:45 GMT+0200 (Mitteleuropäische Sommerzeit)
+Socket ID: 2d1MUQHxHVDJ49puAAAB
+Device: ?
+
+\----------Client Connected----------
+----------This Client ID: 2d1MUQHxHVDJ49puAAAB ----------
+----------Client joined Waiting Room----------
+----------Client received currentState----------
+----------New Player joined: VS2c9mF4jvBVAyieAAAF----------
+----------Player started playing: VS2c9mF4jvBVAyieAAAF as 2----------
+----------New Player joined: VjyaPLcZO44tR6AzAAAG----------
+----------Player started playing: VjyaPLcZO44tR6AzAAAG as 3----------
+----------New Player joined: dCRcg9Awm6F90rMtAAAH----------
+----------Player started playing: dCRcg9Awm6F90rMtAAAH as 4----------

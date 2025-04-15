@@ -2075,12 +2075,12 @@ window.addEventListener('keydown', function (event) {
     }*/
 
     // add an event listener for ending the server und get the test results
-    // l: latency, n: network, x: end server without test results
+    // c: client, n: network, x: end server without test results
     // if (event.key === 'x') {
     //     socket.emit('collectingTests', 'shutdown');
     // }
-    if (event.key === 'l') {
-        socket.emit('collectingTests', 'latency');
+    if (event.key === 'c') {
+        socket.emit('collectingTests', 'client');
     }
     if (event.key === 'n') {
         socket.emit('collectingTests', 'network');
