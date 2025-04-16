@@ -120,11 +120,11 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     ballLight.radius = ballSize;
 
     var hdrTexture = new CubeTexture('./assets/abstract_blue.env', scene);
-    var skyBoxMesh = scene.createDefaultSkybox(hdrTexture, true, 1000, 0.5);
-    if (skyBoxMesh) {
-        skyBoxMesh.name = 'skyBoxMesh';
-        skyBoxMesh.isVisible = false;
-    }
+    // var skyBoxMesh = scene.createDefaultSkybox(hdrTexture, true, 1000, 0.5);
+    // if (skyBoxMesh) {
+    //     skyBoxMesh.name = 'skyBoxMesh';
+    //     skyBoxMesh.isVisible = false;
+    // }
 
     // Meshes --------------------------------------------------------------------------------------
 
@@ -2089,12 +2089,15 @@ window.addEventListener('keydown', function (event) {
 });
 
 socket.on('requestTestArray', () => {
-    for (let i = 0; i < updateCounterArray.length; i++) {
-        if (updateCounterArray[i] == undefined) {
-            latencyTestArray.push(`SUC: ${i}, ERROR: Serverupdate not recieved`);
-        }
-    }
-    socket.emit('sendTestArray', latencyTestArray, renderLoopTestArray, fpsArray);
+    // for (let i = 0; i < updateCounterArray.length; i++) {
+    //     if (updateCounterArray[i] == undefined) {
+    //         latencyTestArray.push(`SUC: ${i}, ERROR: Serverupdate not recieved`);
+    //     }
+    // }
+    const testArrayToSend = latencyTestArray;
+    const rldTestArrayToSend = renderLoopTestArray;
+    const fpsTestArrayToSend = fpsArray;
+    socket.emit('sendTestArray', testArrayToSend, rldTestArrayToSend, fpsTestArrayToSend);
     console.log('Test Array sent to Server');
     // latencyTestArray = [];
 });

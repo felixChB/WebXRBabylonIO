@@ -15,11 +15,11 @@ import { time } from "node:console";
 const port = process.env.PORT || 3000;
 
 ////////////// CHANGE THIS TO YOUR LOCAL IP ADDRESS ///////////////////
-const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
+//const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
 //const ipAdress = '192.168.178.94'; // Wlan Phil
 //const ipAdress = '192.168.178.35'; // Desktop zuhause // WLAN
 //const ipAdress = '192.168.0.30'; // for local network // Router
-//const ipAdress = '192.168.1.188'; // Router
+const ipAdress = '192.168.1.188'; // Router
 ///////////////////////////////////////////////////////////////////////
 
 const app = express();
@@ -36,7 +36,10 @@ const httpsServer = createServer({
     cert: fs.readFileSync(certPath)
 }, app);
 
-const io = new Server(httpsServer, { /* options */ });
+const io = new Server(httpsServer, {
+    /* options */
+    maxHttpBufferSize: 1e8, // 100MB
+});
 
 app.get('/', (req, res) => {
     res.sendFile(join(__dirname, 'index.html'));
@@ -188,7 +191,7 @@ enteredDelayTimer = exitDelayTimer = null;
 
 // Game Variables
 const maxPlayers = 4;
-const playCubeSize = { x: 1.5, y: 1.9, z: 1.5 }; // the size of the player cube in meters // the y value is the top of the cube
+const playCubeSize = { x: 1, y: 1.8, z: 1 }; // the size of the player cube in meters // the y value is the top of the cube
 const playCubeElevation = 0.5; // the elevation of the player cube in meters
 const playerAreaDepth = 1; // the depth of the player area in the z direction in meters
 const playerAreaDistance = 0.5; // the distance from the player area to the wall in meters
@@ -524,6 +527,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('sendTestArray', (rldArray, rldTableArray, fpsTableArray) => {
+        console.log(`Received test arrays from client ${socket.id}.`);
         // writeTestArrayToFile('client', rldArray, 'RLD', socket.id);
         // writeArrayToTable('client', rldTableArray, 'client', socket.id);
         // writeArrayToTable('client', fpsTableArray, 'fps', socket.id);
