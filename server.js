@@ -19,7 +19,8 @@ const port = process.env.PORT || 3000;
 //const ipAdress = '192.168.178.94'; // Wlan Phil
 //const ipAdress = '192.168.178.35'; // Desktop zuhause // WLAN
 //const ipAdress = '192.168.0.30'; // for local network // Router
-const ipAdress = '192.168.1.188'; // Router
+//const ipAdress = '192.168.1.188'; // Router
+const ipAdress = '192.168.50.20'; // neuer Router
 ///////////////////////////////////////////////////////////////////////
 
 const app = express();
@@ -192,9 +193,9 @@ enteredDelayTimer = exitDelayTimer = null;
 // Game Variables
 const maxPlayers = 4;
 const playCubeSize = { x: 1, y: 1.8, z: 1 }; // the size of the player cube in meters // the y value is the top of the cube
-const playCubeElevation = 0.5; // the elevation of the player cube in meters
+const playCubeElevation = 0.6; // the elevation of the player cube in meters
 const playerAreaDepth = 1; // the depth of the player area in the z direction in meters
-const playerAreaDistance = 0.5; // the distance from the player area to the wall in meters
+const playerAreaDistance = 0.4; // the distance from the player area to the wall in meters
 const playerPaddleSize = { h: 0.2, w: 0.4 }; // the size of the player plane in meters
 const ballStartSpeed = 0.02;
 const ballStartColor = '#1f53ff';
@@ -807,7 +808,7 @@ setInterval(function () {
             resetGame();
         } else {
             // make the ball always a litle bit faster
-            ball.speed += 0.00001;
+            ball.speed += 0.00002;
         }
 
         // add  the counter to the ball position

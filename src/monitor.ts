@@ -666,6 +666,11 @@ class Player implements PlayerData {
     }
 }
 
+// Watch for browser/canvas resize events
+window.addEventListener('resize', function () {
+    engine.resize();
+});
+
 // !1
 // Send the client's start time to the server upon connection
 socket.on('connect', () => {

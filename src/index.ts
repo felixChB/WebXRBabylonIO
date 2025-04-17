@@ -2,7 +2,7 @@ import { io } from 'socket.io-client';
 import { /*Camera,*/ Engine, FreeCamera, /*Material,*/ /*PBRBaseMaterial,*/ PBRMaterial, Scene } from '@babylonjs/core';
 import { /*ArcRotateCamera,*/ MeshBuilder, /*ShadowGenerator,*/ GlowLayer, /*ParticleSystem,*/ Animation } from '@babylonjs/core';
 import { DirectionalLight, PointLight /*SSRRenderingPipeline, Constants*/ } from '@babylonjs/core';
-import { Mesh, StandardMaterial, Texture, Color3, Color4, Vector3, Quaternion, CubeTexture /*LinesMesh*/ } from '@babylonjs/core';
+import { Mesh, StandardMaterial, Texture, Color3, Color4, Vector3, Quaternion, /*CubeTexture LinesMesh*/ } from '@babylonjs/core';
 import { WebXRDefaultExperience, WebXRInputSource } from '@babylonjs/core/XR';
 import * as GUI from '@babylonjs/gui';
 
@@ -119,7 +119,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     ballLight.intensity = 2;
     ballLight.radius = ballSize;
 
-    var hdrTexture = new CubeTexture('./assets/abstract_blue.env', scene);
+    // var hdrTexture = new CubeTexture('./assets/abstract_blue.env', scene);
     // var skyBoxMesh = scene.createDefaultSkybox(hdrTexture, true, 1000, 0.5);
     // if (skyBoxMesh) {
     //     skyBoxMesh.name = 'skyBoxMesh';
