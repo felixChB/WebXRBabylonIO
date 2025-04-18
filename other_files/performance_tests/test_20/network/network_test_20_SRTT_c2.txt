@@ -3,7 +3,7 @@ Test Category: network
 Test Type: SRTT
 Date: Wed Apr 16 2025 21:20:02 GMT+0200 (Mitteleuropäische Sommerzeit)
 Socket ID: mmZTZzyh3MkRVQmiAAAP
-Device: ?
+Device: Quest 3
 
 \SUC: 88, Player mmZTZzyh3MkRVQmiAAAP entered AR on Position 2.
 SUC: 85, SRTT: 76ms

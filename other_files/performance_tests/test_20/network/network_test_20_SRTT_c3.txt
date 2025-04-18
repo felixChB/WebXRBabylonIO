@@ -3,7 +3,7 @@ Test Category: network
 Test Type: SRTT
 Date: Wed Apr 16 2025 21:20:02 GMT+0200 (Mitteleuropäische Sommerzeit)
 Socket ID: Y0p0JsJM7AsbBi59AAAN
-Device: ?
+Device: Pico 4
 
 \SUC: 2403, Player Y0p0JsJM7AsbBi59AAAN entered AR on Position 3.
 SUC: 2393, SRTT: 216ms

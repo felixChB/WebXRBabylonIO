@@ -3,7 +3,7 @@ Test Category: client
 Test Type: RLD
 Date: Thu Apr 17 2025 12:24:22 GMT+0200 (Mitteleuropäische Sommerzeit)
 Socket ID: KtaQ6EqF6cVbHSa-AAAO
-Device: ?
+Device: Pico 4
 
 \----------Client Connected----------
 ----------This Client ID: KtaQ6EqF6cVbHSa-AAAO ----------

@@ -3,7 +3,7 @@ Test Category: network
 Test Type: SRTT
 Date: Wed Apr 16 2025 21:45:08 GMT+0200 (Mitteleuropäische Sommerzeit)
 Socket ID: Rq0kX5vTl8zF80gSAAAY
-Device: ?
+Device: Pico 4
 
 \SUC: 3657, Player Rq0kX5vTl8zF80gSAAAY entered AR on Position 2.
 SUC: 3657, SRTT: 6ms

@@ -3,7 +3,7 @@ Test Category: network
 Test Type: SRTT
 Date: Thu Apr 17 2025 13:06:02 GMT+0200 (Mitteleuropäische Sommerzeit)
 Socket ID: MSg3Hb1FXclIi45lAAAP
-Device: ?
+Device: Pico 4
 
 \SUC: 0, Player MSg3Hb1FXclIi45lAAAP entered AR on Position 1.
 SUC: 0, SRTT: 17ms

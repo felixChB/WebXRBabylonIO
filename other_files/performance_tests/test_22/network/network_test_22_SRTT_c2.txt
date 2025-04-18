@@ -3,7 +3,7 @@ Test Category: network
 Test Type: SRTT
 Date: Thu Apr 17 2025 12:24:22 GMT+0200 (Mitteleuropäische Sommerzeit)
 Socket ID: wkitXrXG6PuRFB4LAAAR
-Device: ?
+Device: Quest 3
 
 \SUC: 365, Player wkitXrXG6PuRFB4LAAAR entered AR on Position 2.
 SUC: 365, SRTT: 5ms

@@ -3,7 +3,7 @@ Test Category: network
 Test Type: SRTT
 Date: Thu Apr 17 2025 12:24:22 GMT+0200 (Mitteleuropäische Sommerzeit)
 Socket ID: RqAUg1VuM4gRwv8RAAAS
-Device: ?
+Device: Quest 3
 
 \SUC: 766, Player RqAUg1VuM4gRwv8RAAAS entered AR on Position 3.
 SUC: 765, SRTT: 7ms
