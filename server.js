@@ -15,12 +15,12 @@ import { time } from "node:console";
 const port = process.env.PORT || 3000;
 
 ////////////// CHANGE THIS TO YOUR LOCAL IP ADDRESS ///////////////////
-const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
+//const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
 //const ipAdress = '192.168.178.94'; // Wlan Phil
 //const ipAdress = '192.168.178.35'; // Desktop zuhause // WLAN
 //const ipAdress = '192.168.0.30'; // for local network // Router
 //const ipAdress = '192.168.1.188'; // Router
-//const ipAdress = '192.168.50.20'; // neuer Router
+const ipAdress = '192.168.50.20'; // neuer Router
 ///////////////////////////////////////////////////////////////////////
 
 const app = express();
@@ -160,7 +160,7 @@ let connectedClientNumber = 0;
 /////////////////////////////  VARIABLES  //////////////////////////////////
 // Server Variables
 let serverStartTime;
-const serverRefreshRate = 20; // time between server updates in milliseconds
+const serverRefreshRate = 10; // time between server updates in milliseconds
 let lastUpdateTime = performance.now();
 let deltaT = 0; // time since last update in milliseconds
 let deltaTMultiplier = 1; // multiplier for game values by deltaT
@@ -200,7 +200,7 @@ const playCubeElevation = 0.6; // the elevation of the player cube in meters
 const playerAreaDepth = 1; // the depth of the player area in the z direction in meters
 const playerAreaDistance = 0.4; // the distance from the player area to the wall in meters
 const playerPaddleSize = { h: 0.2, w: 0.4 }; // the size of the player plane in meters
-const ballStartSpeed = 0.02;
+const ballStartSpeed = 0.01;
 const ballStartColor = '#1f53ff';
 const calculatedCubeHeight = playCubeSize.y - playCubeElevation;
 const midPointOfPlayCube = ((playCubeSize.y - playCubeElevation) / 2) + playCubeElevation;
@@ -817,7 +817,7 @@ setInterval(function () {
             resetGame();
         } else {
             // make the ball always a litle bit faster
-            ball.speed += 0.00002 * deltaTMultiplier;
+            ball.speed += 0.00001 * deltaTMultiplier;
         }
 
         // add  the counter to the ball position
@@ -1084,7 +1084,7 @@ function ballBounce(playerNumber, isPaddle) {
     if (isPaddle == true) {
         // changeBallColor(playerStartInfos[playerNumber].color);
         // make the Ball faster, if the ball hits a paddle
-        ball.speed += 0.0001 * deltaTMultiplier;
+        // ball.speed += 0.0001 * deltaTMultiplier;
     }
     io.emit('ballBounce', playerNumber, isPaddle);
 }

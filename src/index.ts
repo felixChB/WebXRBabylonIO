@@ -18,7 +18,7 @@ if (rotationQuaternion) {
     //console.log('Rotation Quaternion: ', rotationQuaternion);
 }
 let clientStartTime = Date.now();
-const clientRefreshRate = 20; // time between client updates in ms
+const clientRefreshRate = 10; // time between client updates in ms
 
 let clientID: string;
 let clientPlayer: Player | null = null;
@@ -1226,7 +1226,7 @@ socket.on('serverUpdate', (playerGameDataList, ballPosition, serverSendTime, ser
             // set the new data from the server to the player
             playerList[id].setData(playerGameDataList[id]);
             // update the player object in the scene
-            // playerList[id].updateObj();
+            playerList[id].updateObj();
         }
     });
     // console.log('Server Update Counter: ', serverUpdateCounter);
@@ -1784,11 +1784,11 @@ engine.runRenderLoop(function () {
     // if (divFps) {
     //     divFps.innerHTML = engine.getFps().toFixed() + ' fps';
     // }
-    Object.keys(playerList).forEach((id) => {
+    /*Object.keys(playerList).forEach((id) => {
         if (playerList[id]) {
             playerList[id].updateObj();
         }
-    });
+    });*/
 
     if (serverUpdateCounter > 0) {
 
