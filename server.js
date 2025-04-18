@@ -15,12 +15,12 @@ import { time } from "node:console";
 const port = process.env.PORT || 3000;
 
 ////////////// CHANGE THIS TO YOUR LOCAL IP ADDRESS ///////////////////
-//const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
+const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
 //const ipAdress = '192.168.178.94'; // Wlan Phil
 //const ipAdress = '192.168.178.35'; // Desktop zuhause // WLAN
 //const ipAdress = '192.168.0.30'; // for local network // Router
 //const ipAdress = '192.168.1.188'; // Router
-const ipAdress = '192.168.50.20'; // neuer Router
+//const ipAdress = '192.168.50.20'; // neuer Router
 ///////////////////////////////////////////////////////////////////////
 
 const app = express();
@@ -161,6 +161,9 @@ let connectedClientNumber = 0;
 // Server Variables
 let serverStartTime;
 const serverRefreshRate = 20; // time between server updates in milliseconds
+let lastUpdateTime = performance.now();
+let deltaT = 0; // time since last update in milliseconds
+let deltaTMultiplier = 1; // multiplier for game values by deltaT
 
 // Test Variables
 let serverUpdateCounter = 0;
@@ -551,6 +554,12 @@ httpsServer.listen(port, ipAdress, () => {
 //    console.log('Game loop started.');
 setInterval(function () {
 
+    deltaT = performance.now() - lastUpdateTime;
+    lastUpdateTime = performance.now();
+    // console.log(`DeltaT: ${deltaT}ms`);
+    deltaTMultiplier = deltaT / serverRefreshRate;
+    // console.log(`DeltaT Multiplier: ${deltaTMultiplier}`);
+
     let onePlayerPlaying = false;
     Object.keys(playerList).forEach((key) => {
         if (playerList[key].isPlaying == true) {
@@ -577,9 +586,9 @@ setInterval(function () {
     // if there are players in the game
     if (onePlayerPlaying) {
         // Update the ball position
-        ball.position.x += ball.velocity.x * ball.speed;
-        ball.position.y += ball.velocity.y * ball.speed;
-        ball.position.z += ball.velocity.z * ball.speed;
+        ball.position.x += ball.velocity.x * ball.speed * deltaTMultiplier;
+        ball.position.y += ball.velocity.y * ball.speed * deltaTMultiplier;
+        ball.position.z += ball.velocity.z * ball.speed * deltaTMultiplier;
 
         // if (ball.position.x < playCubeSize.x / 2 || ball.position.x > -playCubeSize.x / 2 || ball.position.z < playCubeSize.z / 2 || ball.position.z > -playCubeSize.z / 2) {
 
@@ -808,7 +817,7 @@ setInterval(function () {
             resetGame();
         } else {
             // make the ball always a litle bit faster
-            ball.speed += 0.00002;
+            ball.speed += 0.00002 * deltaTMultiplier;
         }
 
         // add  the counter to the ball position
@@ -1075,7 +1084,7 @@ function ballBounce(playerNumber, isPaddle) {
     if (isPaddle == true) {
         // changeBallColor(playerStartInfos[playerNumber].color);
         // make the Ball faster, if the ball hits a paddle
-        ball.speed += 0.0001;
+        ball.speed += 0.0001 * deltaTMultiplier;
     }
     io.emit('ballBounce', playerNumber, isPaddle);
 }
