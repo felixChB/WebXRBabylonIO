@@ -3,7 +3,7 @@ Test Category: client
 Test Type: RLD
 Date: Sat Apr 19 2025 01:51:58 GMT+0200 (Mitteleuropäische Sommerzeit)
 Socket ID: CLBI4kWBWiWLPplXAAAH
-Device: ?
+Device: Quest 3
 
 \----------Client Connected----------
 ----------This Client ID: CLBI4kWBWiWLPplXAAAH ----------

@@ -3,7 +3,7 @@ Test Category: network
 Test Type: SRTT
 Date: Sat Apr 19 2025 01:51:57 GMT+0200 (Mitteleuropäische Sommerzeit)
 Socket ID: CLBI4kWBWiWLPplXAAAH
-Device: ?
+Device: Quest 3
 
 \SUC: 0, Player CLBI4kWBWiWLPplXAAAH entered AR on Position 1.
 SUC: 0, SRTT: 7ms
