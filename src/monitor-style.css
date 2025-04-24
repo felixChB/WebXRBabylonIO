@@ -22,10 +22,15 @@ button {
 ul {
     list-style-type: none;
     padding: 0;
+    margin: 5px;
 }
 
 li {
     margin: 5px 0;
+}
+
+p {
+    margin: 0px 0px 3px 0px;
 }
 
 #monitor-header {
@@ -36,10 +41,42 @@ li {
   width: 100%;
 }
 
+#monitor-body-wrapper {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 100%;
+}
+
+#clients-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 20%;
+    height: 100%;
+    background-color: #161616;
+    color: white;
+    border-right: 1px solid #ccc;
+    overflow: auto;
+}
+
+.client {
+    border: solid 1px white;
+    margin: 0px 0px 5px 0px;
+}
+
+.this-client {
+    color: red !important;
+    border-color: red !important;
+}
+
+.client-infos {
+    margin: 5px;
+}
+
 #game-monitor-wrapper {
     display: block;
     position: relative;
-    width: 100%;
+    width: 80%;
     height: 100%;
 }
 
@@ -60,6 +97,10 @@ li {
     height: 100%;
     grid-template-columns: 50% 50%;
     z-index: 10;
+}
+
+.player-div {
+    border: solid 1px black;
 }
 
 #renderCanvas {

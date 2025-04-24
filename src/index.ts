@@ -63,13 +63,13 @@ const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
 // Test Variables
 let serverUpdateCounter = 0;
 let oldServerUpdateCounter = 0;
-let latencyTestArray: string[] = [];
-const updateCounterArray: number[] = [];
-const renderLoopTestArray: { suc: number; time: number }[] = [];
+let clientTestArray: string[] = [];
+let updateCounterArray: number[] = [];
+let renderLoopTableArray: { suc: number; time: number }[] = [];
 
 let fpsOldTime = 0;
 let fpsNewTime = 0;
-const fpsArray: { suc: number; time: number }[] = [];
+let fpsTableArray: { suc: number; time: number }[] = [];
 
 ////////////////////////////// CREATE BABYLON SCENE ETC. //////////////////////////////
 
@@ -744,8 +744,8 @@ window.addEventListener('resize', function () {
         // },
         uiOptions: {
             sessionMode: 'immersive-ar',
-            // referenceSpaceType: 'local-floor',
-            referenceSpaceType: 'unbounded',
+            referenceSpaceType: 'local-floor',
+            // referenceSpaceType: 'unbounded',
         },
         inputOptions: {
             controllerOptions: {
@@ -852,19 +852,19 @@ window.addEventListener('resize', function () {
 socket.on('connect', () => {
     socket.emit('clientStartTime', clientStartTime);
     // console.log('Previous Player Data: ', previousPlayer);
-    latencyTestArray.push(`----------Client Connected----------`);
+    clientTestArray.push(`----------Client Connected----------`);
 });
 
 // !2
 socket.on('ClientID', (id) => {
     console.log('This Client ID: ', id);
-    latencyTestArray.push(`----------This Client ID: ${id} ----------`);
+    clientTestArray.push(`----------This Client ID: ${id} ----------`);
 });
 
 // !3
-socket.on('reload', () => {
+socket.on('forceReload', () => {
     console.log('Server requested reload');
-    latencyTestArray.push(`----------Server requested reload----------`);
+    clientTestArray.push(`----------Server requested reload----------`);
     xr.baseExperience.exitXRAsync();
     window.location.reload();
 });
@@ -925,7 +925,7 @@ socket.on('reload', () => {
 // !4
 socket.on('joinedWaitingRoom', () => {
     console.log(`You joined the waiting Room. Enter VR to join the Game.`);
-    latencyTestArray.push(`----------Client joined Waiting Room----------`);
+    clientTestArray.push(`----------Client joined Waiting Room----------`);
 
     if (loadingScreen) {
         loadingScreen.style.display = 'none';
@@ -948,7 +948,7 @@ socket.on('startPosDenied', (errorCode) => {
 socket.on('currentState', (players: { [key: string]: Player }, ballColor: string,
     playerStartInfosServer: { [key: number]: PlayerStartInfo }, sceneStartInfosServer: SceneStartInfos) => {
 
-    latencyTestArray.push(`----------Client received currentState----------`);
+    clientTestArray.push(`----------Client received currentState----------`);
 
     sceneStartInfos = sceneStartInfosServer;
     playerStartInfos = playerStartInfosServer;
@@ -989,12 +989,12 @@ socket.on('currentState', (players: { [key: string]: Player }, ballColor: string
 
 // !6
 socket.on('clientEntersAR', (newSocketPlayer, areaEnteredTimerTime) => {
-    latencyTestArray.push(`----------Client enters AR----------`);
+    clientTestArray.push(`----------Client enters AR----------`);
 
     startScreen?.style.setProperty('display', 'none');
 
     // Start VR Session for the client
-    xr.baseExperience.enterXRAsync('immersive-ar', /*'local-floor',*/ 'unbounded').then(() => {
+    xr.baseExperience.enterXRAsync('immersive-ar', 'local-floor'/*, 'unbounded'*/).then(() => {
         console.log('Enter AR');
 
         // look for controllers and add event listeners
@@ -1084,7 +1084,7 @@ socket.on('clientEntersAR', (newSocketPlayer, areaEnteredTimerTime) => {
                             // for testing to report a lag
                             console.log('Send Lag report');
                             socket.emit('reportLag', serverUpdateCounter);
-                            latencyTestArray.push(`----------Report a Lag at or before Counter: ${serverUpdateCounter}----------`);
+                            clientTestArray.push(`----------Report a Lag at or before Counter: ${serverUpdateCounter}----------`);
                         }
                     });
 
@@ -1094,7 +1094,7 @@ socket.on('clientEntersAR', (newSocketPlayer, areaEnteredTimerTime) => {
                             // for testing to report a lag
                             console.log('Send Lag report');
                             socket.emit('reportLag', serverUpdateCounter);
-                            latencyTestArray.push(`----------Report a Lag at or before Counter: ${serverUpdateCounter}----------`);
+                            clientTestArray.push(`----------Report a Lag at or before Counter: ${serverUpdateCounter}----------`);
                         }
                     });
                 }
@@ -1143,7 +1143,7 @@ socket.on('clientEntersAR', (newSocketPlayer, areaEnteredTimerTime) => {
 
 // when the current player is already on the server and a new player joins
 socket.on('newPlayer', (newPlayer) => {
-    latencyTestArray.push(`----------New Player joined: ${newPlayer.id}----------`);
+    clientTestArray.push(`----------New Player joined: ${newPlayer.id}----------`);
     // console log about new player joined
     console.log('New player joined: ', newPlayer.id);
 
@@ -1167,7 +1167,7 @@ socket.on('newPlayer', (newPlayer) => {
 // when the client is on the server and a new player starts playing
 // can be the client itself (if in ar)
 socket.on('playerStartPlaying', (newPlayerId, startPlayingNumber) => {
-    latencyTestArray.push(`----------Player started playing: ${newPlayerId} as ${startPlayingNumber}----------`);
+    clientTestArray.push(`----------Player started playing: ${newPlayerId} as ${startPlayingNumber}----------`);
     console.log('Player started playing: ', newPlayerId, ' as ', startPlayingNumber);
 
     playerList[newPlayerId].isPlaying = true;
@@ -1550,7 +1550,7 @@ socket.on('playerExitGame', (playerId) => {
     const exitPlayer = playerList[playerId];
     if (exitPlayer) {
         console.log(`Player ${exitPlayer.playerNumber} left the game.`);
-        latencyTestArray.push(`----------Player ${exitPlayer.playerNumber} left the game.----------`);
+        clientTestArray.push(`----------Player ${exitPlayer.playerNumber} left the game.----------`);
 
         let playerWall = scene.getMeshByName(`player${exitPlayer.playerNumber}Wall`) as Mesh;
         if (playerWall) {
@@ -1612,7 +1612,7 @@ socket.on('playerDisconnected', (id) => {
     const disconnectedPlayer = playerList[id];
     if (disconnectedPlayer) {
         console.log('Player disconnected: ', id);
-        latencyTestArray.push(`----------Player ${disconnectedPlayer.playerNumber} disconnected.----------`);
+        clientTestArray.push(`----------Player ${disconnectedPlayer.playerNumber} disconnected.----------`);
         disconnectedPlayer.headObj?.dispose();
         disconnectedPlayer.controllerR?.dispose();
         disconnectedPlayer.controllerL?.dispose();
@@ -1805,9 +1805,9 @@ engine.runRenderLoop(function () {
             const roundedDRLT = Math.round(deltaRenderLoopTime);
 
             // console.log('Server Update Counter: ', serverUpdateCounter);
-            // latencyTestArray.push(`Server Update Counter: ${serverUpdateCounter}`);
-            latencyTestArray.push(`SUC: ${serverUpdateCounter}, Delay: ${roundedDRLT}ms`);
-            renderLoopTestArray.push({ suc: serverUpdateCounter, time: roundedDRLT });
+            // clientTestArray.push(`Server Update Counter: ${serverUpdateCounter}`);
+            clientTestArray.push(`SUC: ${serverUpdateCounter}, Delay: ${roundedDRLT}ms`);
+            renderLoopTableArray.push({ suc: serverUpdateCounter, time: roundedDRLT });
 
         }
         oldServerUpdateCounter = serverUpdateCounter;
@@ -1815,7 +1815,7 @@ engine.runRenderLoop(function () {
         // calculate the fps
         fpsNewTime = performance.now();
         const fps = Math.round(fpsNewTime - fpsOldTime);
-        fpsArray.push({ suc: serverUpdateCounter, time: fps });
+        fpsTableArray.push({ suc: serverUpdateCounter, time: fps });
 
         fpsOldTime = fpsNewTime;
     }
@@ -2096,15 +2096,25 @@ window.addEventListener('keydown', function (event) {
 socket.on('requestTestArray', () => {
     // for (let i = 0; i < updateCounterArray.length; i++) {
     //     if (updateCounterArray[i] == undefined) {
-    //         latencyTestArray.push(`SUC: ${i}, ERROR: Serverupdate not recieved`);
+    //         clientTestArray.push(`SUC: ${i}, ERROR: Serverupdate not recieved`);
     //     }
     // }
-    const testArrayToSend = latencyTestArray;
-    const rldTestArrayToSend = renderLoopTestArray;
-    const fpsTestArrayToSend = fpsArray;
+    const testArrayToSend = clientTestArray;
+    const rldTestArrayToSend = renderLoopTableArray;
+    const fpsTestArrayToSend = fpsTableArray;
     socket.emit('sendTestArray', testArrayToSend, rldTestArrayToSend, fpsTestArrayToSend);
     console.log('Test Array sent to Server');
-    // latencyTestArray = [];
+    // clientTestArray = [];
+});
+
+socket.on('clearPlayerArray', () => {
+    console.log('Clearing Player Array');
+    playerList = {};
+    clientTestArray = [];
+    renderLoopTableArray = [];
+    fpsTableArray = [];
+
+    clientTestArray.push('------Player Arrays cleared------');
 });
 
 /*socket.on('clientPong', (serverClientSendTime) => {

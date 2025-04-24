@@ -121,16 +121,17 @@ In Test 1 wurden verschiedene Problembereiche indentifieziert, welche sich als S
 
 - Einstieg
     - evtl noch weitere Tests mit 'unbound', Boundary umgehen
+    - sleep auf den brillen
 - Performance
     - warum lagt es immer?
     - welche Router geben ein bessers Ergebnis?
     - Server Hardware entscheidend?
 - Headsets
     - Probleme mit der WLAN Verbindung testen (Internet, Passwort)
-    - Frameworks mit Headsets testen
+    - (Frameworks mit Headsets testen)
 - Co-Design/Dev
     - Effizienz so eines Prozesses
     - klare Vor- bzw Nachteile (Praxis)
 - Monitoring
     - Wie machen es andere VR-Installationen oder Events?
-    - Bild streaming probieren?
+    - (Bild streaming probieren?)

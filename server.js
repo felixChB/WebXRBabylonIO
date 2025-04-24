@@ -15,12 +15,12 @@ import { time } from "node:console";
 const port = process.env.PORT || 3000;
 
 ////////////// CHANGE THIS TO YOUR LOCAL IP ADDRESS ///////////////////
-//const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
+const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
 //const ipAdress = '192.168.178.94'; // Wlan Phil
 //const ipAdress = '192.168.178.35'; // Desktop zuhause // WLAN
 //const ipAdress = '192.168.0.30'; // for local network // Router
 //const ipAdress = '192.168.1.188'; // Router
-const ipAdress = '192.168.50.20'; // neuer Router
+//const ipAdress = '192.168.50.20'; // neuer Router
 ///////////////////////////////////////////////////////////////////////
 
 const app = express();
@@ -159,6 +159,7 @@ let connectedClientNumber = 0;
 
 /////////////////////////////  VARIABLES  //////////////////////////////////
 // Server Variables
+let allConnectedIds = [];
 let serverStartTime;
 const serverRefreshRate = 10; // time between server updates in milliseconds
 let lastUpdateTime = performance.now();
@@ -291,6 +292,8 @@ let playerStartInfos = {
 // !1
 // Handle connections and logic
 io.on('connection', (socket) => {
+    allConnectedIds.push(socket.id);
+
     console.log(`Player connected: ${socket.id}`);
     networkTestArray.push(`Player connected: ${socket.id}`);
     for (let id in networkTestArrayObject) {
@@ -298,6 +301,7 @@ io.on('connection', (socket) => {
             networkTestArrayObject[id].networkTestArray.push(`SUC: ${serverUpdateCounter}, Player connected: ${socket.id}`);
         }
     }
+    io.emit('newClientMonitor', socket.id);
     // !2
     socket.emit('ClientID', socket.id);
     connectedClientNumber++;
@@ -340,7 +344,7 @@ io.on('connection', (socket) => {
     socket.on('clientStartTime', (clientStartTime) => {
         if (clientStartTime < serverStartTime) {
             // console.log(`Client start time (${clientStartTime}) is lower than server start time (${serverStartTime}). Forcing reload.`);
-            socket.emit('reload');
+            socket.emit('forceReload');
         } else {
             // console.log(`Client start time (${clientStartTime}) is higher than server start time (${serverStartTime}).`);
         }
@@ -472,6 +476,12 @@ io.on('connection', (socket) => {
         //clearInterval(pingInterval);
         connectedClientNumber--;
 
+        for (let i = 0; i < allConnectedIds.length; i++) {
+            if (allConnectedIds[i] == socket.id) {
+                allConnectedIds.splice(i, 1);
+            }
+        }
+
         if (socket.id in playerList) {
             console.log(`Player ${socket.id} disconnected from the game.`);
             networkTestArray.push(`Player ${socket.id} disconnected from the game.`);
@@ -539,6 +549,52 @@ io.on('connection', (socket) => {
         writeArrayToFile('client', 'RLD', rldArray, false, socket.id);
         writeArrayToFile('client', 'RLD', rldTableArray, true, socket.id);
         writeArrayToFile('client', 'FPS', fpsTableArray, true, socket.id);
+    });
+
+    socket.on('requestAllClients', (isMasterRequest) => {
+        if (isMasterRequest) {
+            for (let i = 0; i < allConnectedIds.length; i++) {
+                socket.emit('newClientMonitor', allConnectedIds[i]);
+            }
+        }
+    });
+
+    socket.on('requestPlayerReload', (requestedReloadPos, isMasterRequest) => {
+        if (isMasterRequest) {
+            for (let id in playerList) {
+                if (playerList.hasOwnProperty(id)) {
+                    if (playerList[id].playerNumber == requestedReloadPos) {
+                        io.to(id).emit('forceReload');
+                    }
+                }
+            }
+        }
+    });
+
+    socket.on('requestClearPlayerArray', (requestedArrayPos, isMasterRequest) => {
+        if (isMasterRequest) {
+            for (let id in playerList) {
+                if (playerList.hasOwnProperty(id)) {
+                    if (playerList[id].isPlaying == true) {
+                        if (playerList[id].playerNumber == requestedArrayPos) {
+                            io.to(id).emit('clearPlayerArray');
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    socket.on('requestClientReload', (requestedReloadId, isMasterRequest) => {
+        if (isMasterRequest) {
+            io.to(requestedReloadId).emit('forceReload');
+        }
+    });
+
+    socket.on('requestDisconnectClient', (requestedDisconnectId, isMasterRequest) => {
+        if (isMasterRequest) {
+            io.sockets.sockets.get(requestedDisconnectId).disconnect(true);
+        }
     });
 });
 

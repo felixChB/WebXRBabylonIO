@@ -17,6 +17,7 @@ const rotationQuaternion = null;
 if (rotationQuaternion) {
     //console.log('Rotation Quaternion: ', rotationQuaternion);
 }
+let clientID: string;
 let clientStartTime = Date.now();
 
 let playerList: { [key: string]: Player } = {};
@@ -40,15 +41,24 @@ const resetCamBtn = document.getElementById('reset-cam') as HTMLButtonElement;
 const resetServerArrayBtn = document.getElementById('reset-server-array') as HTMLButtonElement;
 const collectTestsBtn = document.getElementById('collect-tests') as HTMLButtonElement;
 const startButtons: { [key: number]: HTMLButtonElement } = {};
+const kickButtons: { [key: number]: HTMLButtonElement } = {};
+const reloadButtons: { [key: number]: HTMLButtonElement } = {};
+const clearArrayButtons: { [key: number]: HTMLButtonElement } = {};
 for (let i = 1; i <= 4; i++) {
     let startbutton = document.getElementById(`start-${i}`);
     startButtons[i] = startbutton as HTMLButtonElement;
-}
-const kickButtons: { [key: number]: HTMLButtonElement } = {};
-for (let i = 1; i <= 4; i++) {
+
     let kickbutton = document.getElementById(`kick-${i}`);
     kickButtons[i] = kickbutton as HTMLButtonElement;
+
+    let reloadButton = document.getElementById(`reload-${i}`);
+    reloadButtons[i] = reloadButton as HTMLButtonElement;
+
+    let clearArrayButton = document.getElementById(`clear-array-${i}`);
+    clearArrayButtons[i] = clearArrayButton as HTMLButtonElement;
 }
+
+const clientsWrapper = document.getElementById('clients-wrapper');
 
 // Test Variables
 let serverUpdateCounter = 0;
@@ -675,15 +685,20 @@ window.addEventListener('resize', function () {
 // Send the client's start time to the server upon connection
 socket.on('connect', () => {
     socket.emit('clientStartTime', clientStartTime);
+    console.log('This Client ID: ', socket.id);
+    if (socket.id) {
+        clientID = socket.id;
+    }
 });
 
 // !2
-socket.on('ClientID', (id) => {
-    console.log('This Client ID: ', id);
-});
+// socket.on('ClientID', (id) => {
+//     console.log('This Client ID: ', id);
+//     clientID = id;
+// });
 
 // !3
-socket.on('reload', () => {
+socket.on('forceReload', () => {
     console.log('Server requested reload');
     window.location.reload();
 });
@@ -696,6 +711,9 @@ socket.on('currentState', (players: { [key: string]: Player }, ballColor: string
 
     sceneStartInfos = sceneStartInfosServer;
     playerStartInfos = playerStartInfosServer;
+
+    // color the borders of the player divs
+    setPlayerCSSColors(playerStartInfos);
 
     // Basic Stuff from the srever for the website and the scene
     // create the Basic babylonjs scene with the infos from the server
@@ -717,6 +735,9 @@ socket.on('currentState', (players: { [key: string]: Player }, ballColor: string
             //addPlayerGameUtils(playerList[id], false);
         }
     });
+
+    // requesting all connected client ids from the server
+    socket.emit('requestAllClients', true);
 });
 
 // when the current player is already on the server and a new player joins
@@ -1044,6 +1065,8 @@ socket.on('playerExitGame', (playerId) => {
 });
 
 socket.on('playerDisconnected', (id) => {
+    deleteClientElement(id);
+
     const disconnectedPlayer = playerList[id];
     if (disconnectedPlayer) {
         console.log('Player disconnected: ', id);
@@ -1078,6 +1101,81 @@ socket.on('playerDisconnected', (id) => {
         delete playerList[id];
     }
 });
+
+// when the scene is first loaded this will set the color of the player divs
+function setPlayerCSSColors(startPositions: { [key: number]: PlayerStartInfo }) {
+    for (let i = 1; i <= 4; i++) {
+        let playerDiv = document.getElementById(`player-${i}`);
+        if (playerDiv) {
+            playerDiv.style.setProperty('border-color', startPositions[i].color);
+            playerDiv.style.setProperty('color', startPositions[i].color);
+        }
+    }
+}
+
+socket.on('newClientMonitor', (newClientId) => {
+    console.log('New client connected: ', newClientId);
+    // check if the client is already in the list of clients
+    let allreadyClient = document.getElementById(newClientId);
+    if (!allreadyClient) {
+        let clientElement = createClientElement(newClientId);
+        if (clientsWrapper) {
+            clientsWrapper.appendChild(clientElement);
+        }
+    }
+});
+
+function createClientElement(clientId: string): HTMLElement {
+    const clientWrapper = document.createElement('div');
+    clientWrapper.classList.add('client');
+    clientWrapper.id = clientId;
+
+    const clientInfos = document.createElement('div');
+    clientInfos.classList.add('client-infos');
+
+    const clientIdElem = document.createElement('p');
+    clientIdElem.textContent = `Client ID: ${clientId}`;
+    clientInfos.appendChild(clientIdElem);
+
+    if (clientId === clientID) {
+        console.log('This is the current client!');
+        clientWrapper.classList.add('this-client');
+
+        const thisClientElem = document.createElement('p');
+        thisClientElem.textContent = `You!`;
+        clientInfos.appendChild(thisClientElem);
+    } else {
+        // Add the "Force Reload" button
+        const forceReloadButton = document.createElement('button');
+        forceReloadButton.textContent = 'Force Reload';
+        forceReloadButton.addEventListener('click', () => {
+            console.log(`Force Reload clicked for Client ID: ${clientId}`);
+            socket.emit('requestClientReload', clientId, true);
+        });
+        clientInfos.appendChild(forceReloadButton);
+
+        // Add the "Kick from Server" button
+        const kickButton = document.createElement('button');
+        kickButton.textContent = 'Disconnect from Server';
+        kickButton.addEventListener('click', () => {
+            console.log(`Disconnect from Server clicked for Client ID: ${clientId}`);
+            socket.emit('requestDisconnectClient', clientId, true);
+        });
+        clientInfos.appendChild(kickButton);
+    }
+
+    // Append the client info div to the wrapper
+    clientWrapper.appendChild(clientInfos);
+
+    return clientWrapper;
+}
+
+function deleteClientElement(clientId: string) {
+    const clientElement = document.getElementById(clientId);
+    if (clientElement) {
+        clientElement.remove();
+    }
+}
 
 ////////////////////////// RENDER LOOP //////////////////////////////
 // Register a render loop to repeatedly render the scene
@@ -1155,14 +1253,30 @@ collectTestsBtn.addEventListener('click', function () {
     socket.emit('collectingTests', 'all');
 });
 
+// force the player in the position to join the game
 for (let i = 1; i <= Object.keys(startButtons).length; i++) {
     startButtons[i].addEventListener('click', () => {
         socket.emit('requestJoinGame', i, true);
     });
 }
 
+// kick the specific player out of the game
 for (let i = 1; i <= Object.keys(kickButtons).length; i++) {
     kickButtons[i].addEventListener('click', () => {
         socket.emit('clientExitsGame', i, true);
+    });
+}
+
+// force the specific players site to reload
+for (let i = 1; i <= Object.keys(reloadButtons).length; i++) {
+    reloadButtons[i].addEventListener('click', () => {
+        socket.emit('requestPlayerReload', i, true);
+    });
+}
+
+// clear the specific player arrays
+for (let i = 1; i <= Object.keys(clearArrayButtons).length; i++) {
+    clearArrayButtons[i].addEventListener('click', () => {
+        socket.emit('requestClearPlayerArray', i, true);
     });
 }
