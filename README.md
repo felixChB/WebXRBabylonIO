@@ -1,8 +1,9 @@
-# WebXRBabylonIO
+# WebXRBabylonIO - VR-PONG
 
 # About
 
 This project is about the development of a co-located multiplayer VR-Game using webXR.
+The Game is a 3D-VR-Version of the original Pong Game.
 The server runs with Socket.IO and the 3D-Representation is done in Babylonjs.
 
 # Installation
