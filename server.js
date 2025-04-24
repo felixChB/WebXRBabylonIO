@@ -551,6 +551,21 @@ io.on('connection', (socket) => {
         writeArrayToFile('client', 'FPS', fpsTableArray, true, socket.id);
     });
 
+    socket.on('requestClearServerArray', (isMasterRequest) => {
+        if (isMasterRequest) {
+            networkTestArray = [];
+            networkTestTableArray = [];
+            networkTestArrayObject = {};
+            console.log('Server array cleared.');
+            networkTestArray.push('Server array cleared.');
+            for (let id in playerList) {
+                if (playerList.hasOwnProperty(id)) {
+                    networkTestArrayObject[id] = { networkTestArray: [], networkTestTableArray: [] };
+                }
+            }
+        }
+    });
+
     socket.on('requestAllClients', (isMasterRequest) => {
         if (isMasterRequest) {
             for (let i = 0; i < allConnectedIds.length; i++) {

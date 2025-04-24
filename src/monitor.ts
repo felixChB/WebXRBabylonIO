@@ -38,7 +38,7 @@ const gameMonitorInterface = document.getElementById('game-monitor-interface') a
 
 const toggleInterfaceBtn = document.getElementById('toggle-interface') as HTMLButtonElement;
 const resetCamBtn = document.getElementById('reset-cam') as HTMLButtonElement;
-const resetServerArrayBtn = document.getElementById('reset-server-array') as HTMLButtonElement;
+const clearServerArrayBtn = document.getElementById('clear-server-array') as HTMLButtonElement;
 const collectTestsBtn = document.getElementById('collect-tests') as HTMLButtonElement;
 const startButtons: { [key: number]: HTMLButtonElement } = {};
 const kickButtons: { [key: number]: HTMLButtonElement } = {};
@@ -1244,9 +1244,8 @@ resetCamBtn.addEventListener('click', function () {
     camera.target = new Vector3(0, 0, 0);
 });
 
-resetServerArrayBtn.addEventListener('click', function () {
-
-
+clearServerArrayBtn.addEventListener('click', function () {
+    socket.emit('requestClearServerArray', true);
 });
 
 collectTestsBtn.addEventListener('click', function () {
