@@ -1,8 +1,8 @@
 import { io } from 'socket.io-client';
 import { /*Camera,*/ Engine, FreeCamera, /*Material,*/ /*PBRBaseMaterial,*/ PBRMaterial, Scene } from '@babylonjs/core';
-import { /*ArcRotateCamera,*/ MeshBuilder, /*ShadowGenerator,*/ GlowLayer, /*ParticleSystem,*/ Animation } from '@babylonjs/core';
-import { DirectionalLight, PointLight /*SSRRenderingPipeline, Constants*/ } from '@babylonjs/core';
-import { Mesh, StandardMaterial, Texture, Color3, Color4, Vector3, Quaternion, /*CubeTexture LinesMesh*/ } from '@babylonjs/core';
+import { /*ArcRotateCamera,*/ MeshBuilder, GlowLayer, Animation } from '@babylonjs/core';
+import { DirectionalLight, PointLight } from '@babylonjs/core';
+import { Mesh, StandardMaterial, Texture, Color3, Color4, Vector3, Quaternion, CubeTexture } from '@babylonjs/core';
 import { WebXRDefaultExperience, WebXRInputSource } from '@babylonjs/core/XR';
 import * as GUI from '@babylonjs/gui';
 
@@ -119,12 +119,12 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     ballLight.intensity = 2;
     ballLight.radius = ballSize;
 
-    // var hdrTexture = new CubeTexture('./assets/abstract_blue.env', scene);
-    // var skyBoxMesh = scene.createDefaultSkybox(hdrTexture, true, 1000, 0.5);
-    // if (skyBoxMesh) {
-    //     skyBoxMesh.name = 'skyBoxMesh';
-    //     skyBoxMesh.isVisible = false;
-    // }
+    var hdrTexture = new CubeTexture('./assets/abstract_blue.env', scene);
+    var skyBoxMesh = scene.createDefaultSkybox(hdrTexture, true, 1000, 0.5);
+    if (skyBoxMesh) {
+        skyBoxMesh.name = 'skyBoxMesh';
+        skyBoxMesh.isVisible = false;
+    }
 
     // Meshes --------------------------------------------------------------------------------------
 
@@ -146,6 +146,8 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     playBox.edgesColor = new Color4(1, 1, 1, 1);
     // playBox.isVisible = false;
 
+    // make another smaller ground as a recenter ground
+    // only show for debugging to check if it is aligned correctly
     var recenterGround = MeshBuilder.CreateGround('recenterGround', { width: 1, height: 1 }, scene);
     recenterGround.position = new Vector3(playerStartInfos[0].position.x, playerStartInfos[0].position.y, playerStartInfos[0].position.z);
     recenterGround.rotation = new Vector3(playerStartInfos[0].rotation.x, playerStartInfos[0].rotation.y, playerStartInfos[0].rotation.z);
@@ -153,6 +155,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     recenterGround.enableEdgesRendering();
     recenterGround.edgesWidth = edgeWidth;
     recenterGround.edgesColor = Color4.FromHexString(playerStartInfos[0].color);
+    recenterGround.isVisible = false;
 
     // Grounds for the Player Start Positions
     var player1Ground = MeshBuilder.CreateBox('player1Ground', { size: 1 }, scene);
@@ -188,8 +191,6 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     var player1GroundPlane = MeshBuilder.CreateBox('player1GroundPlane', { size: 1 }, scene);
     player1GroundPlane.position = new Vector3(playerStartInfos[1].position.x, 0, 0);
     player1GroundPlane.scaling = new Vector3(playerAreaDepth, 0.001, playCubeSize.z);
-    //player1GroundPlane.scaling = new Vector3(playerAreaDepth, playCubeSize.z, 1);
-    //player1GroundPlane.rotation = new Vector3(-Math.PI / 2, 0, playerStartInfos[1].rotation.z);
     player1GroundPlane.enableEdgesRendering();
     player1GroundPlane.edgesWidth = planeEdgeWidth;
     player1GroundPlane.edgesColor = Color4.FromHexString(playerStartInfos[1].color);
@@ -197,8 +198,6 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     var player2GroundPlane = MeshBuilder.CreateBox('player2GroundPlane', { size: 1 }, scene);
     player2GroundPlane.position = new Vector3(playerStartInfos[2].position.x, 0, 0);
     player2GroundPlane.scaling = new Vector3(playerAreaDepth, 0.001, playCubeSize.z);
-    //player2GroundPlane.scaling = new Vector3(playerAreaDepth, playCubeSize.z, 1);
-    //player2GroundPlane.rotation = new Vector3(-Math.PI / 2, 0, playerStartInfos[2].rotation.z);
     player2GroundPlane.enableEdgesRendering();
     player2GroundPlane.edgesWidth = planeEdgeWidth;
     player2GroundPlane.edgesColor = Color4.FromHexString(playerStartInfos[2].color);
@@ -206,8 +205,6 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     var player3GroundPlane = MeshBuilder.CreateBox('player3GroundPlane', { size: 1 }, scene);
     player3GroundPlane.position = new Vector3(0, 0, playerStartInfos[3].position.z);
     player3GroundPlane.scaling = new Vector3(playCubeSize.x, 0.001, playerAreaDepth);
-    //player3GroundPlane.scaling = new Vector3(playCubeSize.x, playerAreaDepth, 1);
-    //player3GroundPlane.rotation = new Vector3(-Math.PI / 2, 0, playerStartInfos[3].rotation.x);
     player3GroundPlane.enableEdgesRendering();
     player3GroundPlane.edgesWidth = planeEdgeWidth;
     player3GroundPlane.edgesColor = Color4.FromHexString(playerStartInfos[3].color);
@@ -215,8 +212,6 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     var player4GroundPlane = MeshBuilder.CreateBox('player4GroundPlane', { size: 1 }, scene);
     player4GroundPlane.position = new Vector3(0, 0, playerStartInfos[4].position.z);
     player4GroundPlane.scaling = new Vector3(playCubeSize.x, 0.001, playerAreaDepth);
-    //player4GroundPlane.scaling = new Vector3(playCubeSize.x, playerAreaDepth, 1);
-    //player4GroundPlane.rotation = new Vector3(-Math.PI / 2, 0, playerStartInfos[4].rotation.x);
     player4GroundPlane.enableEdgesRendering();
     player4GroundPlane.edgesWidth = planeEdgeWidth;
     player4GroundPlane.edgesColor = Color4.FromHexString(playerStartInfos[4].color);
@@ -423,21 +418,6 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
         blurKernelSize: 64,
     });
     gl.intensity = 0.5;
-
-    // var high = new HighlightLayer("highlight", scene);
-
-    // high.addMesh(player1GroundPlane, Color3.FromHexString(playerStartInfos[1].color));
-    // high.addMesh(player2GroundPlane, Color3.FromHexString(playerStartInfos[2].color));
-    // high.addMesh(player3GroundPlane, Color3.FromHexString(playerStartInfos[3].color));
-    // high.addMesh(player4GroundPlane, Color3.FromHexString(playerStartInfos[4].color));
-    // high.addExcludedMesh(playBox);
-    // high.addExcludedMesh(player1Wall);
-    // high.addExcludedMesh(player2Wall);
-    // high.addExcludedMesh(player3Wall);
-    // high.addExcludedMesh(player4Wall);
-    // high.addExcludedMesh(topWall);
-    // high.addExcludedMesh(bottomWall);
-    // high.addExcludedMesh(HUDMesh);
 }
 
 ////////////////////////////// END CREATE BABYLON SCENE ETC. //////////////////////////////

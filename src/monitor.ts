@@ -136,6 +136,8 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     playBox.edgesColor = new Color4(1, 1, 1, 1);
     // playBox.isVisible = false;
 
+    // make another smaller ground as a recenter ground
+    // only show for debugging to check if it is aligned correctly
     var recenterGround = MeshBuilder.CreateGround('recenterGround', { width: 1, height: 1 }, scene);
     recenterGround.position = new Vector3(playerStartInfos[0].position.x, playerStartInfos[0].position.y, playerStartInfos[0].position.z);
     recenterGround.rotation = new Vector3(playerStartInfos[0].rotation.x, playerStartInfos[0].rotation.y, playerStartInfos[0].rotation.z);
@@ -143,6 +145,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     recenterGround.enableEdgesRendering();
     recenterGround.edgesWidth = edgeWidth;
     recenterGround.edgesColor = Color4.FromHexString(playerStartInfos[0].color);
+    recenterGround.isVisible = true; // show the ground for debugging and testing on the monitor html
 
     // Grounds for the Player Start Positions
     var player1Ground = MeshBuilder.CreateBox('player1Ground', { size: 1 }, scene);
