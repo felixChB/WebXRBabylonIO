@@ -15,12 +15,11 @@ import { time } from "node:console";
 const port = process.env.PORT || 3000;
 
 ////////////// CHANGE THIS TO YOUR LOCAL IP ADDRESS ///////////////////
-const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
-//const ipAdress = '192.168.178.94'; // Wlan Phil
+//const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
 //const ipAdress = '192.168.178.35'; // Desktop zuhause // WLAN
-//const ipAdress = '192.168.0.30'; // for local network // Router
-//const ipAdress = '192.168.1.188'; // Router
+const ipAdress = '192.168.1.188'; // Router
 //const ipAdress = '192.168.50.20'; // neuer Router
+//const ipAdress = '192.168.50.115'; // Router2 über Internet
 ///////////////////////////////////////////////////////////////////////
 
 const app = express();

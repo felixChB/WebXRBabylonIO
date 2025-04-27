@@ -725,7 +725,6 @@ window.addEventListener('resize', function () {
         uiOptions: {
             sessionMode: 'immersive-ar',
             referenceSpaceType: 'local-floor',
-            // referenceSpaceType: 'unbounded',
         },
         inputOptions: {
             controllerOptions: {
@@ -774,7 +773,7 @@ window.addEventListener('resize', function () {
     xr.teleportation.detach();
     xr.pointerSelection.detach();
 
-    const hasImmersiveVR = await xr.baseExperience.sessionManager.isSessionSupportedAsync('immersive-ar');
+    const hasImmersiveVR = await xr.baseExperience.sessionManager.isSessionSupportedAsync('immersive-vr');
 
     if (hasImmersiveVR) {
 
@@ -974,7 +973,7 @@ socket.on('clientEntersAR', (newSocketPlayer, areaEnteredTimerTime) => {
     startScreen?.style.setProperty('display', 'none');
 
     // Start VR Session for the client
-    xr.baseExperience.enterXRAsync('immersive-ar', 'local-floor'/*, 'unbounded'*/).then(() => {
+    xr.baseExperience.enterXRAsync('immersive-ar', 'local-floor').then(() => {
         console.log('Enter AR');
 
         // look for controllers and add event listeners
