@@ -196,6 +196,7 @@ enteredDelayTimer = exitDelayTimer = null;
 // Game Variables
 let leaderboard = [];
 const leaderboardLength = 10; // the length of the leaderboard
+readLeaderboardFromFile();
 let dailyLeaderboard = [];
 const dailyLeaderboardLength = 10; // the length of the daily leaderboard
 const maxPlayers = 4;
@@ -616,7 +617,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('isLeaderboard', () => {
-        socket.emit('isLeaderboard', socket.id);
+        io.emit('isLeaderboard', socket.id);
     });
     socket.on('requestLeaderboard', () => {
         console.log('Leaderboard requested.');
@@ -1086,7 +1087,6 @@ function checkLeaderBoard(player) {
 
             // sort the leaderboard by score in descending order
             leaderboard.sort((a, b) => (a.score > b.score) ? -1 : ((b.score > a.score) ? 1 : 0));
-            console.log('Leaderboard: ', leaderboard);
         } else if (player.score >= leaderboard[leaderboardLength].score) {
             leaderboard.push({ id: player.id, score: player.score });
 
@@ -1096,8 +1096,10 @@ function checkLeaderBoard(player) {
             if (leaderboard.length > leaderboardLength) {
                 leaderboard.pop();
             }
-            console.log('Leaderboard: ', leaderboard);
         }
+        console.log('Leaderboard: ', leaderboard);
+        io.emit('sendLeaderboard', leaderboard);
+        writeLeaderboardToFile();
     }
 }
 
@@ -1361,4 +1363,33 @@ function writeArrayToFile(testCategory, testType, testArray, isTable, socketId =
         }
     });
     // });
+}
+
+function readLeaderboardFromFile() {
+    const leaderboardFilePath = join(__dirname, 'other_files', 'leaderboard.json');
+
+    fs.readFile(leaderboardFilePath, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error reading leaderboard file', err);
+            return;
+        }
+        try {
+            leaderboard = JSON.parse(data);
+            console.log('Leaderboard loaded from file:', leaderboard);
+        } catch (parseError) {
+            console.error('Error parsing leaderboard JSON', parseError);
+        }
+    });
+}
+
+function writeLeaderboardToFile() {
+    const leaderboardFilePath = join(__dirname, 'other_files', 'leaderboard.json');
+
+    fs.writeFile(leaderboardFilePath, JSON.stringify(leaderboard), { flag: 'w' }, (err) => {
+        if (err) {
+            console.error('Error writing leaderboard to file', err);
+        } else {
+            console.log('Leaderboard written to file');
+        }
+    });
 }

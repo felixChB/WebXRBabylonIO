@@ -848,6 +848,9 @@ socket.on('forceReload', () => {
     window.location.reload();
 });
 
+socket.on('sendLeaderboard', (leaderboard) => {
+    console.log('Received leaderboard:', leaderboard);
+});
 // set the prevoius player to available
 /*socket.on('timeForPreviousPlayers', () => {
     if (previousPlayer != null) {
