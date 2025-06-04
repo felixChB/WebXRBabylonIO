@@ -6,6 +6,7 @@ module.exports = {
     entry: {
         client: './src/index.ts',
         monitor: { import: './src/monitor.ts', filename: 'monitor.js' },
+        leaderboard: { import: './src/leaderboard.ts', filename: 'leaderboard.js' },
     },
     mode: 'development',
     devtool: 'inline-source-map',

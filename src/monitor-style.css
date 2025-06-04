@@ -73,6 +73,11 @@ p {
     margin: 5px;
 }
 
+.leaderboard {
+    color: yellow !important;
+    border-color: yellow !important;
+}
+
 #game-monitor-wrapper {
     display: block;
     position: relative;

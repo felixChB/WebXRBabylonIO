@@ -15,9 +15,9 @@ import { time } from "node:console";
 const port = process.env.PORT || 3000;
 
 ////////////// CHANGE THIS TO YOUR LOCAL IP ADDRESS ///////////////////
-//const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
+const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
 //const ipAdress = '192.168.178.35'; // Desktop zuhause // WLAN
-const ipAdress = '192.168.1.188'; // Router
+//const ipAdress = '192.168.1.188'; // Router
 //const ipAdress = '192.168.50.20'; // neuer Router
 //const ipAdress = '192.168.50.115'; // Router2 über Internet
 ///////////////////////////////////////////////////////////////////////
@@ -194,6 +194,10 @@ let enteredDelayTimer, exitDelayTimer;
 enteredDelayTimer = exitDelayTimer = null;
 
 // Game Variables
+let leaderboard = [];
+const leaderboardLength = 10; // the length of the leaderboard
+let dailyLeaderboard = [];
+const dailyLeaderboardLength = 10; // the length of the daily leaderboard
 const maxPlayers = 4;
 const playCubeSize = { x: 1, y: 1.8, z: 1 }; // the size of the player cube in meters // the y value is the top of the cube
 const playCubeElevation = 0.6; // the elevation of the player cube in meters
@@ -610,6 +614,14 @@ io.on('connection', (socket) => {
             io.sockets.sockets.get(requestedDisconnectId).disconnect(true);
         }
     });
+
+    socket.on('isLeaderboard', () => {
+        socket.emit('isLeaderboard', socket.id);
+    });
+    socket.on('requestLeaderboard', () => {
+        console.log('Leaderboard requested.');
+        socket.emit('sendLeaderboard', leaderboard);
+    });
 });
 
 httpsServer.listen(port, ipAdress, () => {
@@ -854,6 +866,7 @@ setInterval(function () {
                 // player 1 missed
                 Object.keys(playerList).forEach((key) => {
                     if (playerList[key].playerNumber == 1) {
+                        checkLeaderBoard(playerList[key]);
                         playerList[key].score = scoreAfterMiss(playerList[key].score);
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
@@ -862,6 +875,7 @@ setInterval(function () {
                 // player 2 missed
                 Object.keys(playerList).forEach((key) => {
                     if (playerList[key].playerNumber == 2) {
+                        checkLeaderBoard(playerList[key]);
                         playerList[key].score = scoreAfterMiss(playerList[key].score);
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
@@ -870,6 +884,7 @@ setInterval(function () {
                 // player 3 missed
                 Object.keys(playerList).forEach((key) => {
                     if (playerList[key].playerNumber == 3) {
+                        checkLeaderBoard(playerList[key]);
                         playerList[key].score = scoreAfterMiss(playerList[key].score);
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
@@ -878,6 +893,7 @@ setInterval(function () {
                 // player 4 missed
                 Object.keys(playerList).forEach((key) => {
                     if (playerList[key].playerNumber == 4) {
+                        checkLeaderBoard(playerList[key]);
                         playerList[key].score = scoreAfterMiss(playerList[key].score);
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
@@ -1061,6 +1077,28 @@ function resetGame() {
     ball.speed = ballStartSpeed;
     ball.color = ballStartColor;
     // changeBallColor(ballStartColor);
+}
+
+function checkLeaderBoard(player) {
+    if (player.score > 0) {
+        if (leaderboard[leaderboardLength] == null) {
+            leaderboard.push({ id: player.id, score: player.score });
+
+            // sort the leaderboard by score in descending order
+            leaderboard.sort((a, b) => (a.score > b.score) ? -1 : ((b.score > a.score) ? 1 : 0));
+            console.log('Leaderboard: ', leaderboard);
+        } else if (player.score >= leaderboard[leaderboardLength].score) {
+            leaderboard.push({ id: player.id, score: player.score });
+
+            // sort the leaderboard by score in descending order
+            leaderboard.sort((a, b) => (a.score > b.score) ? -1 : ((b.score > a.score) ? 1 : 0));
+            // if the leaderboard has more than 10 entries, remove the last one
+            if (leaderboard.length > leaderboardLength) {
+                leaderboard.pop();
+            }
+            console.log('Leaderboard: ', leaderboard);
+        }
+    }
 }
 
 function calculateBallBounce(contrRPos, playerNumber) {

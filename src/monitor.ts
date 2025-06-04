@@ -821,6 +821,17 @@ socket.on('inPosChange', (playerId, newInPos) => {
     }
 });
 
+socket.on('isLeaderboard', (id) => {
+    console.log(`Setting Leaderboard Client with ID: ${id}`);
+
+    let leaderboardClient = document.getElementById(id);
+    if (leaderboardClient) {
+        leaderboardClient.classList.add('leaderboard');
+    } else {
+        console.log(`Leaderboard Client with ID ${id} not found.`);
+    }
+});
+
 function changePlayerColor(playerId: string) {
     (playerList[playerId].headObj as Mesh).material = scene.getMaterialByName(`player${playerList[playerId].playerNumber}_mat`) as PBRMaterial;
     (playerList[playerId].controllerL as Mesh).material = scene.getMaterialByName(`player${playerList[playerId].playerNumber}_mat`) as PBRMaterial;
