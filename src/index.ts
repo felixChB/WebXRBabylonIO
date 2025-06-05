@@ -773,7 +773,7 @@ window.addEventListener('resize', function () {
     xr.teleportation.detach();
     xr.pointerSelection.detach();
 
-    const hasImmersiveVR = await xr.baseExperience.sessionManager.isSessionSupportedAsync('immersive-vr');
+    const hasImmersiveVR = await xr.baseExperience.sessionManager.isSessionSupportedAsync('immersive-ar');
 
     if (hasImmersiveVR) {
 
@@ -848,9 +848,6 @@ socket.on('forceReload', () => {
     window.location.reload();
 });
 
-socket.on('sendLeaderboard', (leaderboard) => {
-    console.log('Received leaderboard:', leaderboard);
-});
 // set the prevoius player to available
 /*socket.on('timeForPreviousPlayers', () => {
     if (previousPlayer != null) {
@@ -1121,6 +1118,22 @@ socket.on('clientEntersAR', (newSocketPlayer, areaEnteredTimerTime) => {
     }).catch((err) => {
         console.error('Failed to enter VR', err);
     });
+});
+
+socket.on('recenterXR', () => {
+    console.log('Recenter XR');
+    // xr.baseExperience.sessionManager.setReferenceSpaceTypeAsync('local-floor');
+
+    if (xrCamera) {
+        const originChange = new XRRigidTransform({
+            x: xrCamera.position.x,
+            y: xrCamera.position.y,
+            z: xrCamera.position.z
+        });
+        let newReferenceSpace = xr.baseExperience.sessionManager.referenceSpace.getOffsetReferenceSpace(originChange);
+        xr.baseExperience.sessionManager.referenceSpace = newReferenceSpace;
+    }
+
 });
 
 // when the current player is already on the server and a new player joins

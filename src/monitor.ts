@@ -43,7 +43,7 @@ const collectTestsBtn = document.getElementById('collect-tests') as HTMLButtonEl
 const startButtons: { [key: number]: HTMLButtonElement } = {};
 const kickButtons: { [key: number]: HTMLButtonElement } = {};
 const reloadButtons: { [key: number]: HTMLButtonElement } = {};
-const clearArrayButtons: { [key: number]: HTMLButtonElement } = {};
+const recenterButtons: { [key: number]: HTMLButtonElement } = {};
 for (let i = 1; i <= 4; i++) {
     let startbutton = document.getElementById(`start-${i}`);
     startButtons[i] = startbutton as HTMLButtonElement;
@@ -54,8 +54,8 @@ for (let i = 1; i <= 4; i++) {
     let reloadButton = document.getElementById(`reload-${i}`);
     reloadButtons[i] = reloadButton as HTMLButtonElement;
 
-    let clearArrayButton = document.getElementById(`clear-array-${i}`);
-    clearArrayButtons[i] = clearArrayButton as HTMLButtonElement;
+    let recenterButton = document.getElementById(`recenter-${i}`);
+    recenterButtons[i] = recenterButton as HTMLButtonElement;
 }
 
 const clientsWrapper = document.getElementById('clients-wrapper');
@@ -1288,8 +1288,8 @@ for (let i = 1; i <= Object.keys(reloadButtons).length; i++) {
 }
 
 // clear the specific player arrays
-for (let i = 1; i <= Object.keys(clearArrayButtons).length; i++) {
-    clearArrayButtons[i].addEventListener('click', () => {
-        socket.emit('requestClearPlayerArray', i, true);
+for (let i = 1; i <= Object.keys(recenterButtons).length; i++) {
+    recenterButtons[i].addEventListener('click', () => {
+        socket.emit('requestRecenterXR', i, true);
     });
 }

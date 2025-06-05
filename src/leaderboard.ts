@@ -28,11 +28,16 @@ socket.on('sendLeaderboard', (leaderboard) => {
 
 function createLeaderboard(leaderboard: { id: string; score: number }[]) {
     const leaderboardContainer = document.getElementById('leaderboard');
-    if (!leaderboardContainer) return;
+    const ranksContainer = document.getElementById('ranks');
+    if (!leaderboardContainer || !ranksContainer) return;
 
     leaderboardContainer.innerHTML = ''; // Clear previous content
+    ranksContainer.innerHTML = ''; // Clear previous content
+
+    let rankCounter = 1;
 
     leaderboard.forEach((entry) => {
+        //create player elements
         const listItem = document.createElement('li');
 
         const playerNameElem = document.createElement('span');
@@ -45,9 +50,15 @@ function createLeaderboard(leaderboard: { id: string; score: number }[]) {
         scoreElem.classList.add('score');
         listItem.appendChild(scoreElem);
         leaderboardContainer.appendChild(listItem);
+
+        //create rank elements
+        const rankItem = document.createElement('li');
+        const rankElem = document.createElement('span');
+        rankElem.textContent = rankCounter.toString();
+        rankElem.classList.add('rank');
+        rankItem.appendChild(rankElem);
+        ranksContainer.appendChild(rankItem);
+        
+        rankCounter++;
     });
 }
-
-// socket.on('leaderboardUpdate', (leaderboard) => {
-
-// });

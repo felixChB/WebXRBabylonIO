@@ -616,6 +616,20 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('requestRecenterXR', (requestedRecenterPos, isMasterRequest) => {
+        if (isMasterRequest) {
+            for (let id in playerList) {
+                if (playerList.hasOwnProperty(id)) {
+                    if (playerList[id].isPlaying == true) {
+                        if (playerList[id].playerNumber == requestedRecenterPos) {
+                            io.to(id).emit('recenterXR');
+                        }
+                    }
+                }
+            }
+        }
+    });
+
     socket.on('isLeaderboard', () => {
         io.emit('isLeaderboard', socket.id);
     });
@@ -867,7 +881,7 @@ setInterval(function () {
                 // player 1 missed
                 Object.keys(playerList).forEach((key) => {
                     if (playerList[key].playerNumber == 1) {
-                        checkLeaderBoard(playerList[key]);
+                        checkLeaderboard(playerList[key]);
                         playerList[key].score = scoreAfterMiss(playerList[key].score);
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
@@ -876,7 +890,7 @@ setInterval(function () {
                 // player 2 missed
                 Object.keys(playerList).forEach((key) => {
                     if (playerList[key].playerNumber == 2) {
-                        checkLeaderBoard(playerList[key]);
+                        checkLeaderboard(playerList[key]);
                         playerList[key].score = scoreAfterMiss(playerList[key].score);
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
@@ -885,7 +899,7 @@ setInterval(function () {
                 // player 3 missed
                 Object.keys(playerList).forEach((key) => {
                     if (playerList[key].playerNumber == 3) {
-                        checkLeaderBoard(playerList[key]);
+                        checkLeaderboard(playerList[key]);
                         playerList[key].score = scoreAfterMiss(playerList[key].score);
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
@@ -894,7 +908,7 @@ setInterval(function () {
                 // player 4 missed
                 Object.keys(playerList).forEach((key) => {
                     if (playerList[key].playerNumber == 4) {
-                        checkLeaderBoard(playerList[key]);
+                        checkLeaderboard(playerList[key]);
                         playerList[key].score = scoreAfterMiss(playerList[key].score);
                         io.emit('scoreUpdate', playerList[key].id, playerList[key].score);
                     }
@@ -1080,26 +1094,31 @@ function resetGame() {
     // changeBallColor(ballStartColor);
 }
 
-function checkLeaderBoard(player) {
+function checkLeaderboard(player) {
     if (player.score > 0) {
-        if (leaderboard[leaderboardLength] == null) {
+        if (leaderboard.length == 0) {
+            // push new score if leaderboard is empty
+            leaderboard.push({ id: player.id, score: player.score });
+            
+            // console.log('Leaderboard: ', leaderboard);
+            io.emit('sendLeaderboard', leaderboard);
+            writeLeaderboardToFile();
+        } else if (player.score >= leaderboard[leaderboard.length - 1].score) {
             leaderboard.push({ id: player.id, score: player.score });
 
             // sort the leaderboard by score in descending order
             leaderboard.sort((a, b) => (a.score > b.score) ? -1 : ((b.score > a.score) ? 1 : 0));
-        } else if (player.score >= leaderboard[leaderboardLength].score) {
-            leaderboard.push({ id: player.id, score: player.score });
 
-            // sort the leaderboard by score in descending order
-            leaderboard.sort((a, b) => (a.score > b.score) ? -1 : ((b.score > a.score) ? 1 : 0));
             // if the leaderboard has more than 10 entries, remove the last one
-            if (leaderboard.length > leaderboardLength) {
+            while (leaderboard.length > leaderboardLength) {
                 leaderboard.pop();
+                console.log('Leaderboard is full, removing last entry.');
             }
+
+            // console.log('Leaderboard: ', leaderboard);
+            io.emit('sendLeaderboard', leaderboard);
+            writeLeaderboardToFile();
         }
-        console.log('Leaderboard: ', leaderboard);
-        io.emit('sendLeaderboard', leaderboard);
-        writeLeaderboardToFile();
     }
 }
 
@@ -1375,7 +1394,7 @@ function readLeaderboardFromFile() {
         }
         try {
             leaderboard = JSON.parse(data);
-            console.log('Leaderboard loaded from file:', leaderboard);
+            console.log('Leaderboard loaded from file');
         } catch (parseError) {
             console.error('Error parsing leaderboard JSON', parseError);
         }
