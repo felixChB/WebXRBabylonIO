@@ -62,6 +62,7 @@ const clientsList = document.getElementById('clients-list');
 
 const clientWrapper = document.getElementById('clients-wrapper') as HTMLDivElement;
 const clientHeader = document.getElementById('clients-header') as HTMLDivElement;
+const gameMonitorWrapper = document.getElementById('game-monitor-wrapper') as HTMLDivElement;
 
 // Test Variables
 let serverUpdateCounter = 0;
@@ -1331,6 +1332,14 @@ clientHeader.addEventListener('click', () => {
             clientWrapper.classList.remove('expanded');
         } else {
             clientWrapper.classList.add('expanded');
+        }
+    }
+});
+
+gameMonitorWrapper.addEventListener('click', () => {
+    if (window.screen.width < 900) {
+        if (clientWrapper.classList.contains('expanded')) {
+            clientWrapper.classList.remove('expanded');
         }
     }
 });

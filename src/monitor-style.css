@@ -92,9 +92,9 @@ p {
     position: relative;
 }
 
-/* #clients-list {
+#clients-list {
     overflow-y: auto;
-} */
+}
 
 /* #clients-headline::before {
     content: "";
