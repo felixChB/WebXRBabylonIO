@@ -1099,7 +1099,7 @@ function checkLeaderboard(player) {
         if (leaderboard.length == 0) {
             // push new score if leaderboard is empty
             leaderboard.push({ id: player.id, score: player.score });
-            
+
             // console.log('Leaderboard: ', leaderboard);
             io.emit('sendLeaderboard', leaderboard);
             writeLeaderboardToFile();
@@ -1112,7 +1112,7 @@ function checkLeaderboard(player) {
             // if the leaderboard has more than 10 entries, remove the last one
             while (leaderboard.length > leaderboardLength) {
                 leaderboard.pop();
-                console.log('Leaderboard is full, removing last entry.');
+                // console.log('Leaderboard is full, removing last entry.');
             }
 
             // console.log('Leaderboard: ', leaderboard);

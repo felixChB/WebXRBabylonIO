@@ -38,8 +38,8 @@ const gameMonitorInterface = document.getElementById('game-monitor-interface') a
 
 const toggleInterfaceBtn = document.getElementById('toggle-interface') as HTMLButtonElement;
 const resetCamBtn = document.getElementById('reset-cam') as HTMLButtonElement;
-const clearServerArrayBtn = document.getElementById('clear-server-array') as HTMLButtonElement;
-const collectTestsBtn = document.getElementById('collect-tests') as HTMLButtonElement;
+// const clearServerArrayBtn = document.getElementById('clear-server-array') as HTMLButtonElement;
+// const collectTestsBtn = document.getElementById('collect-tests') as HTMLButtonElement;
 const startButtons: { [key: number]: HTMLButtonElement } = {};
 const kickButtons: { [key: number]: HTMLButtonElement } = {};
 const reloadButtons: { [key: number]: HTMLButtonElement } = {};
@@ -58,7 +58,10 @@ for (let i = 1; i <= 4; i++) {
     recenterButtons[i] = recenterButton as HTMLButtonElement;
 }
 
-const clientsWrapper = document.getElementById('clients-wrapper');
+const clientsList = document.getElementById('clients-list');
+
+const clientWrapper = document.getElementById('clients-wrapper') as HTMLDivElement;
+const clientHeader = document.getElementById('clients-header') as HTMLDivElement;
 
 // Test Variables
 let serverUpdateCounter = 0;
@@ -484,9 +487,9 @@ class Player implements PlayerData {
     paddle?: Mesh | null;
     scoreMesh?: Mesh | null;
     paddleLight?: PointLight | null;
-    //HUDMesh?: Mesh | null;
+    idMesh?: Mesh | null;
 
-    constructor(player: PlayerData, headObj?: Mesh, controllerR?: Mesh, controllerL?: Mesh, paddle?: Mesh, scoreMesh?: Mesh, paddleLight?: PointLight) {
+    constructor(player: PlayerData, headObj?: Mesh, controllerR?: Mesh, controllerL?: Mesh, paddle?: Mesh, scoreMesh?: Mesh, paddleLight?: PointLight, idMesh?: Mesh) {
         this.id = player.id;
         this.color = player.color;
         this.playerNumber = player.playerNumber;
@@ -505,7 +508,7 @@ class Player implements PlayerData {
         this.paddle = paddle || null;
         this.scoreMesh = scoreMesh || null;
         this.paddleLight = paddleLight || null;
-        //this.HUDMesh = HUDMesh || null;
+        this.idMesh = idMesh || null;
     }
 
     setData(playerGameData: PlayerGameData) {
@@ -521,6 +524,11 @@ class Player implements PlayerData {
         if (this.headObj) {
             this.headObj.position = new Vector3(this.position.x, this.position.y, this.position.z);
             this.headObj.rotation = new Vector3(this.rotation.x, this.rotation.y, this.rotation.z);
+
+            if (this.idMesh) {
+                this.idMesh.position = new Vector3(this.position.x, this.position.y + 0.5, this.position.z);
+                // this.idMesh.rotation = new Vector3(this.rotation.x, this.rotation.y, this.rotation.z);
+            }
         }
         if (this.controllerR) {
             this.controllerR.position = new Vector3(this.contrPosR.x, this.contrPosR.y, this.contrPosR.z);
@@ -888,6 +896,27 @@ function addPlayer(player: Player, isPlayer: boolean) {
     player.controllerL.rotation = new Vector3(player.contrRotL.x, player.contrRotL.y, player.contrRotL.z);
     player.controllerL.material = player.headObj.material;
 
+    player.idMesh = MeshBuilder.CreatePlane(`player_${player.id}_idMesh`, { size: 1 }, scene);
+    player.idMesh.position = new Vector3(player.position.x, player.position.y + 0.5, player.position.z);
+    //player.idMesh.rotation = new Vector3(0, 0, 0);
+
+    player.idMesh.billboardMode = Mesh.BILLBOARDMODE_ALL;
+
+    var playerIdTex = GUI.AdvancedDynamicTexture.CreateForMesh(player.idMesh);
+    // Player Score
+    var idRect = new GUI.Rectangle();
+    idRect.thickness = 0;
+    playerIdTex.addControl(idRect);
+    var idLabel = new GUI.TextBlock();
+    //idLabel.fontFamily = "loadedFont";
+    idLabel.text = player.id;
+    idLabel.color = ghostColor;
+    //idLabel.color = playerStartInfos[player.playerNumber].color;
+    idLabel.fontSize = 80;
+    idRect.addControl(idLabel);
+    // add to guiTextElements
+    guiTextElements[`player_${player.id}_idLabel`] = idLabel;
+
     // player.headObj.isVisible = false;
     // player.controllerL.isVisible = false;
     // player.controllerR.isVisible = false;
@@ -895,7 +924,7 @@ function addPlayer(player: Player, isPlayer: boolean) {
     playerList[player.id].headObj = player.headObj;
     playerList[player.id].controllerR = player.controllerR;
     playerList[player.id].controllerL = player.controllerL;
-    //playerList[player.id].HUDMesh = player.HUDMesh;
+    playerList[player.id].idMesh = player.idMesh;
 }
 
 // spawn the stuff for playing for the player
@@ -1090,7 +1119,7 @@ socket.on('playerDisconnected', (id) => {
         disconnectedPlayer.paddle?.dispose();
         disconnectedPlayer.paddleLight?.dispose();
         disconnectedPlayer.scoreMesh?.dispose();
-        //disconnectedPlayer.HUDMesh?.dispose();
+        disconnectedPlayer.idMesh?.dispose();
 
         let playerWall = scene.getMeshByName(`player${disconnectedPlayer.playerNumber}Wall`) as Mesh;
         if (playerWall) {
@@ -1133,8 +1162,8 @@ socket.on('newClientMonitor', (newClientId) => {
     let allreadyClient = document.getElementById(newClientId);
     if (!allreadyClient) {
         let clientElement = createClientElement(newClientId);
-        if (clientsWrapper) {
-            clientsWrapper.appendChild(clientElement);
+        if (clientsList) {
+            clientsList.appendChild(clientElement);
         }
     }
 });
@@ -1258,13 +1287,13 @@ resetCamBtn.addEventListener('click', function () {
     camera.target = new Vector3(0, 0, 0);
 });
 
-clearServerArrayBtn.addEventListener('click', function () {
-    socket.emit('requestClearServerArray', true);
-});
+// clearServerArrayBtn.addEventListener('click', function () {
+//     socket.emit('requestClearServerArray', true);
+// });
 
-collectTestsBtn.addEventListener('click', function () {
-    socket.emit('collectingTests', 'all');
-});
+// collectTestsBtn.addEventListener('click', function () {
+//     socket.emit('collectingTests', 'all');
+// });
 
 // force the player in the position to join the game
 for (let i = 1; i <= Object.keys(startButtons).length; i++) {
@@ -1293,3 +1322,15 @@ for (let i = 1; i <= Object.keys(recenterButtons).length; i++) {
         socket.emit('requestRecenterXR', i, true);
     });
 }
+
+// client list expandable
+clientHeader.addEventListener('click', () => {
+    console.log('Client Header clicked');
+    if (window.screen.width < 900) {
+        if (clientWrapper.classList.contains('expanded')) {
+            clientWrapper.classList.remove('expanded');
+        } else {
+            clientWrapper.classList.add('expanded');
+        }
+    }
+});

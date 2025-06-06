@@ -1124,12 +1124,23 @@ socket.on('recenterXR', () => {
     console.log('Recenter XR');
     // xr.baseExperience.sessionManager.setReferenceSpaceTypeAsync('local-floor');
 
+
+    let newRotation = Quaternion.FromEulerAngles(0, -Math.PI / 2, 0);
+
     if (xrCamera) {
-        const originChange = new XRRigidTransform({
-            x: xrCamera.position.x,
-            y: xrCamera.position.y,
-            z: xrCamera.position.z
-        });
+        const originChange = new XRRigidTransform(
+            {
+                x: 0,
+                y: 0,
+                z: 0
+            },
+            {
+                x: newRotation.x,
+                y: newRotation.y,
+                z: newRotation.z,
+                w: newRotation.w
+            }
+        );
         let newReferenceSpace = xr.baseExperience.sessionManager.referenceSpace.getOffsetReferenceSpace(originChange);
         xr.baseExperience.sessionManager.referenceSpace = newReferenceSpace;
     }
@@ -1176,7 +1187,7 @@ socket.on('playerStartPlaying', (newPlayerId, startPlayingNumber) => {
 
         let skyBoxMesh = scene.getMeshByName('skyBoxMesh') as Mesh;
         if (skyBoxMesh) {
-            skyBoxMesh.isVisible = true;
+            //skyBoxMesh.isVisible = true;
         }
 
         for (let i = 1; i <= 4; i++) {

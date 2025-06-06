@@ -1,18 +1,17 @@
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
+html,
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    /* overflow: hidden; */
+    background-color: rgb(35, 35, 35);
 }
 
 body {
-  font-family: Arial, sans-serif;
-  background-color: #f0f0f0;
-  color: #333;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+    font-family: Arial, sans-serif;
+    color: #333;
+    position: relative;
 }
 
 button {
@@ -34,18 +33,26 @@ p {
 }
 
 #monitor-header {
-  background-color: red;
-  color: white;
-  padding: 10px 0px;
-  text-align: center;
-  width: 100%;
+    position: fixed;
+    display: flex;
+    top: 0;
+    left: 0;
+    background-color: rgb(35, 35, 35);
+    color: white;
+    padding: 5px 0px;
+    height: 30px;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    z-index: 10;
 }
 
 #monitor-body-wrapper {
+    padding-top: 40px; /* Adjusted to account for the header height */
     display: flex;
     flex-direction: row;
     width: 100%;
-    height: 100%;
+    height: calc(100% - 40px);
 }
 
 #clients-wrapper {
@@ -53,11 +60,52 @@ p {
     flex-direction: column;
     width: 20%;
     height: 100%;
-    background-color: #161616;
+    background-color: rgb(35, 35, 35);
     color: white;
-    border-right: 1px solid #ccc;
-    overflow: auto;
+    overflow: hidden;
+    transition: all 0.3s ease-out;
 }
+
+.expanded {
+    height: 80% !important;
+    border-radius: 10px 10px 0 0;
+}
+
+#clients-header {
+    background-color: #222;
+    color: white;
+    padding: 0;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#clients-header:hover {
+    cursor: pointer;
+}
+
+#clients-headline {
+    font-size: 1.2em;
+    font-weight: normal;
+    margin: 10px 5px 5px 5px;
+    position: relative;
+}
+
+/* #clients-list {
+    overflow-y: auto;
+} */
+
+/* #clients-headline::before {
+    content: "";
+    border: solid rgb(255, 255, 255);
+    border-width: 0 2px 2px 0;
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    position: absolute;
+    transform: rotate(225deg);
+} */
 
 .client {
     border: solid 1px white;
@@ -120,4 +168,37 @@ p {
 
 .xr-button-overlay {
     display: none;
+}
+
+
+@media only screen and (max-width: 900px) {
+    body {
+        justify-content: start;
+    }
+
+    #monitor-body-wrapper {
+        flex-direction: column;
+        width: 100%;
+        height: calc(100% - 40px - 40px);
+        position: relative;
+    }
+
+    #game-monitor-wrapper {
+        width: 100%;
+    }
+
+    #clients-header {
+        height: 40px !important;
+        width: 100%;
+    }
+
+    #clients-wrapper {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 40px;
+        z-index: 100;
+        overflow: hidden;
+    }
 }
