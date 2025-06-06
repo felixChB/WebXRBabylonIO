@@ -197,8 +197,8 @@ enteredDelayTimer = exitDelayTimer = null;
 let leaderboard = [];
 const leaderboardLength = 10; // the length of the leaderboard
 readLeaderboardFromFile();
-let dailyLeaderboard = [];
-const dailyLeaderboardLength = 10; // the length of the daily leaderboard
+// let dailyLeaderboard = [];
+// const dailyLeaderboardLength = 10; // the length of the daily leaderboard
 const maxPlayers = 4;
 const playCubeSize = { x: 1, y: 1.8, z: 1 }; // the size of the player cube in meters // the y value is the top of the cube
 const playCubeElevation = 0.6; // the elevation of the player cube in meters
@@ -243,6 +243,7 @@ let ball = {
 let sceneStartinfos = {
     playCubeSize: playCubeSize,
     playCubeElevation: playCubeElevation,
+    playerAreaDistance: playerAreaDistance,
     playerAreaDepth: playerAreaDepth,
     playerPaddleSize: playerPaddleSize,
     ballSize: ball.size,

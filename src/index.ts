@@ -433,6 +433,7 @@ interface PlayerStartInfo {
 interface SceneStartInfos {
     playCubeSize: { x: number, y: number, z: number };
     playCubeElevation: number;
+    playerAreaDistance: number;
     playerAreaDepth: number;
     playerPaddleSize: { w: number, h: number };
     ballSize: number;
@@ -1129,7 +1130,31 @@ socket.on('recenterXR', () => {
 
         let newRotation = Quaternion.FromEulerAngles(0, -Math.PI / 2, 0);
 
+
         if (xrCamera) {
+
+            const originReset = new XRRigidTransform(
+                {
+                    x: (sceneStartInfos.playCubeSize.x / 2 + sceneStartInfos.playerAreaDepth / 2 + sceneStartInfos.playerAreaDistance - xrCamera.position.x),
+                    y: 0,
+                    z: 0
+                },
+                {
+                    x: 0,
+                    y: 0,
+                    z: 0,
+                    w: 0
+                }
+            );
+
+            ;
+
+
+            let newPosResetRS = xr.baseExperience.sessionManager.referenceSpace.getOffsetReferenceSpace(originReset);
+            xr.baseExperience.sessionManager.referenceSpace = newPosResetRS;
+
+            let resetCameraRotation = Quaternion.FromEulerAngles(xrCamera.rotation.x, xrCamera.rotation.y, xrCamera.rotation.z);
+
             const originChange = new XRRigidTransform(
                 {
                     x: 0,
@@ -1137,14 +1162,15 @@ socket.on('recenterXR', () => {
                     z: 0
                 },
                 {
-                    x: newRotation.x,
-                    y: newRotation.y,
-                    z: newRotation.z,
-                    w: newRotation.w
+                    x: resetCameraRotation.x,
+                    y: resetCameraRotation.y,
+                    z: resetCameraRotation.z,
+                    w: resetCameraRotation.w
                 }
             );
-            let newReferenceSpace = xr.baseExperience.sessionManager.referenceSpace.getOffsetReferenceSpace(originChange);
-            xr.baseExperience.sessionManager.referenceSpace = newReferenceSpace;
+
+            //let newReferenceSpace = xr.baseExperience.sessionManager.referenceSpace.getOffsetReferenceSpace(originChange);
+            //xr.baseExperience.sessionManager.referenceSpace = newReferenceSpace;
         }
     }
 
