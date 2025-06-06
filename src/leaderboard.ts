@@ -8,7 +8,7 @@ let clientStartTime = Date.now();
 // !1
 // Send the client's start time to the server upon connection
 socket.on('connect', () => {
-    socket.emit('clientStartTime', clientStartTime);
+    socket.emit('clientStartTime', clientStartTime, 'leaderboard');
     console.log('This Client ID: ', socket.id);
     
     socket.emit('isLeaderboard');

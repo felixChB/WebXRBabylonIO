@@ -117,6 +117,21 @@ p {
     border-color: red !important;
 }
 
+.leaderboard-client {
+    color: rgb(255 168 32) !important;
+    border-color: rgb(255 168 32) !important;
+}
+
+.monitor-client {
+    color: rgb(255, 122, 144) !important;
+    border-color: rgb(255, 122, 144) !important;
+}
+
+.player-client {
+    color: rgb(162, 128, 255) !important;
+    border-color: rgb(162, 128, 255) !important;
+}
+
 .client-infos {
     margin: 5px;
 }

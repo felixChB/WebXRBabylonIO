@@ -158,7 +158,7 @@ let connectedClientNumber = 0;
 
 /////////////////////////////  VARIABLES  //////////////////////////////////
 // Server Variables
-let allConnectedIds = [];
+let allConnectedIds = {}; // store all connected player ids with client types
 let serverStartTime;
 const serverRefreshRate = 10; // time between server updates in milliseconds
 let lastUpdateTime = performance.now();
@@ -296,7 +296,6 @@ let playerStartInfos = {
 // !1
 // Handle connections and logic
 io.on('connection', (socket) => {
-    allConnectedIds.push(socket.id);
 
     console.log(`Player connected: ${socket.id}`);
     networkTestArray.push(`Player connected: ${socket.id}`);
@@ -305,7 +304,6 @@ io.on('connection', (socket) => {
             networkTestArrayObject[id].networkTestArray.push(`SUC: ${serverUpdateCounter}, Player connected: ${socket.id}`);
         }
     }
-    io.emit('newClientMonitor', socket.id);
     // !2
     socket.emit('ClientID', socket.id);
     connectedClientNumber++;
@@ -345,13 +343,16 @@ io.on('connection', (socket) => {
     // End Network Ping Pong Test //
 
     // !3
-    socket.on('clientStartTime', (clientStartTime) => {
+    socket.on('clientStartTime', (clientStartTime, typeOfClient) => {
         if (clientStartTime < serverStartTime) {
             // console.log(`Client start time (${clientStartTime}) is lower than server start time (${serverStartTime}). Forcing reload.`);
             socket.emit('forceReload');
-        } else {
-            // console.log(`Client start time (${clientStartTime}) is higher than server start time (${serverStartTime}).`);
+            return;
         }
+
+        allConnectedIds[socket.id] = typeOfClient; // store the client type with the id
+        io.emit('newClientMonitor', socket.id, typeOfClient); // send the new client to all connected clients
+
     });
 
     if (Object.keys(playerList).length >= maxPlayers) {
@@ -480,11 +481,13 @@ io.on('connection', (socket) => {
         //clearInterval(pingInterval);
         connectedClientNumber--;
 
-        for (let i = 0; i < allConnectedIds.length; i++) {
-            if (allConnectedIds[i] == socket.id) {
-                allConnectedIds.splice(i, 1);
-            }
-        }
+        delete allConnectedIds[socket.id]; // remove the client id from the list
+
+        // for (let i = 0; i < allConnectedIds.length; i++) {
+        //     if (allConnectedIds[i] == socket.id) {
+        //         allConnectedIds.splice(i, 1);
+        //     }
+        // }
 
         if (socket.id in playerList) {
             console.log(`Player ${socket.id} disconnected from the game.`);
@@ -578,6 +581,16 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('requestAllClients', (isMasterRequest) => {
+        if (isMasterRequest) {
+            for (let id in allConnectedIds) {
+                if (allConnectedIds.hasOwnProperty(id)) {
+                    socket.emit('newClientMonitor', id, allConnectedIds[id]);
+                }
+            }
+        }
+    });
+
     socket.on('requestPlayerReload', (requestedReloadPos, isMasterRequest) => {
         if (isMasterRequest) {
             for (let id in playerList) {
@@ -613,6 +626,12 @@ io.on('connection', (socket) => {
     socket.on('requestDisconnectClient', (requestedDisconnectId, isMasterRequest) => {
         if (isMasterRequest) {
             io.sockets.sockets.get(requestedDisconnectId).disconnect(true);
+        }
+    });
+
+    socket.on('requestRecenterClient', (requestedRecenterId, isMasterRequest) => {
+        if (isMasterRequest) {
+            io.to(requestedRecenterId).emit('recenterXR');
         }
     });
 

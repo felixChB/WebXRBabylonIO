@@ -829,7 +829,7 @@ window.addEventListener('resize', function () {
 // !1
 // Send the client's start time to the server upon connection
 socket.on('connect', () => {
-    socket.emit('clientStartTime', clientStartTime);
+    socket.emit('clientStartTime', clientStartTime, 'player');
     // console.log('Previous Player Data: ', previousPlayer);
     clientTestArray.push(`----------Client Connected----------`);
 });
@@ -1121,28 +1121,31 @@ socket.on('clientEntersAR', (newSocketPlayer, areaEnteredTimerTime) => {
 });
 
 socket.on('recenterXR', () => {
-    console.log('Recenter XR');
-    // xr.baseExperience.sessionManager.setReferenceSpaceTypeAsync('local-floor');
+
+    if (playerUsingXR == true) {
+        console.log('Recenter XR');
+        // xr.baseExperience.sessionManager.setReferenceSpaceTypeAsync('local-floor');
 
 
-    let newRotation = Quaternion.FromEulerAngles(0, -Math.PI / 2, 0);
+        let newRotation = Quaternion.FromEulerAngles(0, -Math.PI / 2, 0);
 
-    if (xrCamera) {
-        const originChange = new XRRigidTransform(
-            {
-                x: 0,
-                y: 0,
-                z: 0
-            },
-            {
-                x: newRotation.x,
-                y: newRotation.y,
-                z: newRotation.z,
-                w: newRotation.w
-            }
-        );
-        let newReferenceSpace = xr.baseExperience.sessionManager.referenceSpace.getOffsetReferenceSpace(originChange);
-        xr.baseExperience.sessionManager.referenceSpace = newReferenceSpace;
+        if (xrCamera) {
+            const originChange = new XRRigidTransform(
+                {
+                    x: 0,
+                    y: 0,
+                    z: 0
+                },
+                {
+                    x: newRotation.x,
+                    y: newRotation.y,
+                    z: newRotation.z,
+                    w: newRotation.w
+                }
+            );
+            let newReferenceSpace = xr.baseExperience.sessionManager.referenceSpace.getOffsetReferenceSpace(originChange);
+            xr.baseExperience.sessionManager.referenceSpace = newReferenceSpace;
+        }
     }
 
 });

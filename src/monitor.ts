@@ -60,7 +60,7 @@ for (let i = 1; i <= 4; i++) {
 
 const clientsList = document.getElementById('clients-list');
 
-const clientWrapper = document.getElementById('clients-wrapper') as HTMLDivElement;
+const clientsWrapper = document.getElementById('clients-wrapper') as HTMLDivElement;
 const clientHeader = document.getElementById('clients-header') as HTMLDivElement;
 const gameMonitorWrapper = document.getElementById('game-monitor-wrapper') as HTMLDivElement;
 
@@ -696,7 +696,7 @@ window.addEventListener('resize', function () {
 // !1
 // Send the client's start time to the server upon connection
 socket.on('connect', () => {
-    socket.emit('clientStartTime', clientStartTime);
+    socket.emit('clientStartTime', clientStartTime, 'monitor');
     console.log('This Client ID: ', socket.id);
     if (socket.id) {
         clientID = socket.id;
@@ -1157,61 +1157,85 @@ function setPlayerCSSColors(startPositions: { [key: number]: PlayerStartInfo }) 
     }
 }
 
-socket.on('newClientMonitor', (newClientId) => {
+socket.on('newClientMonitor', (newClientId, typeOfClient) => {
     console.log('New client connected: ', newClientId);
     // check if the client is already in the list of clients
     let allreadyClient = document.getElementById(newClientId);
     if (!allreadyClient) {
-        let clientElement = createClientElement(newClientId);
+        let clientElement = createClientElement(newClientId, typeOfClient);
         if (clientsList) {
             clientsList.appendChild(clientElement);
         }
     }
 });
 
-function createClientElement(clientId: string): HTMLElement {
-    const clientWrapper = document.createElement('div');
-    clientWrapper.classList.add('client');
-    clientWrapper.id = clientId;
+function createClientElement(clientId: string, typeOfClient: string): HTMLElement {
+    const clientInfoWrapper = document.createElement('div');
+    clientInfoWrapper.classList.add('client');
+    clientInfoWrapper.id = clientId;
 
     const clientInfos = document.createElement('div');
     clientInfos.classList.add('client-infos');
 
     const clientIdElem = document.createElement('p');
-    clientIdElem.textContent = `Client ID: ${clientId}`;
+
+    if (typeOfClient === 'leaderboard') {
+        clientInfoWrapper.classList.add('leaderboard-client');
+        clientIdElem.textContent = `Leaderboard: ${clientId}`;
+    } else if (typeOfClient === 'monitor') {
+        clientInfoWrapper.classList.add('monitor-client');
+        clientIdElem.textContent = `Monitor: ${clientId}`;
+    } else if (typeOfClient === 'player') {
+        clientInfoWrapper.classList.add('player-client');
+        clientIdElem.textContent = `Player: ${clientId}`;
+    }
+
     clientInfos.appendChild(clientIdElem);
 
     if (clientId === clientID) {
         console.log('This is the current client!');
-        clientWrapper.classList.add('this-client');
+        clientInfoWrapper.classList.add('this-client');
 
         const thisClientElem = document.createElement('p');
         thisClientElem.textContent = `You!`;
         clientInfos.appendChild(thisClientElem);
     } else {
-        // Add the "Force Reload" button
-        const forceReloadButton = document.createElement('button');
-        forceReloadButton.textContent = 'Force Reload';
-        forceReloadButton.addEventListener('click', () => {
-            console.log(`Force Reload clicked for Client ID: ${clientId}`);
-            socket.emit('requestClientReload', clientId, true);
-        });
-        clientInfos.appendChild(forceReloadButton);
+        if (typeOfClient === 'monitor' || typeOfClient === 'player' || typeOfClient === 'leaderboard') {
+            // Add the "Force Reload" button
+            const forceReloadButton = document.createElement('button');
+            forceReloadButton.textContent = 'Reload';
+            forceReloadButton.addEventListener('click', () => {
+                console.log(`Force Reload clicked for Client ID: ${clientId}`);
+                socket.emit('requestClientReload', clientId, true);
+            });
+            clientInfos.appendChild(forceReloadButton);
 
-        // Add the "Kick from Server" button
-        const kickButton = document.createElement('button');
-        kickButton.textContent = 'Disconnect from Server';
-        kickButton.addEventListener('click', () => {
-            console.log(`Disconnect from Server clicked for Client ID: ${clientId}`);
-            socket.emit('requestDisconnectClient', clientId, true);
-        });
-        clientInfos.appendChild(kickButton);
+            // Add the "Kick from Server" button
+            const kickButton = document.createElement('button');
+            kickButton.textContent = 'Disconnect';
+            kickButton.addEventListener('click', () => {
+                console.log(`Disconnect from Server clicked for Client ID: ${clientId}`);
+                socket.emit('requestDisconnectClient', clientId, true);
+            });
+            clientInfos.appendChild(kickButton);
+        }
+
+        if (typeOfClient === 'player') {
+            // Add the "Recenter" button
+            const recenterButton = document.createElement('button');
+            recenterButton.textContent = 'Recenter';
+            recenterButton.addEventListener('click', () => {
+                console.log(`Recenter XR for Client ID: ${clientId}`);
+                socket.emit('requestRecenterClient', clientId, true);
+            });
+            clientInfos.appendChild(recenterButton);
+        }
     }
 
     // Append the client info div to the wrapper
-    clientWrapper.appendChild(clientInfos);
+    clientInfoWrapper.appendChild(clientInfos);
 
-    return clientWrapper;
+    return clientInfoWrapper;
 }
 
 function deleteClientElement(clientId: string) {
@@ -1328,18 +1352,18 @@ for (let i = 1; i <= Object.keys(recenterButtons).length; i++) {
 clientHeader.addEventListener('click', () => {
     console.log('Client Header clicked');
     if (window.screen.width < 900) {
-        if (clientWrapper.classList.contains('expanded')) {
-            clientWrapper.classList.remove('expanded');
+        if (clientsWrapper.classList.contains('expanded')) {
+            clientsWrapper.classList.remove('expanded');
         } else {
-            clientWrapper.classList.add('expanded');
+            clientsWrapper.classList.add('expanded');
         }
     }
 });
 
 gameMonitorWrapper.addEventListener('click', () => {
     if (window.screen.width < 900) {
-        if (clientWrapper.classList.contains('expanded')) {
-            clientWrapper.classList.remove('expanded');
+        if (clientsWrapper.classList.contains('expanded')) {
+            clientsWrapper.classList.remove('expanded');
         }
     }
 });
