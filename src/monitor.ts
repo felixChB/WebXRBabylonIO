@@ -1157,19 +1157,39 @@ function setPlayerCSSColors(startPositions: { [key: number]: PlayerStartInfo }) 
     }
 }
 
-socket.on('newClientMonitor', (newClientId, typeOfClient) => {
+socket.on('newClientMonitor', (newClientId, typeOfClient, enterAs) => {
     console.log('New client connected: ', newClientId);
     // check if the client is already in the list of clients
     let allreadyClient = document.getElementById(newClientId);
     if (!allreadyClient) {
-        let clientElement = createClientElement(newClientId, typeOfClient);
+        let clientElement = createClientElement(newClientId, typeOfClient, enterAs);
         if (clientsList) {
             clientsList.appendChild(clientElement);
         }
+    } else {
+        changerEnterAs(newClientId, typeOfClient, enterAs);
     }
 });
 
-function createClientElement(clientId: string, typeOfClient: string): HTMLElement {
+function changerEnterAs(clientId: string, typeOfClient: string, enterAs: number | null) {
+
+    if (typeOfClient === 'player') {
+        console.log(`Changing Enter As for Client ID: ${clientId} to ${typeOfClient} with Enter As: ${enterAs}`);
+        let clientEnterAsElem = document.getElementById('enterAs-' + clientId);
+        if (clientEnterAsElem) {
+            if (enterAs !== null) {
+                clientEnterAsElem.textContent = `Entered As Position: ${enterAs}`;
+                clientEnterAsElem.classList.add('enter-as-shown');
+            } else {
+                clientEnterAsElem.textContent = ``;
+                clientEnterAsElem.classList.remove('enter-as-shown');
+            }
+        }
+    }
+}
+
+
+function createClientElement(clientId: string, typeOfClient: string, enterAs: number | null): HTMLElement {
     const clientInfoWrapper = document.createElement('div');
     clientInfoWrapper.classList.add('client');
     clientInfoWrapper.id = clientId;
@@ -1200,6 +1220,19 @@ function createClientElement(clientId: string, typeOfClient: string): HTMLElemen
         thisClientElem.textContent = `You!`;
         clientInfos.appendChild(thisClientElem);
     } else {
+
+        if (typeOfClient === 'player') {
+            const enterAsElem = document.createElement('p');
+            if (enterAs !== null) {
+                enterAsElem.textContent = `Entered As Position: ${enterAs}`;
+                enterAsElem.classList.add('enter-as-shown');
+            }
+            enterAsElem.classList.add('enter-as');
+            enterAsElem.id = `enterAs-${clientId}`;
+            clientInfos.appendChild(enterAsElem);
+        }
+
+
         if (typeOfClient === 'monitor' || typeOfClient === 'player' || typeOfClient === 'leaderboard') {
             // Add the "Force Reload" button
             const forceReloadButton = document.createElement('button');

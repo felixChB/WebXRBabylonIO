@@ -352,8 +352,8 @@ io.on('connection', (socket) => {
             return;
         }
 
-        allConnectedIds[socket.id] = typeOfClient; // store the client type with the id
-        io.emit('newClientMonitor', socket.id, typeOfClient); // send the new client to all connected clients
+        allConnectedIds[socket.id] = { type: typeOfClient, enterAs: null }; // store the client type with the id
+        io.emit('newClientMonitor', socket.id, allConnectedIds[socket.id].type, allConnectedIds[socket.id].enterAs); // send the new client to all connected clients
 
     });
 
@@ -398,6 +398,9 @@ io.on('connection', (socket) => {
                 playerList[socket.id].setData(data);
                 // socket.emit('clientPong', data.clientSendTime);
             });
+
+            allConnectedIds[socket.id].enterAs = startPlayerNum; // store the player number in the allConnectedIds object
+            io.emit('newClientMonitor', socket.id, allConnectedIds[socket.id].type, allConnectedIds[socket.id].enterAs);
         } else {
             socket.emit('startPosDenied', 0);
         }
@@ -475,6 +478,9 @@ io.on('connection', (socket) => {
 
             io.emit('playerDisconnected', socket.id);
             io.emit('scoreUpdate', socket.id, 0);
+
+            allConnectedIds[socket.id].enterAs = null; // store the player number in the allConnectedIds object
+            io.emit('newClientMonitor', socket.id, allConnectedIds[socket.id].type, allConnectedIds[socket.id].enterAs);
         }
     });
 
@@ -575,19 +581,19 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('requestAllClients', (isMasterRequest) => {
-        if (isMasterRequest) {
-            for (let i = 0; i < allConnectedIds.length; i++) {
-                socket.emit('newClientMonitor', allConnectedIds[i]);
-            }
-        }
-    });
+    // socket.on('requestAllClients', (isMasterRequest) => {
+    //     if (isMasterRequest) {
+    //         for (let i = 0; i < allConnectedIds.length; i++) {
+    //             socket.emit('newClientMonitor', allConnectedIds[i]);
+    //         }
+    //     }
+    // });
 
     socket.on('requestAllClients', (isMasterRequest) => {
         if (isMasterRequest) {
             for (let id in allConnectedIds) {
                 if (allConnectedIds.hasOwnProperty(id)) {
-                    socket.emit('newClientMonitor', id, allConnectedIds[id]);
+                    socket.emit('newClientMonitor', id, allConnectedIds[id].type, allConnectedIds[id].enterAs);
                 }
             }
         }

@@ -47,7 +47,7 @@ let enteredGameAreaInterval: NodeJS.Timer | null = null;
 const ghostColor = '#bdbdbd';
 
 let playerStartPosition: Vector3 | null = null;
-let playerStartRotation: Vector3 | null = null;
+// let playerStartRotation: Vector3 | null = null;
 
 // Get HTML Elements
 // const divFps = document.getElementById('fps');
@@ -1107,7 +1107,7 @@ socket.on('clientEntersAR', (newSocketPlayer, areaEnteredTimerTime) => {
         }
 
         playerStartPosition = new Vector3(playerList[clientID].position.x, playerList[clientID].position.y, playerList[clientID].position.z);
-        playerStartRotation = new Vector3(playerList[clientID].rotation.x, playerList[clientID].rotation.y, playerList[clientID].rotation.z);
+        // playerStartRotation = new Vector3(playerList[clientID].rotation.x, playerList[clientID].rotation.y, playerList[clientID].rotation.z);
 
         // set the xrCamera position and rotation to the player position and rotation from the server
         if (xrCamera) {
