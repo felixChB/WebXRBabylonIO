@@ -11,6 +11,7 @@ import { constants } from "node:crypto";
 import e from "express";
 import { write } from "node:fs";
 import { time } from "node:console";
+import { server } from "typescript";
 
 const port = process.env.PORT || 3000;
 
@@ -160,7 +161,7 @@ let connectedClientNumber = 0;
 // Server Variables
 let allConnectedIds = {}; // store all connected player ids with client types
 let serverStartTime;
-const serverRefreshRate = 10; // time between server updates in milliseconds
+const serverRefreshRate = 5; // time between server updates in milliseconds
 let lastUpdateTime = performance.now();
 let deltaT = 0; // time since last update in milliseconds
 let deltaTMultiplier = 1; // multiplier for game values by deltaT
@@ -205,7 +206,7 @@ const playCubeElevation = 0.6; // the elevation of the player cube in meters
 const playerAreaDepth = 1; // the depth of the player area in the z direction in meters
 const playerAreaDistance = 0.4; // the distance from the player area to the wall in meters
 const playerPaddleSize = { h: 0.2, w: 0.4 }; // the size of the player plane in meters
-const ballStartSpeed = 0.01;
+const ballStartSpeed = 0.01 * serverRefreshRate / 10;
 const ballStartColor = '#1f53ff';
 const calculatedCubeHeight = playCubeSize.y - playCubeElevation;
 const midPointOfPlayCube = ((playCubeSize.y - playCubeElevation) / 2) + playCubeElevation;
@@ -633,6 +634,7 @@ io.on('connection', (socket) => {
     socket.on('requestRecenterClient', (requestedRecenterId, isMasterRequest) => {
         if (isMasterRequest) {
             io.to(requestedRecenterId).emit('recenterXR');
+            console.log(`Recenter request sent to client ${requestedRecenterId}.`);
         }
     });
 
@@ -643,6 +645,7 @@ io.on('connection', (socket) => {
                     if (playerList[id].isPlaying == true) {
                         if (playerList[id].playerNumber == requestedRecenterPos) {
                             io.to(id).emit('recenterXR');
+                            console.log(`Recenter request sent to client ${id}.`);
                         }
                     }
                 }
@@ -938,7 +941,7 @@ setInterval(function () {
             resetGame();
         } else {
             // make the ball always a litle bit faster
-            ball.speed += 0.00001 * deltaTMultiplier;
+            ball.speed += 0.00001 * deltaTMultiplier * serverRefreshRate / 10;
         }
 
         // add  the counter to the ball position

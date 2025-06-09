@@ -18,7 +18,7 @@ if (rotationQuaternion) {
     //console.log('Rotation Quaternion: ', rotationQuaternion);
 }
 let clientStartTime = Date.now();
-const clientRefreshRate = 10; // time between client updates in ms
+const clientRefreshRate = 5; // time between client updates in ms
 
 let clientID: string;
 let clientPlayer: Player | null = null;
@@ -45,6 +45,9 @@ let exitGameAreaInterval: NodeJS.Timer | null = null;
 let enteredGameAreaInterval: NodeJS.Timer | null = null;
 
 const ghostColor = '#bdbdbd';
+
+let playerStartPosition: Vector3 | null = null;
+let playerStartRotation: Vector3 | null = null;
 
 // Get HTML Elements
 // const divFps = document.getElementById('fps');
@@ -1103,6 +1106,9 @@ socket.on('clientEntersAR', (newSocketPlayer, areaEnteredTimerTime) => {
             updateHUDInfo('enteredGameArea', areaEnteredTimerTime);
         }
 
+        playerStartPosition = new Vector3(playerList[clientID].position.x, playerList[clientID].position.y, playerList[clientID].position.z);
+        playerStartRotation = new Vector3(playerList[clientID].rotation.x, playerList[clientID].rotation.y, playerList[clientID].rotation.z);
+
         // set the xrCamera position and rotation to the player position and rotation from the server
         if (xrCamera) {
             xrCamera.position = new Vector3(playerList[clientID].position.x, playerList[clientID].position.y, playerList[clientID].position.z);
@@ -1125,52 +1131,60 @@ socket.on('recenterXR', () => {
 
     if (playerUsingXR == true) {
         console.log('Recenter XR');
-        // xr.baseExperience.sessionManager.setReferenceSpaceTypeAsync('local-floor');
 
-
-        let newRotation = Quaternion.FromEulerAngles(0, -Math.PI / 2, 0);
-
+        //let newRotation = Quaternion.FromEulerAngles(0, -Math.PI / 2, 0);
 
         if (xrCamera) {
 
-            const originReset = new XRRigidTransform(
-                {
-                    x: (sceneStartInfos.playCubeSize.x / 2 + sceneStartInfos.playerAreaDepth / 2 + sceneStartInfos.playerAreaDistance - xrCamera.position.x),
-                    y: 0,
-                    z: 0
-                },
-                {
-                    x: 0,
-                    y: 0,
-                    z: 0,
-                    w: 0
-                }
-            );
+            let xrCameraHight = xrCamera.position.y;
 
-            ;
+            //xrCamera.position = new Vector3(0, 0, 0);
+            xr.baseExperience.sessionManager.setReferenceSpaceTypeAsync('local-floor');
 
+            //let newPosResetRS = xr.baseExperience.sessionManager.referenceSpace.getOffsetReferenceSpace(originReset);
+            //xr.baseExperience.sessionManager.referenceSpace = newPosResetRS;
 
-            let newPosResetRS = xr.baseExperience.sessionManager.referenceSpace.getOffsetReferenceSpace(originReset);
-            xr.baseExperience.sessionManager.referenceSpace = newPosResetRS;
+            // let resetCameraRotation = Quaternion.FromEulerAngles(0, -xrCamera.rotation.y, 0);
 
-            let resetCameraRotation = Quaternion.FromEulerAngles(xrCamera.rotation.x, xrCamera.rotation.y, xrCamera.rotation.z);
+            // const originChange = new XRRigidTransform(
+            //     {
+            //         x: xrCamera.position.x,
+            //         y: 0,
+            //         z: xrCamera.position.z
+            //     },
+            //     {
+            //         x: resetCameraRotation.x,
+            //         y: resetCameraRotation.y,
+            //         z: resetCameraRotation.z,
+            //         w: resetCameraRotation.w
+            //     }
+            // );
 
-            const originChange = new XRRigidTransform(
-                {
-                    x: 0,
-                    y: 0,
-                    z: 0
-                },
-                {
-                    x: resetCameraRotation.x,
-                    y: resetCameraRotation.y,
-                    z: resetCameraRotation.z,
-                    w: resetCameraRotation.w
-                }
-            );
+            // sessionManager.referenceSpace = newReferenceSpaceType;
 
-            //let newReferenceSpace = xr.baseExperience.sessionManager.referenceSpace.getOffsetReferenceSpace(originChange);
-            //xr.baseExperience.sessionManager.referenceSpace = newReferenceSpace;
+            // let newReferenceSpace = xr.baseExperience.sessionManager.referenceSpace.getOffsetReferenceSpace(originChange);
+            // xr.baseExperience.sessionManager.referenceSpace = newReferenceSpace;
+
+            // xrCamera.position = new Vector3(0, 0, 0);
+            // xrCamera.rotation = new Vector3(0, 0, 0);
+
+            // if (playerStartPosition) {
+            //     xrCamera.position = new Vector3(playerStartPosition.x, playerStartPosition.y, playerStartPosition.z);
+            // }
+            // if (playerStartRotation) {
+            //     xrCamera.rotationQuaternion = playerStartRotation;
+            // }
+
+            xrCamera.position.y = xrCameraHight;
+            if (playerStartPosition) {
+                xrCamera.position.x = playerStartPosition.x;
+                xrCamera.position.z = playerStartPosition.z;
+            }
+            //xrCamera.rotationQuaternion = ;
+
+            // const newReferenceSpace = await xr.baseExperience.sessionManager.setReferenceSpaceTypeAsync('local-floor');
+            // xr.baseExperience.sessionManager.referenceSpace = newReferenceSpace;
+            console.log('xrCamera position after recenter: ', xrCamera.position);
         }
     }
 
