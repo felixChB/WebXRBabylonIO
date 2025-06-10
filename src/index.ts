@@ -25,6 +25,8 @@ let clientPlayer: Player | null = null;
 let playerUsingXR: boolean = false;
 // let clientStartPos: { x: number, y: number, z: number };
 
+let isVRMode: boolean = true;
+
 let playerList: { [key: string]: Player } = {};
 let previousPlayer: PreviousPlayerData | null = null;
 getLocalStorage();
@@ -123,7 +125,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     ballLight.radius = ballSize;
 
     var hdrTexture = new CubeTexture('./assets/abstract_blue.env', scene);
-    var skyBoxMesh = scene.createDefaultSkybox(hdrTexture, true, 1000, 0.5);
+    var skyBoxMesh = scene.createDefaultSkybox(hdrTexture, true, 1000, 0.2);
     if (skyBoxMesh) {
         skyBoxMesh.name = 'skyBoxMesh';
         skyBoxMesh.isVisible = false;
@@ -319,16 +321,16 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
 
     var playerWallMat = new PBRMaterial('playerWallMat', scene);
     playerWallMat.albedoColor = Color3.FromHexString('#000000');
-    playerWallMat.alpha = 0.3;
-    playerWallMat.metallic = 0;
+    playerWallMat.alpha = 0.5;
+    playerWallMat.metallic = 0.2;
     playerWallMat.roughness = 0.5;
     playerWallMat.backFaceCulling = false;
 
     var wallBounceMat = new PBRMaterial('wallBounceMat', scene);
     wallBounceMat.albedoColor = Color3.FromHexString('#575757');
     //wallBounceMat.emissiveColor = Color3.FromHexString('#ffffff');
-    wallBounceMat.alpha = 0.3;
-    wallBounceMat.metallic = 0;
+    wallBounceMat.alpha = 0.5;
+    wallBounceMat.metallic = 0.2;
     wallBounceMat.roughness = 0.5;
     wallBounceMat.backFaceCulling = false;
 
@@ -422,7 +424,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
         mainTextureFixedSize: 1024,
         blurKernelSize: 64,
     });
-    gl.intensity = 0.5;
+    gl.intensity = 0.6;
 }
 
 ////////////////////////////// END CREATE BABYLON SCENE ETC. //////////////////////////////
@@ -1231,9 +1233,11 @@ socket.on('playerStartPlaying', (newPlayerId, startPlayingNumber) => {
 
     if (newPlayerId == clientID) {
 
-        let skyBoxMesh = scene.getMeshByName('skyBoxMesh') as Mesh;
-        if (skyBoxMesh) {
-            //skyBoxMesh.isVisible = true;
+        if (isVRMode == true) {
+            let skyBoxMesh = scene.getMeshByName('skyBoxMesh') as Mesh;
+            if (skyBoxMesh) {
+                skyBoxMesh.isVisible = true;
+            }
         }
 
         for (let i = 1; i <= 4; i++) {
