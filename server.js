@@ -1125,9 +1125,12 @@ function resetGame() {
 
 function checkLeaderboard(player) {
     if (player.score > 0) {
-        if (leaderboard.length == 0) {
-            // push new score if leaderboard is empty
+        if (leaderboard.length < leaderboardLength) {
+            // if the leaderboard is not full, just push the new score
             leaderboard.push({ id: player.id, score: player.score });
+
+            // sort the leaderboard by score in descending order
+            leaderboard.sort((a, b) => (a.score > b.score) ? -1 : ((b.score > a.score) ? 1 : 0));
 
             // console.log('Leaderboard: ', leaderboard);
             io.emit('sendLeaderboard', leaderboard);

@@ -56,7 +56,7 @@ const startScreen = document.getElementById('startScreen');
 const continueAsPreviousPlayer = document.getElementById('continueAsPreviousPlayer');
 const loadingScreen = document.getElementById('loadingScreen');
 const startButtons: { [key: number]: HTMLButtonElement } = {};
-for (let i = 0; i <= 4; i++) {
+for (let i = 1; i <= 4; i++) {
     let startbutton = document.getElementById(`startPos-${i}`);
     startButtons[i] = startbutton as HTMLButtonElement;
 }
@@ -149,6 +149,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     playBox.edgesColor = new Color4(1, 1, 1, 1);
     // playBox.isVisible = false;
 
+    /*
     // make another smaller ground as a recenter ground
     // only show for debugging to check if it is aligned correctly
     var recenterGround = MeshBuilder.CreateGround('recenterGround', { width: 1, height: 1 }, scene);
@@ -159,6 +160,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     recenterGround.edgesWidth = edgeWidth;
     recenterGround.edgesColor = Color4.FromHexString(playerStartInfos[0].color);
     recenterGround.isVisible = false;
+    */
 
     // Grounds for the Player Start Positions
     var player1Ground = MeshBuilder.CreateBox('player1Ground', { size: 1 }, scene);
@@ -406,7 +408,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
         }
     }
 
-    recenterGround.material = playerStartMat;
+    // recenterGround.material = playerStartMat;
 
     topWall.material = playerWallMat;
     bottomWall.material = playerWallMat;
@@ -721,6 +723,7 @@ window.addEventListener('resize', function () {
 
 (async function main() {
     // Create a WebXR experience
+
     xr = await scene.createDefaultXRExperienceAsync({
         floorMeshes: [scene.getMeshByName('ground') as Mesh],
         // uiOptions: {
@@ -751,7 +754,7 @@ window.addEventListener('resize', function () {
     });
 
     // Add an event listener to each button
-    for (let i = 0; i < Object.keys(startButtons).length; i++) {
+    for (let i = 1; i <= Object.keys(startButtons).length; i++) {
 
         // mouse hover effect and camera position change
         startButtons[i].addEventListener('mouseover', () => {
@@ -1352,7 +1355,7 @@ function updatePlayerScore(scoredPlayerID: string, newScore: number) {
 // when the scene is first loaded this will set the color of the start buttons
 // the information can so be send from the server to the client
 function setStartButtonColor(startPositions: { [key: number]: PlayerStartInfo }) {
-    for (let i = 0; i < Object.keys(startButtons).length; i++) {
+    for (let i = 1; i <= Object.keys(startButtons).length; i++) {
         let startButton = document.getElementById(`startPos-${i}`);
         if (startButton) {
             startButton.style.setProperty('border-color', startPositions[i].color);
@@ -1371,7 +1374,7 @@ function setStartButtonColor(startPositions: { [key: number]: PlayerStartInfo })
 // set which player positions are available for the client
 // set the availability of the start buttons, the visibility of the player walls and the visibility of the player scores
 function setPlayerAvailability(startPositions: { [key: number]: PlayerStartInfo }) {
-    for (let i = 0; i < Object.keys(startButtons).length; i++) {
+    for (let i = 1; i <= Object.keys(startButtons).length; i++) {
         let playerWall = scene.getMeshByName(`player${i}Wall`) as Mesh;
         // let playerScoreMesh = scene.getMeshByName(`player${i}ScoreMesh`) as Mesh;
         if (startPositions[i].used == true) {

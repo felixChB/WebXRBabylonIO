@@ -43,7 +43,7 @@ const resetCamBtn = document.getElementById('reset-cam') as HTMLButtonElement;
 const startButtons: { [key: number]: HTMLButtonElement } = {};
 const kickButtons: { [key: number]: HTMLButtonElement } = {};
 const reloadButtons: { [key: number]: HTMLButtonElement } = {};
-const recenterButtons: { [key: number]: HTMLButtonElement } = {};
+// const recenterButtons: { [key: number]: HTMLButtonElement } = {};
 for (let i = 1; i <= 4; i++) {
     let startbutton = document.getElementById(`start-${i}`);
     startButtons[i] = startbutton as HTMLButtonElement;
@@ -54,8 +54,10 @@ for (let i = 1; i <= 4; i++) {
     let reloadButton = document.getElementById(`reload-${i}`);
     reloadButtons[i] = reloadButton as HTMLButtonElement;
 
+    /*
     let recenterButton = document.getElementById(`recenter-${i}`);
     recenterButtons[i] = recenterButton as HTMLButtonElement;
+    */
 }
 
 const clientsList = document.getElementById('clients-list');
@@ -140,6 +142,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     playBox.edgesColor = new Color4(1, 1, 1, 1);
     // playBox.isVisible = false;
 
+    /*
     // make another smaller ground as a recenter ground
     // only show for debugging to check if it is aligned correctly
     var recenterGround = MeshBuilder.CreateGround('recenterGround', { width: 1, height: 1 }, scene);
@@ -150,6 +153,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
     recenterGround.edgesWidth = edgeWidth;
     recenterGround.edgesColor = Color4.FromHexString(playerStartInfos[0].color);
     recenterGround.isVisible = true; // show the ground for debugging and testing on the monitor html
+    */
 
     // Grounds for the Player Start Positions
     var player1Ground = MeshBuilder.CreateBox('player1Ground', { size: 1 }, scene);
@@ -405,7 +409,7 @@ function createBasicScene(sceneStartInfos: SceneStartInfos, playerStartInfos: { 
         }
     }
 
-    recenterGround.material = playerStartMat;
+    // recenterGround.material = playerStartMat;
 
     topWall.material = playerWallMat;
     bottomWall.material = playerWallMat;
@@ -1253,6 +1257,7 @@ function createClientElement(clientId: string, typeOfClient: string, enterAs: nu
             clientInfos.appendChild(kickButton);
         }
 
+        /*
         if (typeOfClient === 'player') {
             // Add the "Recenter" button
             const recenterButton = document.createElement('button');
@@ -1263,6 +1268,7 @@ function createClientElement(clientId: string, typeOfClient: string, enterAs: nu
             });
             clientInfos.appendChild(recenterButton);
         }
+        */
     }
 
     // Append the client info div to the wrapper
@@ -1374,12 +1380,14 @@ for (let i = 1; i <= Object.keys(reloadButtons).length; i++) {
     });
 }
 
+/*
 // clear the specific player arrays
 for (let i = 1; i <= Object.keys(recenterButtons).length; i++) {
     recenterButtons[i].addEventListener('click', () => {
         socket.emit('requestRecenterXR', i, true);
     });
 }
+*/
 
 // client list expandable
 clientHeader.addEventListener('click', () => {

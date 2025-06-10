@@ -41,7 +41,7 @@ function createLeaderboard(leaderboard: { id: string; score: number }[]) {
         const listItem = document.createElement('li');
 
         const playerNameElem = document.createElement('span');
-        playerNameElem.textContent = entry.id;
+        playerNameElem.textContent = entry.id.slice(0, 4); // Limit player name to 4 characters
         playerNameElem.classList.add('player-name');
         listItem.appendChild(playerNameElem);
 
