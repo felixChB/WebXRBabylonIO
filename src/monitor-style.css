@@ -148,6 +148,18 @@ p {
     height: 100%;
 }
 
+#game-timer {
+    position: absolute;
+    top: 0;
+    left: calc(50% - 40px);
+    width: 40px;
+    z-index: 100;
+    color: red;
+    border: solid 1px red;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 5px;
+}
+
 #game-monitor-interface {
     display: block;
     width: 100%;

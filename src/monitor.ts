@@ -31,6 +31,9 @@ const guiRectElements: { [key: string]: GUI.Rectangle } = {};
 
 const ghostColor = '#bdbdbd';
 
+let gameTimerTimeClient: number = 0; // game timer time in seconds
+let gameTime: number = 0; // game time in seconds
+
 // Get HTML Elements
 const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
 
@@ -38,6 +41,7 @@ const gameMonitorInterface = document.getElementById('game-monitor-interface') a
 
 const toggleInterfaceBtn = document.getElementById('toggle-interface') as HTMLButtonElement;
 const resetCamBtn = document.getElementById('reset-cam') as HTMLButtonElement;
+const joinAllPlayersBtn = document.getElementById('join-all-players') as HTMLButtonElement;
 // const clearServerArrayBtn = document.getElementById('clear-server-array') as HTMLButtonElement;
 // const collectTestsBtn = document.getElementById('collect-tests') as HTMLButtonElement;
 const startButtons: { [key: number]: HTMLButtonElement } = {};
@@ -65,6 +69,8 @@ const clientsList = document.getElementById('clients-list');
 const clientsWrapper = document.getElementById('clients-wrapper') as HTMLDivElement;
 const clientHeader = document.getElementById('clients-header') as HTMLDivElement;
 const gameMonitorWrapper = document.getElementById('game-monitor-wrapper') as HTMLDivElement;
+
+const gameTimerDiv = document.getElementById('game-timer') as HTMLDivElement;
 
 // Test Variables
 let serverUpdateCounter = 0;
@@ -723,7 +729,9 @@ socket.on('forceReload', () => {
 // get all current Player Information from the Server at the start
 // and spawning all current players except yourself
 socket.on('currentState', (players: { [key: string]: Player }, ballColor: string,
-    playerStartInfosServer: { [key: number]: PlayerStartInfo }, sceneStartInfosServer: SceneStartInfos) => {
+    playerStartInfosServer: { [key: number]: PlayerStartInfo }, sceneStartInfosServer: SceneStartInfos, autoJoin: boolean, gameTimerTime: number) => {
+
+    gameTimerTimeClient = gameTimerTime;
 
     sceneStartInfos = sceneStartInfosServer;
     playerStartInfos = playerStartInfosServer;
@@ -786,7 +794,7 @@ socket.on('playerStartPlaying', (newPlayerId, startPlayingNumber) => {
 });
 
 // update the players position and rotation from the server
-socket.on('serverUpdate', (playerGameDataList, ballPosition, serverSendTime, serverUpdateCounterServer) => {
+socket.on('serverUpdate', (playerGameDataList, ballPosition, serverSendTime, serverUpdateCounterServer, gameTimerInSeconds) => {
     Object.keys(playerGameDataList).forEach((id) => {
         if (playerList[id]) {
             // set the new data from the server to the player
@@ -796,6 +804,10 @@ socket.on('serverUpdate', (playerGameDataList, ballPosition, serverSendTime, ser
         }
     });
     // console.log('Server Update Counter: ', serverUpdateCounter);
+
+    gameTime = gameTimerInSeconds;
+
+    updateGameTimer();
 
     serverUpdateCounter = serverUpdateCounterServer;
 
@@ -1351,6 +1363,11 @@ resetCamBtn.addEventListener('click', function () {
     camera.target = new Vector3(0, 0, 0);
 });
 
+joinAllPlayersBtn.addEventListener('click', function () {
+    console.log('Joining all players');
+    socket.emit('requestAllJoinGame', true);
+});
+
 // clearServerArrayBtn.addEventListener('click', function () {
 //     socket.emit('requestClearServerArray', true);
 // });
@@ -1408,3 +1425,13 @@ gameMonitorWrapper.addEventListener('click', () => {
         }
     }
 });
+
+function updateGameTimer() {
+    if (gameTimerDiv) {
+        let delta = gameTimerTimeClient - gameTime;
+        console.log('Game Timer Delta: ', delta, ' Game Time Client: ', gameTimerTimeClient, ' Game Time: ', gameTime);
+        let minutes = Math.floor((delta % (1000 * 60 * 60)) / (1000 * 60));
+        let seconds = Math.floor((delta % (1000 * 60)) / 1000);
+        gameTimerDiv.innerHTML = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
+}

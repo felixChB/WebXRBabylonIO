@@ -12,15 +12,18 @@ import e from "express";
 import { write } from "node:fs";
 import { time } from "node:console";
 import { server } from "typescript";
+import { clearInterval } from "node:timers";
 
 const port = process.env.PORT || 3000;
 
 ////////////// CHANGE THIS TO YOUR LOCAL IP ADDRESS ///////////////////
-const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
+//const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
 //const ipAdress = '192.168.178.35'; // Desktop zuhause // WLAN
 //const ipAdress = '192.168.1.188'; // Router
-//const ipAdress = '192.168.50.20'; // neuer Router
+const ipAdress = '192.168.178.94'; // neuer Router
 //const ipAdress = '192.168.50.115'; // Router2 über Internet
+//const ipAdress = '192.168.1.163'; //Router blau
+//const ipAdress = '192.168.50.239'; // Router schwarz
 ///////////////////////////////////////////////////////////////////////
 
 const app = express();
@@ -127,14 +130,16 @@ class Player {
             } else {
                 if (newInPosition != 0) {
                     console.log(`Player: ${this.id} entered the game area ${newInPosition}.`);
-                    enteredDelayTimer = setTimeout(() => {
-                        io.to(this.id).emit('enteredGameArea', areaEnteredTimerTime);
-                        areaEnteredTimerList[newInPosition] = setTimeout(() => {
-                            // let the player join the game
-                            console.log(`Player ${this.id} tries to join the Game through the area ${newInPosition}.`);
-                            playerStartPlaying(this.id);
-                        }, areaEnteredTimerTime);
-                    }, enteredDelayTime);
+                    if (autoJoin == true) {
+                        enteredDelayTimer = setTimeout(() => {
+                            io.to(this.id).emit('enteredGameArea', areaEnteredTimerTime);
+                            areaEnteredTimerList[newInPosition] = setTimeout(() => {
+                                // let the player join the game
+                                console.log(`Player ${this.id} tries to join the Game through the area ${newInPosition}.`);
+                                playerStartPlaying(this.id);
+                            }, areaEnteredTimerTime);
+                        }, enteredDelayTime);
+                    }
                 } else if (newInPosition == 0) {
                     // clear the timer if the player exits the game area again
                     // stop the timer for the player to join the game
@@ -165,6 +170,12 @@ const serverRefreshRate = 5; // time between server updates in milliseconds
 let lastUpdateTime = performance.now();
 let deltaT = 0; // time since last update in milliseconds
 let deltaTMultiplier = 1; // multiplier for game values by deltaT
+
+let autoJoin = false; // if true, players can join the game by entering the game area
+
+let gameTimer = null; // timer for the game to end after a certain time
+const gameTimerTime = 300000; // in milliseconds, 5 minutes
+let timerInSeconds = 0; // timer in seconds, used for the game timer
 
 // Test Variables
 let serverUpdateCounter = 0;
@@ -201,10 +212,10 @@ readLeaderboardFromFile();
 // let dailyLeaderboard = [];
 // const dailyLeaderboardLength = 10; // the length of the daily leaderboard
 const maxPlayers = 4;
-const playCubeSize = { x: 1, y: 1.8, z: 1 }; // the size of the player cube in meters // the y value is the top of the cube
+const playCubeSize = { x: 1.2, y: 1.9, z: 1.2 }; // the size of the player cube in meters // the y value is the top of the cube
 const playCubeElevation = 0.6; // the elevation of the player cube in meters
 const playerAreaDepth = 1; // the depth of the player area in the z direction in meters
-const playerAreaDistance = 0.4; // the distance from the player area to the wall in meters
+const playerAreaDistance = 0.2; // the distance from the player area to the wall in meters
 const playerPaddleSize = { h: 0.2, w: 0.4 }; // the size of the player plane in meters
 const ballStartSpeed = 0.01 * serverRefreshRate / 10;
 const ballStartColor = '#1f53ff';
@@ -369,7 +380,7 @@ io.on('connection', (socket) => {
 
     // !5
     // Send the current state to the new player
-    socket.emit('currentState', playerList, activeColor, playerStartInfos, sceneStartinfos);
+    socket.emit('currentState', playerList, activeColor, playerStartInfos, sceneStartinfos, autoJoin, gameTimerTime);
 
     // start as a previous player
     /*socket.on('continueAsPreviousPlayer', (previousPlayerData) => {
@@ -420,18 +431,21 @@ io.on('connection', (socket) => {
         } else {
             playerStartPlaying(socket.id);
         }
+    });
 
-        // if (requestPlayerInPos == 0) {
-        //     socket.emit('startPosDenied', 1);
-        // } else {
-        //     if (playerStartInfos[requestPlayerInPos].used == false) {
-        //         playerStartInfos[requestPlayerInPos].used = true;
-
-        //         playerStartPlaying(socket.id, requestPlayerInPos);
-        //     } else {
-        //         socket.emit('startPosDenied', 2);
-        //     }
-        // }
+    socket.on('requestAllJoinGame', (isMasterRequest) => {
+        if (isMasterRequest) {
+            for (let id in playerList) {
+                if (playerList[id].isPlaying == false) {
+                    for (let i = 1; i <= 4; i++) {
+                        if (playerList[id].inPosition == i) {
+                            playerStartPlaying(id);
+                        }
+                    }
+                }
+            }
+            setGameTimer();
+        }
     });
 
     socket.on('clientExitsGame', (requestedExitPos, isMasterRequest) => {
@@ -958,7 +972,7 @@ setInterval(function () {
         if (ball.position.x != 0 && ball.position.y != (playCubeSize.y / 2) - playCubeElevation && ball.position.z != 0) {
             console.log('No Players in the Game, resetting Ball.');
             resetGame();
-            io.emit('serverUpdate', prepareGameData(), ball.position, performance.now(), serverUpdateCounter);
+            io.emit('serverUpdate', prepareGameData(), ball.position, performance.now(), serverUpdateCounter, timerInSeconds);
             serverUpdateCounter++;
         }
     }
@@ -966,7 +980,7 @@ setInterval(function () {
     // Sending the current game state to all players if there are players in XR (AR/VR)
     // the necessary data of the players and the ball
     if (Object.keys(playerList).length > 0) {
-        io.emit('serverUpdate', prepareGameData(), ball.position, performance.now(), serverUpdateCounter);
+        io.emit('serverUpdate', prepareGameData(), ball.position, performance.now(), serverUpdateCounter, timerInSeconds);
         serverUpdateCounter++;
     }
 }, serverRefreshRate);
@@ -1029,11 +1043,13 @@ function clientEntersAR(newPlayer, socket) {
     playerList[newPlayer.id] = newPlayer;
 
     if (playerList[newPlayer.id].inPosition != 0) {
-        areaEnteredTimerList[newPlayer.inPosition] = setTimeout(() => {
-            // let the player join the game
-            console.log(`Player ${newPlayer.id} tries to join the Game through the area ${newPlayer.inPosition}.`);
-            playerStartPlaying(newPlayer.id);
-        }, firstEnteredTimerTime);
+        if (autoJoin == true) {
+            areaEnteredTimerList[newPlayer.inPosition] = setTimeout(() => {
+                // let the player join the game
+                console.log(`Player ${newPlayer.id} tries to join the Game through the area ${newPlayer.inPosition}.`);
+                playerStartPlaying(newPlayer.id);
+            }, firstEnteredTimerTime);
+        }
     }
 
     socket.emit('clientEntersAR', playerList[newPlayer.id], firstEnteredTimerTime);
@@ -1443,4 +1459,20 @@ function writeLeaderboardToFile() {
             console.log('Leaderboard written to file');
         }
     });
+}
+
+function setGameTimer() {
+    if (gameTimer != null) {
+        clearInterval(gameTimer);
+    }
+    timerInSeconds = 0;
+    gameTimer = setInterval(() => {
+        timerInSeconds++;
+        if (timerInSeconds >= gameTimerTime) {
+            clearInterval(gameTimer);
+            gameTimer = null;
+            console.log('Game Timer ended, resetting Game.');
+            resetGame();
+        }
+    }, 1000);
 }

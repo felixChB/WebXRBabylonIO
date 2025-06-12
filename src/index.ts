@@ -26,6 +26,10 @@ let playerUsingXR: boolean = false;
 // let clientStartPos: { x: number, y: number, z: number };
 
 let isVRMode: boolean = true;
+let autoJoinClient: boolean = false; //gets overritten by the server in the current state
+
+let gameTimerTimeClient: number = 0; // game timer time in seconds
+let gameTime: number = 0; // game time in seconds
 
 let playerList: { [key: string]: Player } = {};
 let previousPlayer: PreviousPlayerData | null = null;
@@ -934,9 +938,12 @@ socket.on('startPosDenied', (errorCode) => {
 // get all current Player Information from the Server at the start
 // and spawning all current players except yourself
 socket.on('currentState', (players: { [key: string]: Player }, ballColor: string,
-    playerStartInfosServer: { [key: number]: PlayerStartInfo }, sceneStartInfosServer: SceneStartInfos) => {
+    playerStartInfosServer: { [key: number]: PlayerStartInfo }, sceneStartInfosServer: SceneStartInfos, autoJoin: boolean, gameTimerTime: number) => {
 
     clientTestArray.push(`----------Client received currentState----------`);
+
+    autoJoinClient = autoJoin;
+    gameTimerTimeClient = gameTimerTime;
 
     sceneStartInfos = sceneStartInfosServer;
     playerStartInfos = playerStartInfosServer;
@@ -1107,8 +1114,10 @@ socket.on('clientEntersAR', (newSocketPlayer, areaEnteredTimerTime) => {
         if (playerList[clientID].inPosition != 0) {
             (playerList[clientID].paddle as Mesh).isVisible = true;
             (playerList[clientID].paddleLight as PointLight).intensity = 1;
-            updateHUDPosition(playerList[clientID].inPosition);
-            updateHUDInfo('enteredGameArea', areaEnteredTimerTime);
+            if (autoJoinClient == true) {
+                updateHUDPosition(playerList[clientID].inPosition);
+                updateHUDInfo('enteredGameArea', areaEnteredTimerTime);
+            }
         }
 
         playerStartPosition = new Vector3(playerList[clientID].position.x, playerList[clientID].position.y, playerList[clientID].position.z);
@@ -1281,7 +1290,7 @@ socket.on('playerStartPlaying', (newPlayerId, startPlayingNumber) => {
 });
 
 // update the players position and rotation from the server
-socket.on('serverUpdate', (playerGameDataList, ballPosition, serverSendTime, serverUpdateCounterServer) => {
+socket.on('serverUpdate', (playerGameDataList, ballPosition, serverSendTime, serverUpdateCounterServer, gameTimerInSeconds) => {
     Object.keys(playerGameDataList).forEach((id) => {
         if (playerList[id]) {
             // set the new data from the server to the player
@@ -1291,6 +1300,8 @@ socket.on('serverUpdate', (playerGameDataList, ballPosition, serverSendTime, ser
         }
     });
     // console.log('Server Update Counter: ', serverUpdateCounter);
+
+    gameTime = gameTimerInSeconds;
 
     serverUpdateCounter = serverUpdateCounterServer;
     // save the time when the client recieved the server update
@@ -1746,8 +1757,10 @@ socket.on('enteredGameArea', (areaEnteredTimerTime) => {
     console.log('Player reentered the Game Area. Timer: ', areaEnteredTimerTime);
     (playerList[clientID].paddle as Mesh).isVisible = true;
     (playerList[clientID].paddleLight as PointLight).intensity = 1;
-    updateHUDPosition(playerList[clientID].inPosition);
-    updateHUDInfo('enteredGameArea', areaEnteredTimerTime);
+    if (autoJoinClient == true) {
+        updateHUDPosition(playerList[clientID].inPosition);
+        updateHUDInfo('enteredGameArea', areaEnteredTimerTime);
+    }
 });
 
 // when the player Exits the game area while trying to join the game
@@ -1755,8 +1768,10 @@ socket.on('exitJoiningGameArea', () => {
     console.log('Player exit the Joining Game Area.');
     (playerList[clientID].paddle as Mesh).isVisible = false;
     (playerList[clientID].paddleLight as PointLight).intensity = 0;
-    updateHUDPosition(0);
-    updateHUDInfo('exitJoiningGameArea');
+    if (autoJoinClient == true) {
+        updateHUDPosition(0);
+        updateHUDInfo('exitJoiningGameArea');
+    }
 });
 
 function updateHUDPosition(positionNumber: number) {
