@@ -1290,7 +1290,7 @@ socket.on('playerStartPlaying', (newPlayerId, startPlayingNumber) => {
 });
 
 // update the players position and rotation from the server
-socket.on('serverUpdate', (playerGameDataList, ballPosition, serverSendTime, serverUpdateCounterServer, gameTimerInSeconds) => {
+socket.on('serverUpdate', (playerGameDataList, ballPosition, serverSendTime, serverUpdateCounterServer) => {
     Object.keys(playerGameDataList).forEach((id) => {
         if (playerList[id]) {
             // set the new data from the server to the player
@@ -1301,8 +1301,6 @@ socket.on('serverUpdate', (playerGameDataList, ballPosition, serverSendTime, ser
     });
     // console.log('Server Update Counter: ', serverUpdateCounter);
 
-    gameTime = gameTimerInSeconds;
-
     serverUpdateCounter = serverUpdateCounterServer;
     // save the time when the client recieved the server update
     // pair it with the server update counter to store the specific update with the recivied time
@@ -1312,6 +1310,10 @@ socket.on('serverUpdate', (playerGameDataList, ballPosition, serverSendTime, ser
 
     // send the pong back to the server to calculate the ServerRoundTrip Time
     socket.emit('ServerPong', serverSendTime, socket.id, serverUpdateCounter);
+});
+
+socket.on('gameTimeUpdate', (gameTimerInSeconds) => {
+    gameTime = gameTimerInSeconds;
 });
 
 // recieve a score update from the server

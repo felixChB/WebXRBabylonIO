@@ -11,9 +11,17 @@
 
 <body>
     <div id="monitor-header">
-        <button id="toggle-interface">Toggle Interface</button>
-        <button id="reset-cam">Reset Camera Position</button>
-        <button id="join-all-players">Join all players</button>
+        <div>
+            <span>VR-Pong Monitor</span>
+        </div>
+        <div>
+            <button id="join-all-players">Join all players</button>
+            <button id="reload-all-players">Reload all players</button>
+        </div>
+        <div>
+            <button id="toggle-interface">Toggle Interface</button>
+            <button id="reset-cam">Reset Camera Position</button>
+        </div>
         <!-- <button id="clear-server-array">Clear Server Arrays</button>
         <button id="collect-tests">Collect Tests</button> -->
 
@@ -65,7 +73,7 @@
                 </div>
             </div>
             <div id="game-timer">
-                00:01
+                00:00
             </div>
             <canvas id="renderCanvas"></canvas>
         </div>

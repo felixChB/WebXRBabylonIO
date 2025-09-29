@@ -42,6 +42,7 @@ const gameMonitorInterface = document.getElementById('game-monitor-interface') a
 const toggleInterfaceBtn = document.getElementById('toggle-interface') as HTMLButtonElement;
 const resetCamBtn = document.getElementById('reset-cam') as HTMLButtonElement;
 const joinAllPlayersBtn = document.getElementById('join-all-players') as HTMLButtonElement;
+const reloadAllPlayersBtn = document.getElementById('reload-all-players') as HTMLButtonElement;
 // const clearServerArrayBtn = document.getElementById('clear-server-array') as HTMLButtonElement;
 // const collectTestsBtn = document.getElementById('collect-tests') as HTMLButtonElement;
 const startButtons: { [key: number]: HTMLButtonElement } = {};
@@ -794,7 +795,7 @@ socket.on('playerStartPlaying', (newPlayerId, startPlayingNumber) => {
 });
 
 // update the players position and rotation from the server
-socket.on('serverUpdate', (playerGameDataList, ballPosition, serverSendTime, serverUpdateCounterServer, gameTimerInSeconds) => {
+socket.on('serverUpdate', (playerGameDataList, ballPosition, serverSendTime, serverUpdateCounterServer) => {
     Object.keys(playerGameDataList).forEach((id) => {
         if (playerList[id]) {
             // set the new data from the server to the player
@@ -805,16 +806,18 @@ socket.on('serverUpdate', (playerGameDataList, ballPosition, serverSendTime, ser
     });
     // console.log('Server Update Counter: ', serverUpdateCounter);
 
-    gameTime = gameTimerInSeconds;
-
-    updateGameTimer();
-
     serverUpdateCounter = serverUpdateCounterServer;
 
     updateBall(ballPosition);
 
     // send the pong back to the server to calculate the ServerRoundTrip Time
     socket.emit('ServerPong', serverSendTime, socket.id, serverUpdateCounter);
+});
+
+socket.on('gameTimeUpdate', (gameTimerInSeconds) => {
+    gameTime = gameTimerInSeconds;
+
+    updateGameTimer();
 });
 
 // recieve a score update from the server
@@ -1368,6 +1371,11 @@ joinAllPlayersBtn.addEventListener('click', function () {
     socket.emit('requestAllJoinGame', true);
 });
 
+reloadAllPlayersBtn.addEventListener('click', function () {
+    console.log('Reloading all players');
+    socket.emit('requestAllPlayerReload', true);
+});
+
 // clearServerArrayBtn.addEventListener('click', function () {
 //     socket.emit('requestClearServerArray', true);
 // });
@@ -1428,10 +1436,10 @@ gameMonitorWrapper.addEventListener('click', () => {
 
 function updateGameTimer() {
     if (gameTimerDiv) {
-        let delta = gameTimerTimeClient - gameTime;
-        console.log('Game Timer Delta: ', delta, ' Game Time Client: ', gameTimerTimeClient, ' Game Time: ', gameTime);
+        let delta = gameTimerTimeClient - gameTime * 1000;
+        console.log('Game Timer Delta: ', delta, ' Game Time Client: ', gameTimerTimeClient, ' Game Time: ', gameTime * 1000);
         let minutes = Math.floor((delta % (1000 * 60 * 60)) / (1000 * 60));
         let seconds = Math.floor((delta % (1000 * 60)) / 1000);
-        gameTimerDiv.innerHTML = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        gameTimerDiv.innerHTML = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
     }
 }

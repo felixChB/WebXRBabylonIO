@@ -20,7 +20,7 @@ const port = process.env.PORT || 3000;
 //const ipAdress = '192.168.178.84'; // Desktop zuhause // LAN
 //const ipAdress = '192.168.178.35'; // Desktop zuhause // WLAN
 //const ipAdress = '192.168.1.188'; // Router
-const ipAdress = '192.168.178.94'; // neuer Router
+const ipAdress = '192.168.178.35'; // neuer Router
 //const ipAdress = '192.168.50.115'; // Router2 über Internet
 //const ipAdress = '192.168.1.163'; //Router blau
 //const ipAdress = '192.168.50.239'; // Router schwarz
@@ -445,6 +445,14 @@ io.on('connection', (socket) => {
                 }
             }
             setGameTimer();
+        }
+    });
+
+    socket.on('requestAllPlayerReload', (isMasterRequest) => {
+        if (isMasterRequest) {
+            for (let id in playerList) {
+                io.to(id).emit('forceReload');
+            }
         }
     });
 
@@ -972,7 +980,7 @@ setInterval(function () {
         if (ball.position.x != 0 && ball.position.y != (playCubeSize.y / 2) - playCubeElevation && ball.position.z != 0) {
             console.log('No Players in the Game, resetting Ball.');
             resetGame();
-            io.emit('serverUpdate', prepareGameData(), ball.position, performance.now(), serverUpdateCounter, timerInSeconds);
+            io.emit('serverUpdate', prepareGameData(), ball.position, performance.now(), serverUpdateCounter);
             serverUpdateCounter++;
         }
     }
@@ -980,7 +988,7 @@ setInterval(function () {
     // Sending the current game state to all players if there are players in XR (AR/VR)
     // the necessary data of the players and the ball
     if (Object.keys(playerList).length > 0) {
-        io.emit('serverUpdate', prepareGameData(), ball.position, performance.now(), serverUpdateCounter, timerInSeconds);
+        io.emit('serverUpdate', prepareGameData(), ball.position, performance.now(), serverUpdateCounter);
         serverUpdateCounter++;
     }
 }, serverRefreshRate);
@@ -1466,13 +1474,21 @@ function setGameTimer() {
         clearInterval(gameTimer);
     }
     timerInSeconds = 0;
+    io.emit('gameTimeUpdate', timerInSeconds);
     gameTimer = setInterval(() => {
         timerInSeconds++;
-        if (timerInSeconds >= gameTimerTime) {
+        console.log(`Game Timer: ${timerInSeconds}s`);
+        io.emit('gameTimeUpdate', timerInSeconds);
+        if (timerInSeconds >= gameTimerTime / 1000) {
             clearInterval(gameTimer);
             gameTimer = null;
             console.log('Game Timer ended, resetting Game.');
             resetGame();
+            for (let id in playerList) {
+                if (playerList[id].isPlaying == true) {
+                    playerExitsGame(id);
+                }
+            }
         }
     }, 1000);
 }
