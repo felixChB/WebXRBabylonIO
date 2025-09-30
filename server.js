@@ -1477,7 +1477,7 @@ function setGameTimer() {
     io.emit('gameTimeUpdate', timerInSeconds);
     gameTimer = setInterval(() => {
         timerInSeconds++;
-        console.log(`Game Timer: ${timerInSeconds}s`);
+        // console.log(`Game Timer: ${timerInSeconds}s`);
         io.emit('gameTimeUpdate', timerInSeconds);
         if (timerInSeconds >= gameTimerTime / 1000) {
             clearInterval(gameTimer);
