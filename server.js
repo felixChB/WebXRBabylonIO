@@ -1028,7 +1028,7 @@ function killTimers(playerNumer) {
 }
 
 function scoreAfterMiss(oldScore) {
-    let newScore = oldScore - 10;
+    let newScore = oldScore - 1;
     if (newScore < 0) {
         newScore = 0;
     }
